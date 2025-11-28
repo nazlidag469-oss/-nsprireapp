@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
@@ -21,6 +21,7 @@
         <h2>Sohbetler</h2>
         <button id="newChatBtn" class="pill-button">+ Yeni sohbet</button>
       </div>
+
       <div id="conversationList" class="conversation-list"></div>
 
       <div class="sidebar-section">
@@ -33,7 +34,6 @@
       <div class="sidebar-section">
         <h3>Ülke ve abonelik</h3>
 
-        <!-- Ülke seçimi: TR / Diğer -->
         <label class="muted" for="countrySelect">Ülke</label>
         <select id="countrySelect">
           <option value="tr">Türkiye</option>
@@ -46,23 +46,21 @@
           <option value="pro">Pro</option>
           <option value="team">Takım</option>
         </select>
+
         <button id="planSaveBtn" class="pill-button">Kaydet</button>
         <p id="planSavedText" class="muted"></p>
 
-        <!-- Fiyat bilgisi -->
         <p class="muted" id="pricingText">
           Pro plan fiyatı: Türkiye'de <strong>250 TL / ay</strong>, diğer ülkelerde
-          <strong>9.99 USD / ay</strong>. (Takım planı daha yüksek fiyatlıdır.)
+          <strong>9.99 USD / ay</strong>.
         </p>
 
         <button id="payBtn" class="pill-button primary small">
           Bu planı satın al
         </button>
       </div>
-
-      <div class="sidebar-footer">
-        <a href="admin.html">Admin Paneli</a>
-      </div>
+      
+      <!-- ❌ Admin paneli linki tamamen kaldırıldı -->
     </aside>
 
     <!-- Sağdan kayan yardım paneli -->
@@ -75,16 +73,14 @@
       </p>
       <p>
         Pro plan: Türkiye'de 250 TL/ay, diğer ülkelerde 9.99 USD/ay olarak sunulur.
-        Gerçek tahsilat, bağladığın ödeme sağlayıcısı üzerinden yapılır.
       </p>
       <button id="closeHelpBtn" class="pill-button">Kapat</button>
     </aside>
 
-    <!-- Orta: Chat alanı -->
+    <!-- Chat Alanı -->
     <main class="chat-area">
       <div id="chatMessages" class="chat-messages"></div>
 
-      <!-- Kredi ve plan bilgisi -->
       <div class="credits-row">
         <span id="planLabel" class="muted"></span>
         <span id="creditsLabel" class="muted"></span>
@@ -93,7 +89,6 @@
         </button>
       </div>
 
-      <!-- Konu / platform / dil ayarları -->
       <div class="controls">
         <div class="control-row">
           <input
@@ -109,7 +104,6 @@
             <option value="instagram">Instagram Reels</option>
           </select>
 
-          <!-- Çok dilli -->
           <select id="langSelect">
             <option value="tr">Türkçe</option>
             <option value="en">English</option>
@@ -120,7 +114,6 @@
         </div>
       </div>
 
-      <!-- Chat giriş satırı -->
       <form id="chatForm" class="chat-input-row">
         <textarea
           id="messageInput"
@@ -134,15 +127,12 @@
     </main>
   </div>
 
-  <!-- Reklam modalı -->
+  <!-- Reklam Modal -->
   <div id="modalBackdrop" class="backdrop hidden"></div>
   <div id="adModal" class="modal hidden">
     <div class="modal-content">
       <h2>Reklam izleyerek hak kazan</h2>
-      <p>
-        Gerçek uygulamada burada video reklam oynayacak. Şimdilik test için
-        aşağıdaki butona basarak reklamı izlemiş sayılacaksın.
-      </p>
+      <p>Gerçek uygulamada burada video reklam oynayacak.</p>
       <button id="adWatchedBtn" class="pill-button primary">
         Reklamı izledim (+1 hak)
       </button>
