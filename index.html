@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
@@ -11,7 +11,7 @@
     <!-- Üst bar -->
     <header class="top-bar">
       <button id="sidebarToggle" class="icon-button">☰</button>
-      <div class="top-title">InspireApp</div>
+      <div class="top-title">INSPIREAPP</div>
       <button id="helpToggle" class="icon-button">?</button>
     </header>
 
@@ -51,7 +51,7 @@
         <p id="planSavedText" class="muted"></p>
 
         <p class="muted" id="pricingText">
-          Pro plan fiyatı: Türkiye'de <strong>250 TL / ay</strong>, diğer ülkelerde
+          Pro plan fiyatı: Türkiye'de <strong>299 TL / ay</strong>, diğer ülkelerde
           <strong>9.99 USD / ay</strong>.
         </p>
 
@@ -59,21 +59,45 @@
           Bu planı satın al
         </button>
       </div>
-      
-      <!-- ❌ Admin paneli linki tamamen kaldırıldı -->
     </aside>
 
     <!-- Sağdan kayan yardım paneli -->
     <aside id="helpPanel" class="help-panel hidden">
-      <h2>Yardım</h2>
-      <p>Soldan sohbetler arasında geçiş yapabilir, “+ Yeni sohbet” ile sıfırdan başlayabilirsin.</p>
-      <p>E-posta, ülke ve plan bilgilerin bu cihazdaki tarayıcıda saklanır.</p>
+      <h2>Bilgi &amp; Destek</h2>
+
+      <h3>Bilgi</h3>
       <p>
-        Ücretsiz kullanıcılar için günlük 4 içerik hakkı vardır; ekstra haklar reklam izleyerek açılır.
+        InspireApp, kısa video içerikleri (YouTube Shorts, TikTok, Reels)
+        için fikir üreten bir asistandır.
       </p>
       <p>
-        Pro plan: Türkiye'de 250 TL/ay, diğer ülkelerde 9.99 USD/ay olarak sunulur.
+        Soldaki menüden sohbetler arasında geçiş yapabilir, “+ Yeni sohbet”
+        ile yeni bir konuşma başlatabilirsin.
       </p>
+      <p>
+        Ücretsiz kullanıcılar için günlük 4 puan vardır. Her istek 1 puan
+        tüketir. Ek puan kazanmak için reklam izleyebilirsin.
+      </p>
+      <p>
+        Pro plan: Türkiye'de <strong>299 TL/ay</strong>, diğer ülkelerde
+        <strong>9.99 USD/ay</strong>. Takım planı daha yüksek fiyatlıdır ve
+        ekip kullanımı içindir.
+      </p>
+      <ul>
+        <li>Pro: Sınırsız puan</li>
+        <li>Öncelikli istek işleme</li>
+        <li>Daha uzun ve detaylı içerik önerileri</li>
+      </ul>
+
+      <h3>Destek</h3>
+      <p>
+        Herhangi bir sorun, istek veya hata bildirimi için bize e-posta
+        gönderebilirsin:
+      </p>
+      <p>
+        <a href="mailto:nazlidak469@gmail.com">nazlidak469@gmail.com</a>
+      </p>
+
       <button id="closeHelpBtn" class="pill-button">Kapat</button>
     </aside>
 
@@ -85,7 +109,7 @@
         <span id="planLabel" class="muted"></span>
         <span id="creditsLabel" class="muted"></span>
         <button id="watchAdBtn" class="pill-button small">
-          Reklam izle +1 hak
+          Reklam izle +1 puan
         </button>
       </div>
 
@@ -127,19 +151,78 @@
     </main>
   </div>
 
-  <!-- Reklam Modal -->
+  <!-- Reklam Modalı (iki adımlı) -->
   <div id="modalBackdrop" class="backdrop hidden"></div>
   <div id="adModal" class="modal hidden">
     <div class="modal-content">
-      <h2>Reklam izleyerek hak kazan</h2>
-      <p>Gerçek uygulamada burada video reklam oynayacak.</p>
-      <button id="adWatchedBtn" class="pill-button primary">
-        Reklamı izledim (+1 hak)
-      </button>
-      <button id="adCloseBtn" class="pill-button">Vazgeç</button>
+      <!-- X ikonu -->
+      <button id="adCloseIcon" class="icon-button modal-close">×</button>
+
+      <!-- 1. Adım: normal reklam açıklaması -->
+      <div id="adStepMain">
+        <h2>Reklam izleyerek puan kazan</h2>
+        <p>Gerçek uygulamada burada video reklam oynayacak.</p>
+        <button id="adWatchedBtn" class="pill-button primary">
+          Reklamı izledim (+1 puan)
+        </button>
+        <button id="adCancelBtn" class="pill-button">
+          Vazgeç
+        </button>
+      </div>
+
+      <!-- 2. Adım: uyarı -->
+      <div id="adStepConfirm" class="hidden">
+        <h3>Puanı kaçırmak üzeresin</h3>
+        <p>
+          İzlemeye devam etmezsen bu reklam oturumundan puan kazanamayacaksın.
+        </p>
+        <button id="adContinueBtn" class="pill-button primary">
+          İzlemeye devam et
+        </button>
+        <button id="adConfirmCloseBtn" class="pill-button">
+          Kapat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Açılış ekranı: Dil + E-posta -->
+  <div id="onboardingOverlay" class="onboarding-overlay hidden">
+    <div class="onboarding-card">
+      <h1 class="onboarding-title">INSPIREAPP</h1>
+
+      <!-- Adım 1: Dil seçimi -->
+      <div id="onboardStepLang">
+        <h2>Dil seçin</h2>
+        <p>Uygulama dilini seçin. Bu ayarı daha sonra değiştirebilirsiniz.</p>
+        <select id="onboardLangSelect">
+          <option value="tr">Türkçe</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+        </select>
+        <button id="onboardLangSaveBtn" class="pill-button primary">
+          Devam et
+        </button>
+      </div>
+
+      <!-- Adım 2: E-posta -->
+      <div id="onboardStepEmail" class="hidden">
+        <h2>Başlamak için e-posta adresinizi girin</h2>
+        <p>Sohbetleriniz bu cihazda e-posta bilginizle eşleşerek saklanır.</p>
+        <input
+          id="onboardEmailInput"
+          type="email"
+          placeholder="ornek@mail.com"
+        />
+        <button id="onboardEmailSaveBtn" class="pill-button primary">
+          Sohbete başla
+        </button>
+      </div>
     </div>
   </div>
 
   <script src="app.js"></script>
 </body>
-</html>
+      </html>
