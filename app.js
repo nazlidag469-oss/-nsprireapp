@@ -1,185 +1,108 @@
-// ==== CONSTANTS ====
+// Basit sabitler
 const STORAGE_KEY = "inspireapp_conversations_v1";
 const CREDITS_KEY = "inspireapp_credits_v1";
 const PLAN_KEY = "inspireapp_plan_v1";
 const EMAIL_KEY = "inspireapp_email_v1";
 const LANG_KEY = "inspireapp_lang_v1";
-const MAX_FREE_CREDITS = 4;
-const SUPPORT_EMAIL = "insprireappdestek@gmail.com";
 
+const MAX_FREE_CREDITS = 4;
+
+// Dil kodu -> OpenAI'ye gidecek isim
 const LANG_NAMES = {
-  tr: "Turkish", en: "English", es: "Spanish", de: "German", fr: "French",
-  it: "Italian", pt: "Portuguese", ru: "Russian", ar: "Arabic", fa: "Persian",
-  hi: "Hindi", id: "Indonesian", ms: "Malay", th: "Thai", ja: "Japanese",
-  ko: "Korean", nl: "Dutch", sv: "Swedish", no: "Norwegian", da: "Danish",
+  tr: "Turkish",
+  en: "English",
+  es: "Spanish",
+  de: "German",
+  fr: "French",
+  it: "Italian",
+  pt: "Portuguese",
+  ru: "Russian",
+  ar: "Arabic",
+  fa: "Persian",
+  hi: "Hindi",
+  id: "Indonesian",
+  ms: "Malay",
+  th: "Thai",
+  ja: "Japanese",
+  ko: "Korean",
+  nl: "Dutch",
+  sv: "Swedish",
+  no: "Norwegian",
+  da: "Danish",
   pl: "Polish",
 };
 
-// Arayüz metni – kısa tutmak için sadece TR, EN, AR.
-// Diğer diller EN kullanır.
-const UI_TEXT = {
-  tr: {
-    planFree: "Plan: Ücretsiz",
-    planPro: "Plan: Pro (sınırsız puan)",
-    credits: (c) => `Kalan puan: ${c}/${MAX_FREE_CREDITS}`,
-    creditsInf: "Kalan puan: Sınırsız",
-    planStatusFree: "Plan: Ücretsiz",
-    planStatusPro: "Plan: Pro (aktif)",
-    btnWatchAd: "Reklam izle +1 puan",
-    btnSub: "Pro’ya abone ol",
-    btnChangeEmail: "E-postayı değiştir",
-    helpTitle: "Bilgi & Destek",
-    helpInfoTitle: "Bilgi",
-    helpIntro:
-      "InspireApp, kısa video içerikleri (YouTube Shorts, TikTok, Reels) için fikir üreten bir asistandır.",
-    helpHowTo:
-      "Konu veya mesajını yaz, platform ve dili seç, Gönder butonuna bas.",
-    helpCredits:
-      "Ücretsiz kullanıcılar için günlük 4 puan vardır. Her istek 1 puan tüketir. Reklam izleyerek ek puan kazanabilirsin.",
-    helpPricePrefix: "Pro plan fiyatı: ",
-    helpBenefitsTitle: "Pro ayrıcalıkları",
-    helpB1: "Sınırsız puan",
-    helpB2: "Öncelikli istek işleme",
-    helpB3: "Daha uzun ve detaylı fikirler",
-    helpSupportTitle: "Destek",
-    helpSupportIntro:
-      "Herhangi bir sorun, istek veya hata için bize e-posta gönderebilirsin:",
-    helpSupportLabel: "Destek e-postası:",
-    btnClose: "Kapat",
-    onboardLangTitle: "Dil seçin",
-    onboardLangText:
-      "Uygulama dilini seçin. Bu ayar içerik dilini belirler.",
-    onboardLangBtn: "Devam et",
-    onboardEmailTitle: "Başlamak için e-posta adresinizi girin",
-    onboardEmailText:
-      "Sohbetleriniz bu cihazda e-posta bilginizle eşleşerek saklanır.",
-    onboardEmailBtn: "Sohbete başla",
-    apiGeneric: "API'den anlamlı bir cevap alınamadı.",
-    apiNetwork: "Sunucuya bağlanırken bir hata oluştu.",
-    subActivated: "Pro plan deneme amaçlı olarak aktif edildi.",
-  },
-  en: {
-    planFree: "Plan: Free",
-    planPro: "Plan: Pro (unlimited points)",
-    credits: (c) => `Points left: ${c}/${MAX_FREE_CREDITS}`,
-    creditsInf: "Points left: Unlimited",
-    planStatusFree: "Plan: Free",
-    planStatusPro: "Plan: Pro (active)",
-    btnWatchAd: "Watch ad +1 point",
-    btnSub: "Upgrade to Pro",
-    btnChangeEmail: "Change e-mail",
-    helpTitle: "Info & Support",
-    helpInfoTitle: "Info",
-    helpIntro:
-      "InspireApp generates ideas for short videos (YouTube Shorts, TikTok, Reels).",
-    helpHowTo:
-      "Type a topic or message, choose platform and language, then press Send.",
-    helpCredits:
-      "Free users have 4 points per day. Each request costs 1 point. Watch ads to earn more.",
-    helpPricePrefix: "Pro price: ",
-    helpBenefitsTitle: "Pro benefits",
-    helpB1: "Unlimited points",
-    helpB2: "Priority processing",
-    helpB3: "Longer, more detailed ideas",
-    helpSupportTitle: "Support",
-    helpSupportIntro: "For issues or feedback, send us an e-mail:",
-    helpSupportLabel: "Support e-mail:",
-    btnClose: "Close",
-    onboardLangTitle: "Choose language",
-    onboardLangText: "Select app language. You can change it later.",
-    onboardLangBtn: "Continue",
-    onboardEmailTitle: "Enter your e-mail to start",
-    onboardEmailText:
-      "Your chats are stored on this device linked to your e-mail.",
-    onboardEmailBtn: "Start chatting",
-    apiGeneric: "Could not get a meaningful answer from the API.",
-    apiNetwork: "An error occurred while contacting the server.",
-    subActivated: "Pro plan activated for demo purposes.",
-  },
-  ar: {
-    planFree: "الخطة: مجانية",
-    planPro: "الخطة: برو (نقاط غير محدودة)",
-    credits: (c) => `النقاط المتبقية: ${c}/${MAX_FREE_CREDITS}`,
-    creditsInf: "النقاط المتبقية: غير محدودة",
-    planStatusFree: "الخطة: مجانية",
-    planStatusPro: "الخطة: برو (مفعّلة)",
-    btnWatchAd: "شاهد إعلان +1 نقطة",
-    btnSub: "ترقية إلى برو",
-    btnChangeEmail: "تغيير البريد الإلكتروني",
-    helpTitle: "معلومات ودعم",
-    helpInfoTitle: "معلومات",
-    helpIntro:
-      "InspireApp مساعد لتوليد أفكار لمقاطع الفيديو القصيرة (YouTube Shorts, TikTok, Reels).",
-    helpHowTo:
-      "اكتب الموضوع أو الرسالة، اختر المنصة واللغة ثم اضغط إرسال.",
-    helpCredits:
-      "للمستخدم المجاني 4 نقاط يوميًا، كل طلب يستهلك نقطة واحدة. يمكنك مشاهدة إعلان للحصول على نقاط إضافية.",
-    helpPricePrefix: "سعر برو: ",
-    helpBenefitsTitle: "مزايا برو",
-    helpB1: "نقاط غير محدودة",
-    helpB2: "أولوية في معالجة الطلبات",
-    helpB3: "أفكار أطول وأكثر تفصيلاً",
-    helpSupportTitle: "الدعم",
-    helpSupportIntro:
-      "لأي مشكلة أو اقتراح يمكنك مراسلتنا عبر البريد الإلكتروني:",
-    helpSupportLabel: "بريد الدعم:",
-    btnClose: "إغلاق",
-    onboardLangTitle: "اختر اللغة",
-    onboardLangText: "اختر لغة التطبيق، ويمكنك تغييرها لاحقًا.",
-    onboardLangBtn: "متابعة",
-    onboardEmailTitle: "أدخل بريدك الإلكتروني للبدء",
-    onboardEmailText:
-      "يتم حفظ محادثاتك على هذا الجهاز مع ربطها ببريدك الإلكتروني.",
-    onboardEmailBtn: "ابدأ المحادثة",
-    apiGeneric: "تعذر الحصول على رد مناسب من الـ API.",
-    apiNetwork: "حدث خطأ أثناء الاتصال بالخادم.",
-    subActivated: "تم تفعيل خطة برو لأغراض التجربة.",
-  },
+// Dil -> YouTube bölge
+const LANG_REGION = {
+  tr: "TR",
+  en: "US",
+  es: "ES",
+  de: "DE",
+  fr: "FR",
+  it: "IT",
+  pt: "BR",
+  ru: "RU",
+  ar: "SA",
+  fa: "IR",
+  hi: "IN",
+  id: "ID",
+  ms: "MY",
+  th: "TH",
+  ja: "JP",
+  ko: "KR",
+  nl: "NL",
+  sv: "SE",
+  no: "NO",
+  da: "DK",
+  pl: "PL",
 };
 
-function P() {
-  return UI_TEXT[currentLangCode] || UI_TEXT.en;
-}
-function priceText() {
-  if (currentLangCode === "tr") return "299 TL/ay.";
-  if (currentLangCode === "ar") return "19.99 USD/الشهر.";
-  return "9.99 USD/month.";
-}
-
-// ===== STATE =====
 let conversations = [];
 let currentId = null;
-let currentPlan = "free";
+let currentPlan = "free"; // "free" | "pro"
 let credits = MAX_FREE_CREDITS;
 let currentLangCode = "tr";
 let currentEmail = "";
 
-// ===== STORAGE =====
+/* ========= DURUM YÜKLE / KAYDET ========= */
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    conversations = raw ? JSON.parse(raw) : [];
+    if (raw) conversations = JSON.parse(raw);
   } catch {
     conversations = [];
   }
+
   if (!conversations.length) {
-    conversations.push({
+    const first = {
       id: Date.now().toString(),
       title: "Yeni sohbet",
       messages: [],
       createdAt: Date.now(),
-    });
+    };
+    conversations.push(first);
   }
   currentId = conversations[0].id;
-  const p = localStorage.getItem(PLAN_KEY);
-  if (p === "pro" || p === "free") currentPlan = p;
-  const c = parseInt(localStorage.getItem(CREDITS_KEY) || "", 10);
-  credits = Number.isNaN(c) ? MAX_FREE_CREDITS : c;
-  const l = localStorage.getItem(LANG_KEY);
-  if (l && LANG_NAMES[l]) currentLangCode = l;
-  const e = localStorage.getItem(EMAIL_KEY);
-  if (e) currentEmail = e;
+
+  const savedPlan = localStorage.getItem(PLAN_KEY);
+  if (savedPlan === "pro" || savedPlan === "free") currentPlan = savedPlan;
+
+  const savedCredits = localStorage.getItem(CREDITS_KEY);
+  if (savedCredits !== null) {
+    const n = parseInt(savedCredits, 10);
+    credits = Number.isNaN(n) ? MAX_FREE_CREDITS : n;
+  } else {
+    credits = MAX_FREE_CREDITS;
+  }
+
+  const savedLang = localStorage.getItem(LANG_KEY);
+  if (savedLang && LANG_NAMES[savedLang]) currentLangCode = savedLang;
+
+  const savedEmail = localStorage.getItem(EMAIL_KEY);
+  if (savedEmail) currentEmail = savedEmail;
 }
+
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
 }
@@ -194,135 +117,107 @@ function saveEmail() {
   else localStorage.removeItem(EMAIL_KEY);
 }
 
-// ===== CHAT HELPERS =====
-function currentConv() {
+/* ========= YARDIMCI ========= */
+
+function getCurrentConversation() {
   return conversations.find((c) => c.id === currentId);
 }
+
 function renderConversationList() {
-  const list = document.getElementById("conversationList");
-  if (!list) return;
-  list.innerHTML = "";
+  const listEl = document.getElementById("conversationList");
+  if (!listEl) return;
+  listEl.innerHTML = "";
   conversations
     .slice()
     .sort((a, b) => b.createdAt - a.createdAt)
-    .forEach((c) => {
-      const d = document.createElement("div");
-      d.className = "conversation-item" + (c.id === currentId ? " active" : "");
-      d.textContent = c.title || "Sohbet";
-      d.onclick = () => {
-        currentId = c.id;
+    .forEach((conv) => {
+      const item = document.createElement("div");
+      item.className =
+        "conversation-item" + (conv.id === currentId ? " active" : "");
+      item.textContent = conv.title || "Sohbet";
+      item.onclick = () => {
+        currentId = conv.id;
         renderConversationList();
         renderMessages();
       };
-      list.appendChild(d);
+      listEl.appendChild(item);
     });
 }
+
 function renderMessages() {
-  const box = document.getElementById("chatMessages");
-  if (!box) return;
-  box.innerHTML = "";
-  currentConv().messages.forEach((m) => {
+  const container = document.getElementById("chatMessages");
+  if (!container) return;
+  const conv = getCurrentConversation();
+  container.innerHTML = "";
+  conv.messages.forEach((m) => {
     const row = document.createElement("div");
     row.className = "message-row " + m.role;
     const bubble = document.createElement("div");
     bubble.className = "bubble";
     bubble.textContent = m.text;
     row.appendChild(bubble);
-    box.appendChild(row);
+    container.appendChild(row);
   });
-  box.scrollTop = box.scrollHeight;
+  container.scrollTop = container.scrollHeight;
 }
+
 function addMessage(role, text) {
-  const conv = currentConv();
+  const conv = getCurrentConversation();
   conv.messages.push({ role, text });
-  if (!conv.title && role === "user" && text) conv.title = text.slice(0, 25);
+  if (!conv.title && role === "user" && text) {
+    conv.title = text.slice(0, 25);
+  }
   saveState();
   renderConversationList();
   renderMessages();
 }
 
-// ===== UI UPDATE =====
+/* ========= PLAN / PUAN UI ========= */
+
 function updatePlanAndCreditsUI() {
-  const T = P();
   const planLabel = document.getElementById("planLabel");
   const creditsLabel = document.getElementById("creditsLabel");
   const watchAdBtn = document.getElementById("watchAdBtn");
   const planStatus = document.getElementById("planStatus");
   const subscribeBlock = document.getElementById("subscribeBlock");
-  const subscribeBtn = document.getElementById("subscribeBtn");
-  const changeEmailBtn = document.getElementById("changeEmailBtn");
 
-  if (planLabel)
-    planLabel.textContent = currentPlan === "pro" ? T.planPro : T.planFree;
+  if (planLabel) {
+    planLabel.textContent =
+      currentPlan === "pro" ? "Plan: Pro (sınırsız puan)" : "Plan: Ücretsiz";
+  }
   if (creditsLabel) {
-    creditsLabel.textContent =
-      currentPlan === "free" ? T.credits(credits) : T.creditsInf;
+    if (currentPlan === "free") {
+      creditsLabel.textContent = `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`;
+    } else {
+      creditsLabel.textContent = "Kalan puan: Sınırsız";
+    }
   }
   if (watchAdBtn) {
-    watchAdBtn.textContent = T.btnWatchAd;
     if (currentPlan === "free") watchAdBtn.classList.remove("hidden");
     else watchAdBtn.classList.add("hidden");
   }
-  if (planStatus)
+  if (planStatus) {
     planStatus.textContent =
-      currentPlan === "pro" ? T.planStatusPro : T.planStatusFree;
+      currentPlan === "pro" ? "Plan: Pro (aktif)" : "Plan: Ücretsiz";
+  }
   if (subscribeBlock) {
     if (currentPlan === "pro") subscribeBlock.classList.add("hidden");
     else subscribeBlock.classList.remove("hidden");
   }
-  if (subscribeBtn) subscribeBtn.textContent = T.btnSub;
-  if (changeEmailBtn) changeEmailBtn.textContent = T.btnChangeEmail;
-}
-function updateAccountEmailUI() {
-  const el = document.getElementById("accountEmail");
-  if (el) el.textContent = currentEmail || "Kayıtlı değil";
-}
-function renderHelpPanel(onClose) {
-  const T = P();
-  const help = document.getElementById("helpPanel");
-  if (!help) return;
-  help.innerHTML = `
-    <h2>${T.helpTitle}</h2>
-    <h3>${T.helpInfoTitle}</h3>
-    <p>${T.helpIntro}</p>
-    <p>${T.helpHowTo}</p>
-    <p>${T.helpCredits}</p>
-    <p><strong>${T.helpPricePrefix}${priceText()}</strong></p>
-    <h3>${T.helpBenefitsTitle}</h3>
-    <ul>
-      <li>${T.helpB1}</li>
-      <li>${T.helpB2}</li>
-      <li>${T.helpB3}</li>
-    </ul>
-    <h3>${T.helpSupportTitle}</h3>
-    <p>${T.helpSupportIntro}</p>
-    <p>${T.helpSupportLabel}
-      <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
-    </p>
-    <button id="closeHelpBtn" class="pill-button">${T.btnClose}</button>
-  `;
-  const btn = document.getElementById("closeHelpBtn");
-  if (btn && onClose) btn.addEventListener("click", onClose);
-}
-function updateOnboardingTexts() {
-  const T = P();
-  const lt = document.getElementById("onboardLangTitle");
-  const lx = document.getElementById("onboardLangText");
-  const lb = document.getElementById("onboardLangSaveBtn");
-  const et = document.getElementById("onboardEmailTitle");
-  const ex = document.getElementById("onboardEmailText");
-  const eb = document.getElementById("onboardEmailSaveBtn");
-  if (lt) lt.textContent = T.onboardLangTitle;
-  if (lx) lx.textContent = T.onboardLangText;
-  if (lb) lb.textContent = T.onboardLangBtn;
-  if (et) et.textContent = T.onboardEmailTitle;
-  if (ex) ex.textContent = T.onboardEmailText;
-  if (eb) eb.textContent = T.onboardEmailBtn;
 }
 
-// ===== API =====
+function updateAccountEmailUI() {
+  const accountEmail = document.getElementById("accountEmail");
+  if (accountEmail) {
+    accountEmail.textContent = currentEmail || "Kayıtlı değil";
+  }
+}
+
+/* ========= API ========= */
+
 async function callIdeasAPI(prompt, platform, langCode) {
   const langName = LANG_NAMES[langCode] || "Turkish";
+
   try {
     const res = await fetch("/api/ideas", {
       method: "POST",
@@ -336,18 +231,42 @@ async function callIdeasAPI(prompt, platform, langCode) {
     } catch {
       if (text) return text;
     }
-    return P().apiGeneric;
-  } catch {
-    return P().apiNetwork;
+    return "API'den anlamlı bir cevap alınamadı.";
+  } catch (e) {
+    return "Sunucuya bağlanırken bir hata oluştu.";
   }
 }
 
-// ===== DOM READY =====
+// (Gerçek ödeme entegrasyonu için /api/checkout yazılmalı)
+async function startPayment() {
+  try {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: "pro" }),
+    });
+    const data = await res.json().catch(() => null);
+    if (data && data.url) {
+      window.location.href = data.url;
+    } else {
+      alert(
+        "Ödeme entegrasyonu henüz tam bağlanmadı. Backend tarafında /api/checkout ayarlanmalı."
+      );
+    }
+  } catch (e) {
+    alert("Ödeme başlatılırken hata oluştu.");
+  }
+}
+
+/* ========= DOM BAŞLANGIÇ ========= */
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Elemanlar
   const sidebar = document.getElementById("sidebar");
   const helpPanel = document.getElementById("helpPanel");
   const menuToggle = document.getElementById("menuToggle");
   const helpToggle = document.getElementById("helpToggle");
+  const closeHelpBtn = document.getElementById("closeHelpBtn");
   const chatForm = document.getElementById("chatForm");
   const topicInput = document.getElementById("topicInput");
   const platformSelect = document.getElementById("platformSelect");
@@ -358,6 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const watchAdBtn = document.getElementById("watchAdBtn");
   const subscribeBtn = document.getElementById("subscribeBtn");
   const changeEmailBtn = document.getElementById("changeEmailBtn");
+  const trendsList = document.getElementById("trendsList");
 
   const modalBackdrop = document.getElementById("modalBackdrop");
   const adModal = document.getElementById("adModal");
@@ -369,6 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const adContinueBtn = document.getElementById("adContinueBtn");
   const adConfirmCloseBtn = document.getElementById("adConfirmCloseBtn");
 
+  // Onboarding
   const onboardingOverlay = document.getElementById("onboardingOverlay");
   const onboardStepLang = document.getElementById("onboardStepLang");
   const onboardStepEmail = document.getElementById("onboardStepEmail");
@@ -377,6 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const onboardEmailInput = document.getElementById("onboardEmailInput");
   const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
+  // Durum
   loadState();
   renderConversationList();
   renderMessages();
@@ -384,79 +306,134 @@ document.addEventListener("DOMContentLoaded", () => {
   updateAccountEmailUI();
   if (langSelect) langSelect.value = currentLangCode;
 
-  const closeHelp = () => helpPanel && helpPanel.classList.add("hidden");
-  renderHelpPanel(closeHelp);
-  updateOnboardingTexts();
+  /* === TRENDLER === */
+  async function loadTrends(code) {
+    if (!trendsList) return;
+    trendsList.innerHTML = "<li>Yükleniyor...</li>";
+    const region = (LANG_REGION[code] || "US").toUpperCase();
+    try {
+      const res = await fetch(`/api/trends?region=${region}`);
+      const data = await res.json();
+      if (!res.ok) {
+        trendsList.innerHTML =
+          "<li>Trendler alınırken hata: " + (data.message || "") + "</li>";
+        return;
+      }
+      if (!data.items || !data.items.length) {
+        trendsList.innerHTML = "<li>Bu hafta trend bulunamadı.</li>";
+        return;
+      }
+      trendsList.innerHTML = "";
+      data.items.forEach((item) => {
+        const li = document.createElement("li");
+        li.className = "trends-item";
+        const a = document.createElement("a");
+        a.href = item.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = item.title;
+        li.appendChild(a);
+        trendsList.appendChild(li);
+      });
+    } catch (e) {
+      trendsList.innerHTML =
+        "<li>Trendler alınırken beklenmeyen bir hata oluştu.</li>";
+    }
+  }
 
-  // Menü & yardım
-  if (menuToggle && sidebar)
-    menuToggle.addEventListener("click", () =>
-      sidebar.classList.toggle("hidden")
-    );
-  if (helpToggle && helpPanel)
-    helpToggle.addEventListener("click", () =>
-      helpPanel.classList.remove("hidden")
-    );
+  loadTrends(currentLangCode);
 
-  // Yeni sohbet
-  if (newChatBtn)
+  /* === Menü & Yardım === */
+
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener("click", () => {
+      sidebar.classList.toggle("hidden");
+    });
+  }
+  if (helpToggle && helpPanel) {
+    helpToggle.addEventListener("click", () => {
+      helpPanel.classList.remove("hidden");
+    });
+  }
+  if (closeHelpBtn && helpPanel) {
+    closeHelpBtn.addEventListener("click", () => {
+      helpPanel.classList.add("hidden");
+    });
+  }
+
+  /* === Yeni sohbet === */
+
+  if (newChatBtn) {
     newChatBtn.addEventListener("click", () => {
-      conversations.unshift({
+      const conv = {
         id: Date.now().toString(),
         title: "Yeni sohbet",
         messages: [],
         createdAt: Date.now(),
-      });
-      currentId = conversations[0].id;
+      };
+      conversations.unshift(conv);
+      currentId = conv.id;
       saveState();
       renderConversationList();
       renderMessages();
     });
+  }
 
-  // Reklam modalı
-  function openAd() {
+  /* === Reklam modalı === */
+
+  function openAdModal() {
     if (!modalBackdrop || !adModal || !adStepMain || !adStepConfirm) return;
     adStepMain.classList.remove("hidden");
     adStepConfirm.classList.add("hidden");
     modalBackdrop.classList.remove("hidden");
     adModal.classList.remove("hidden");
   }
-  function closeAd() {
+  function closeAdModal() {
     if (!modalBackdrop || !adModal) return;
     modalBackdrop.classList.add("hidden");
     adModal.classList.add("hidden");
   }
-  if (watchAdBtn)
+
+  if (watchAdBtn) {
     watchAdBtn.addEventListener("click", () => {
-      if (currentPlan === "free") openAd();
+      if (currentPlan !== "free") return;
+      openAdModal();
     });
-  if (adCancelBtn) adCancelBtn.addEventListener("click", closeAd);
-  if (adWatchedBtn)
+  }
+  if (adCancelBtn) adCancelBtn.addEventListener("click", closeAdModal);
+  if (adWatchedBtn) {
     adWatchedBtn.addEventListener("click", () => {
       credits += 1;
       saveCredits();
       updatePlanAndCreditsUI();
-      closeAd();
+      closeAdModal();
     });
-  if (adCloseIcon)
+  }
+  if (adCloseIcon && adStepMain && adStepConfirm) {
     adCloseIcon.addEventListener("click", () => {
       adStepMain.classList.add("hidden");
       adStepConfirm.classList.remove("hidden");
     });
-  if (adContinueBtn)
+  }
+  if (adContinueBtn && adStepMain && adStepConfirm) {
     adContinueBtn.addEventListener("click", () => {
       adStepConfirm.classList.add("hidden");
       adStepMain.classList.remove("hidden");
     });
-  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", closeAd);
-  if (modalBackdrop) modalBackdrop.addEventListener("click", closeAd);
+  }
+  if (adConfirmCloseBtn) {
+    adConfirmCloseBtn.addEventListener("click", closeAdModal);
+  }
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener("click", closeAdModal);
+  }
 
-  // Onboarding
+  /* === ONBOARDING (Dil + E-posta) === */
+
   function showOnboardingIfNeeded() {
-    if (!onboardingOverlay) return;
+    if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
     const hasLang = !!localStorage.getItem(LANG_KEY);
     const hasEmail = !!localStorage.getItem(EMAIL_KEY);
-    updateOnboardingTexts();
     if (hasLang && hasEmail) {
       onboardingOverlay.classList.add("hidden");
       return;
@@ -470,83 +447,100 @@ document.addEventListener("DOMContentLoaded", () => {
       onboardStepEmail.classList.remove("hidden");
     }
   }
-  if (onboardLangSaveBtn && onboardLangSelect)
+
+  if (onboardLangSaveBtn && onboardLangSelect) {
     onboardLangSaveBtn.addEventListener("click", () => {
       const code = onboardLangSelect.value || "tr";
-      if (!LANG_NAMES[code]) return;
       currentLangCode = code;
       localStorage.setItem(LANG_KEY, code);
       if (langSelect) langSelect.value = code;
-      updatePlanAndCreditsUI();
-      renderHelpPanel(closeHelp);
-      showOnboardingIfNeeded();
+      loadTrends(code);
+      onboardStepLang.classList.add("hidden");
+      onboardStepEmail.classList.remove("hidden");
     });
-  if (onboardEmailSaveBtn && onboardEmailInput)
+  }
+
+  if (onboardEmailSaveBtn && onboardEmailInput) {
     onboardEmailSaveBtn.addEventListener("click", () => {
       const email = onboardEmailInput.value.trim();
       if (!email) return;
       currentEmail = email;
       saveEmail();
       updateAccountEmailUI();
-      if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
+      onboardingOverlay.classList.add("hidden");
     });
+  }
+
   showOnboardingIfNeeded();
 
-  // Menüden e-posta değiştirme
-  if (changeEmailBtn)
+  // Üç nokta menüsünden e-posta değiştirme
+  if (changeEmailBtn) {
     changeEmailBtn.addEventListener("click", () => {
-      if (!onboardingOverlay) return;
+      if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
       onboardStepLang.classList.add("hidden");
       onboardStepEmail.classList.remove("hidden");
       onboardingOverlay.classList.remove("hidden");
-      updateOnboardingTexts();
     });
+  }
 
-  // Pro’ya geç – şimdilik demo
-  if (subscribeBtn)
+  /* === Abone ol butonu === */
+
+  if (subscribeBtn) {
     subscribeBtn.addEventListener("click", () => {
+      // Şimdilik demo: direkt Pro yapıyoruz.
       currentPlan = "pro";
       savePlan();
       updatePlanAndCreditsUI();
-      alert(P().subActivated);
+      alert("Pro plan deneme amaçlı olarak aktif edildi.");
+      // Gerçek kullanımda: startPayment();
     });
+  }
 
-  // Ana ekrandan dil değişimi
-  if (langSelect)
+  /* === Dil seçimi (ana ekran) === */
+
+  if (langSelect) {
     langSelect.addEventListener("change", () => {
       const code = langSelect.value;
-      if (!LANG_NAMES[code]) return;
-      currentLangCode = code;
-      localStorage.setItem(LANG_KEY, code);
-      updatePlanAndCreditsUI();
-      renderHelpPanel(closeHelp);
-      updateOnboardingTexts();
+      if (LANG_NAMES[code]) {
+        currentLangCode = code;
+        localStorage.setItem(LANG_KEY, code);
+        loadTrends(code);
+      }
     });
+  }
 
-  // Mesaj gönderme
-  if (chatForm)
+  /* === Mesaj gönderme === */
+
+  if (chatForm) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const text =
-        (messageInput && messageInput.value.trim()) ||
-        (topicInput && topicInput.value.trim());
+        (messageInput.value || "").trim() ||
+        (topicInput ? topicInput.value.trim() : "");
       if (!text) return;
+
+      const platform = platformSelect ? platformSelect.value : "youtube";
+      const langCode = currentLangCode;
+
       if (currentPlan === "free" && credits <= 0) {
-        openAd();
+        openAdModal();
         return;
       }
-      const platform = platformSelect ? platformSelect.value : "youtube";
+
       addMessage("user", text);
-      if (messageInput) messageInput.value = "";
+      messageInput.value = "";
       if (topicInput) topicInput.value = "";
+
       if (loadingEl) loadingEl.classList.remove("hidden");
-      const reply = await callIdeasAPI(text, platform, currentLangCode);
+      const reply = await callIdeasAPI(text, platform, langCode);
       if (loadingEl) loadingEl.classList.add("hidden");
       addMessage("assistant", reply);
+
       if (currentPlan === "free") {
         credits = Math.max(credits - 1, 0);
         saveCredits();
         updatePlanAndCreditsUI();
       }
     });
+  }
 });
