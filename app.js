@@ -1,190 +1,152 @@
-// ====== SABİTLER ======
+// ==== CONSTANTS ====
 const STORAGE_KEY = "inspireapp_conversations_v1";
 const CREDITS_KEY = "inspireapp_credits_v1";
 const PLAN_KEY = "inspireapp_plan_v1";
 const EMAIL_KEY = "inspireapp_email_v1";
 const LANG_KEY = "inspireapp_lang_v1";
-
 const MAX_FREE_CREDITS = 4;
 const SUPPORT_EMAIL = "insprireappdestek@gmail.com";
 
-// OpenAI için dil isimleri
 const LANG_NAMES = {
-  tr: "Turkish",
-  en: "English",
-  es: "Spanish",
-  de: "German",
-  fr: "French",
-  it: "Italian",
-  pt: "Portuguese",
-  ru: "Russian",
-  ar: "Arabic",
-  fa: "Persian",
-  hi: "Hindi",
-  id: "Indonesian",
-  ms: "Malay",
-  th: "Thai",
-  ja: "Japanese",
-  ko: "Korean",
-  nl: "Dutch",
-  sv: "Swedish",
-  no: "Norwegian",
-  da: "Danish",
+  tr: "Turkish", en: "English", es: "Spanish", de: "German", fr: "French",
+  it: "Italian", pt: "Portuguese", ru: "Russian", ar: "Arabic", fa: "Persian",
+  hi: "Hindi", id: "Indonesian", ms: "Malay", th: "Thai", ja: "Japanese",
+  ko: "Korean", nl: "Dutch", sv: "Swedish", no: "Norwegian", da: "Danish",
   pl: "Polish",
 };
 
-// Arayüz metinleri (kısa tutmak için sadece 3 dil tam; diğerleri İngilizceye düşer)
+// Arayüz metni – kısa tutmak için sadece TR, EN, AR.
+// Diğer diller EN kullanır.
 const UI_TEXT = {
   tr: {
-    plan_free_label: "Plan: Ücretsiz",
-    plan_pro_label: "Plan: Pro (sınırsız puan)",
-    credits_free: (c) => `Kalan puan: ${c}/${MAX_FREE_CREDITS}`,
-    credits_unlimited: "Kalan puan: Sınırsız",
-    plan_status_free: "Plan: Ücretsiz",
-    plan_status_pro: "Plan: Pro (aktif)",
-    btn_watch_ad: "Reklam izle +1 puan",
-    btn_subscribe: "Pro'ya geç",
-    subscribe_title: "Pro'ya yükselt",
-    subscribe_text: "Sınırsız puan ve ekstra ayrıcalıklar için Pro plana geç.",
-    btn_change_email: "E-postayı değiştir",
-
-    help_title: "Bilgi & Destek",
-    help_info_heading: "Bilgi",
-    help_info_intro:
+    planFree: "Plan: Ücretsiz",
+    planPro: "Plan: Pro (sınırsız puan)",
+    credits: (c) => `Kalan puan: ${c}/${MAX_FREE_CREDITS}`,
+    creditsInf: "Kalan puan: Sınırsız",
+    planStatusFree: "Plan: Ücretsiz",
+    planStatusPro: "Plan: Pro (aktif)",
+    btnWatchAd: "Reklam izle +1 puan",
+    btnSub: "Pro’ya abone ol",
+    btnChangeEmail: "E-postayı değiştir",
+    helpTitle: "Bilgi & Destek",
+    helpInfoTitle: "Bilgi",
+    helpIntro:
       "InspireApp, kısa video içerikleri (YouTube Shorts, TikTok, Reels) için fikir üreten bir asistandır.",
-    help_info_howto:
-      "Sohbet alanında konu veya mesajını yaz, platform ve dili seç, Gönder butonuna bas.",
-    help_info_credits:
+    helpHowTo:
+      "Konu veya mesajını yaz, platform ve dili seç, Gönder butonuna bas.",
+    helpCredits:
       "Ücretsiz kullanıcılar için günlük 4 puan vardır. Her istek 1 puan tüketir. Reklam izleyerek ek puan kazanabilirsin.",
-    help_info_price: "Pro plan fiyatı: Türkiye'de 299 TL/ay.",
-    help_pro_benefits_title: "Pro plan ayrıcalıkları",
-    help_pro_benefit1: "Sınırsız puan",
-    help_pro_benefit2: "Öncelikli istek işleme",
-    help_pro_benefit3: "Daha uzun ve detaylı içerik önerileri",
-    help_support_heading: "Destek",
-    help_support_intro:
+    helpPricePrefix: "Pro plan fiyatı: ",
+    helpBenefitsTitle: "Pro ayrıcalıkları",
+    helpB1: "Sınırsız puan",
+    helpB2: "Öncelikli istek işleme",
+    helpB3: "Daha uzun ve detaylı fikirler",
+    helpSupportTitle: "Destek",
+    helpSupportIntro:
       "Herhangi bir sorun, istek veya hata için bize e-posta gönderebilirsin:",
-    help_support_email_prefix: "Destek e-postası:",
-    btn_close: "Kapat",
-
-    onboard_lang_title: "Dil seçin",
-    onboard_lang_text:
-      "Uygulama dilini seçin. Bu ayarı daha sonra değiştirebilirsiniz.",
-    onboard_lang_button: "Devam et",
-    onboard_email_title: "Başlamak için e-posta adresinizi girin",
-    onboard_email_text:
+    helpSupportLabel: "Destek e-postası:",
+    btnClose: "Kapat",
+    onboardLangTitle: "Dil seçin",
+    onboardLangText:
+      "Uygulama dilini seçin. Bu ayar içerik dilini belirler.",
+    onboardLangBtn: "Devam et",
+    onboardEmailTitle: "Başlamak için e-posta adresinizi girin",
+    onboardEmailText:
       "Sohbetleriniz bu cihazda e-posta bilginizle eşleşerek saklanır.",
-    onboard_email_button: "Sohbete başla",
-
-    api_error_generic: "API'den anlamlı bir cevap alınamadı.",
-    api_error_network: "Sunucuya bağlanırken bir hata oluştu.",
-    subscribe_demo_activated: "Pro plan deneme amaçlı olarak aktif edildi.",
-    payment_not_ready:
-      "Ödeme entegrasyonu için backend tarafında /api/checkout ayarlanmalı.",
-    payment_error: "Ödeme başlatılırken hata oluştu.",
+    onboardEmailBtn: "Sohbete başla",
+    apiGeneric: "API'den anlamlı bir cevap alınamadı.",
+    apiNetwork: "Sunucuya bağlanırken bir hata oluştu.",
+    subActivated: "Pro plan deneme amaçlı olarak aktif edildi.",
   },
   en: {
-    plan_free_label: "Plan: Free",
-    plan_pro_label: "Plan: Pro (unlimited points)",
-    credits_free: (c) => `Points left: ${c}/${MAX_FREE_CREDITS}`,
-    credits_unlimited: "Points left: Unlimited",
-    plan_status_free: "Plan: Free",
-    plan_status_pro: "Plan: Pro (active)",
-    btn_watch_ad: "Watch ad +1 point",
-    btn_subscribe: "Upgrade to Pro",
-    subscribe_title: "Upgrade to Pro",
-    subscribe_text:
-      "Get unlimited points and extra features with the Pro plan.",
-    btn_change_email: "Change e-mail",
-
-    help_title: "Info & Support",
-    help_info_heading: "Info",
-    help_info_intro:
-      "InspireApp is an assistant that generates ideas for short-form videos (YouTube Shorts, TikTok, Reels).",
-    help_info_howto:
+    planFree: "Plan: Free",
+    planPro: "Plan: Pro (unlimited points)",
+    credits: (c) => `Points left: ${c}/${MAX_FREE_CREDITS}`,
+    creditsInf: "Points left: Unlimited",
+    planStatusFree: "Plan: Free",
+    planStatusPro: "Plan: Pro (active)",
+    btnWatchAd: "Watch ad +1 point",
+    btnSub: "Upgrade to Pro",
+    btnChangeEmail: "Change e-mail",
+    helpTitle: "Info & Support",
+    helpInfoTitle: "Info",
+    helpIntro:
+      "InspireApp generates ideas for short videos (YouTube Shorts, TikTok, Reels).",
+    helpHowTo:
       "Type a topic or message, choose platform and language, then press Send.",
-    help_info_credits:
-      "Free users have 4 points per day. Each request costs 1 point. Watch ads to earn more points.",
-    help_info_price: "Pro price: 9.99 USD/month.",
-    help_pro_benefits_title: "Pro benefits",
-    help_pro_benefit1: "Unlimited points",
-    help_pro_benefit2: "Priority processing",
-    help_pro_benefit3: "Longer, more detailed ideas",
-    help_support_heading: "Support",
-    help_support_intro: "For issues or feedback, send us an e-mail:",
-    help_support_email_prefix: "Support e-mail:",
-    btn_close: "Close",
-
-    onboard_lang_title: "Choose language",
-    onboard_lang_text: "Select the app language. You can change it later.",
-    onboard_lang_button: "Continue",
-    onboard_email_title: "Enter your e-mail to start",
-    onboard_email_text:
-      "Your conversations are stored on this device linked to your e-mail.",
-    onboard_email_button: "Start chatting",
-
-    api_error_generic: "Could not get a meaningful answer from the API.",
-    api_error_network: "An error occurred while contacting the server.",
-    subscribe_demo_activated: "Pro plan activated for demo purposes.",
-    payment_not_ready:
-      "Payment integration is not configured yet. Backend /api/checkout required.",
-    payment_error: "An error occurred while starting the payment.",
+    helpCredits:
+      "Free users have 4 points per day. Each request costs 1 point. Watch ads to earn more.",
+    helpPricePrefix: "Pro price: ",
+    helpBenefitsTitle: "Pro benefits",
+    helpB1: "Unlimited points",
+    helpB2: "Priority processing",
+    helpB3: "Longer, more detailed ideas",
+    helpSupportTitle: "Support",
+    helpSupportIntro: "For issues or feedback, send us an e-mail:",
+    helpSupportLabel: "Support e-mail:",
+    btnClose: "Close",
+    onboardLangTitle: "Choose language",
+    onboardLangText: "Select app language. You can change it later.",
+    onboardLangBtn: "Continue",
+    onboardEmailTitle: "Enter your e-mail to start",
+    onboardEmailText:
+      "Your chats are stored on this device linked to your e-mail.",
+    onboardEmailBtn: "Start chatting",
+    apiGeneric: "Could not get a meaningful answer from the API.",
+    apiNetwork: "An error occurred while contacting the server.",
+    subActivated: "Pro plan activated for demo purposes.",
   },
   ar: {
-    plan_free_label: "الخطة: مجانية",
-    plan_pro_label: "الخطة: برو (نقاط غير محدودة)",
-    credits_free: (c) => `النقاط المتبقية: ${c}/${MAX_FREE_CREDITS}`,
-    credits_unlimited: "النقاط المتبقية: غير محدودة",
-    plan_status_free: "الخطة: مجانية",
-    plan_status_pro: "الخطة: برو (مفعّلة)",
-    btn_watch_ad: "شاهد إعلان +1 نقطة",
-    btn_subscribe: "ترقية إلى برو",
-    subscribe_title: "ترقية إلى برو",
-    subscribe_text:
-      "احصل على نقاط غير محدودة ومزايا إضافية مع خطة برو.",
-    btn_change_email: "تغيير البريد الإلكتروني",
-
-    help_title: "معلومات ودعم",
-    help_info_heading: "معلومات",
-    help_info_intro:
+    planFree: "الخطة: مجانية",
+    planPro: "الخطة: برو (نقاط غير محدودة)",
+    credits: (c) => `النقاط المتبقية: ${c}/${MAX_FREE_CREDITS}`,
+    creditsInf: "النقاط المتبقية: غير محدودة",
+    planStatusFree: "الخطة: مجانية",
+    planStatusPro: "الخطة: برو (مفعّلة)",
+    btnWatchAd: "شاهد إعلان +1 نقطة",
+    btnSub: "ترقية إلى برو",
+    btnChangeEmail: "تغيير البريد الإلكتروني",
+    helpTitle: "معلومات ودعم",
+    helpInfoTitle: "معلومات",
+    helpIntro:
       "InspireApp مساعد لتوليد أفكار لمقاطع الفيديو القصيرة (YouTube Shorts, TikTok, Reels).",
-    help_info_howto:
+    helpHowTo:
       "اكتب الموضوع أو الرسالة، اختر المنصة واللغة ثم اضغط إرسال.",
-    help_info_credits:
+    helpCredits:
       "للمستخدم المجاني 4 نقاط يوميًا، كل طلب يستهلك نقطة واحدة. يمكنك مشاهدة إعلان للحصول على نقاط إضافية.",
-    help_info_price: "سعر برو: 19.99 دولار أمريكي شهريًا.",
-    help_pro_benefits_title: "مزايا برو",
-    help_pro_benefit1: "نقاط غير محدودة",
-    help_pro_benefit2: "أولوية في معالجة الطلبات",
-    help_pro_benefit3: "أفكار أطول وأكثر تفصيلاً",
-    help_support_heading: "الدعم",
-    help_support_intro:
+    helpPricePrefix: "سعر برو: ",
+    helpBenefitsTitle: "مزايا برو",
+    helpB1: "نقاط غير محدودة",
+    helpB2: "أولوية في معالجة الطلبات",
+    helpB3: "أفكار أطول وأكثر تفصيلاً",
+    helpSupportTitle: "الدعم",
+    helpSupportIntro:
       "لأي مشكلة أو اقتراح يمكنك مراسلتنا عبر البريد الإلكتروني:",
-    help_support_email_prefix: "بريد الدعم:",
-    btn_close: "إغلاق",
-
-    onboard_lang_title: "اختر اللغة",
-    onboard_lang_text: "اختر لغة التطبيق، ويمكنك تغييرها لاحقًا.",
-    onboard_lang_button: "متابعة",
-    onboard_email_title: "أدخل بريدك الإلكتروني للبدء",
-    onboard_email_text:
+    helpSupportLabel: "بريد الدعم:",
+    btnClose: "إغلاق",
+    onboardLangTitle: "اختر اللغة",
+    onboardLangText: "اختر لغة التطبيق، ويمكنك تغييرها لاحقًا.",
+    onboardLangBtn: "متابعة",
+    onboardEmailTitle: "أدخل بريدك الإلكتروني للبدء",
+    onboardEmailText:
       "يتم حفظ محادثاتك على هذا الجهاز مع ربطها ببريدك الإلكتروني.",
-    onboard_email_button: "ابدأ المحادثة",
-
-    api_error_generic: "تعذر الحصول على رد مناسب من الـ API.",
-    api_error_network: "حدث خطأ أثناء الاتصال بالخادم.",
-    subscribe_demo_activated: "تم تفعيل خطة برو لأغراض التجربة.",
-    payment_not_ready:
-      "ميزة الدفع غير مكتملة بعد، يجب إعداد /api/checkout في الخادم.",
-    payment_error: "حدث خطأ أثناء بدء عملية الدفع.",
+    onboardEmailBtn: "ابدأ المحادثة",
+    apiGeneric: "تعذر الحصول على رد مناسب من الـ API.",
+    apiNetwork: "حدث خطأ أثناء الاتصال بالخادم.",
+    subActivated: "تم تفعيل خطة برو لأغراض التجربة.",
   },
 };
 
-function pack() {
-  return UI_TEXT[currentLangCode] || UI_TEXT.en || UI_TEXT.tr;
+function P() {
+  return UI_TEXT[currentLangCode] || UI_TEXT.en;
+}
+function priceText() {
+  if (currentLangCode === "tr") return "299 TL/ay.";
+  if (currentLangCode === "ar") return "19.99 USD/الشهر.";
+  return "9.99 USD/month.";
 }
 
-// ====== STATE ======
+// ===== STATE =====
 let conversations = [];
 let currentId = null;
 let currentPlan = "free";
@@ -192,7 +154,7 @@ let credits = MAX_FREE_CREDITS;
 let currentLangCode = "tr";
 let currentEmail = "";
 
-// ====== STORAGE ======
+// ===== STORAGE =====
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -200,7 +162,6 @@ function loadState() {
   } catch {
     conversations = [];
   }
-
   if (!conversations.length) {
     conversations.push({
       id: Date.now().toString(),
@@ -210,20 +171,15 @@ function loadState() {
     });
   }
   currentId = conversations[0].id;
-
   const p = localStorage.getItem(PLAN_KEY);
   if (p === "pro" || p === "free") currentPlan = p;
-
   const c = parseInt(localStorage.getItem(CREDITS_KEY) || "", 10);
   credits = Number.isNaN(c) ? MAX_FREE_CREDITS : c;
-
   const l = localStorage.getItem(LANG_KEY);
   if (l && LANG_NAMES[l]) currentLangCode = l;
-
   const e = localStorage.getItem(EMAIL_KEY);
   if (e) currentEmail = e;
 }
-
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
 }
@@ -238,37 +194,34 @@ function saveEmail() {
   else localStorage.removeItem(EMAIL_KEY);
 }
 
-// ====== HELPERS ======
-function currentConversation() {
+// ===== CHAT HELPERS =====
+function currentConv() {
   return conversations.find((c) => c.id === currentId);
 }
-
 function renderConversationList() {
-  const listEl = document.getElementById("conversationList");
-  if (!listEl) return;
-  listEl.innerHTML = "";
+  const list = document.getElementById("conversationList");
+  if (!list) return;
+  list.innerHTML = "";
   conversations
     .slice()
     .sort((a, b) => b.createdAt - a.createdAt)
-    .forEach((conv) => {
-      const div = document.createElement("div");
-      div.className =
-        "conversation-item" + (conv.id === currentId ? " active" : "");
-      div.textContent = conv.title || "Sohbet";
-      div.onclick = () => {
-        currentId = conv.id;
+    .forEach((c) => {
+      const d = document.createElement("div");
+      d.className = "conversation-item" + (c.id === currentId ? " active" : "");
+      d.textContent = c.title || "Sohbet";
+      d.onclick = () => {
+        currentId = c.id;
         renderConversationList();
         renderMessages();
       };
-      listEl.appendChild(div);
+      list.appendChild(d);
     });
 }
-
 function renderMessages() {
   const box = document.getElementById("chatMessages");
   if (!box) return;
   box.innerHTML = "";
-  currentConversation().messages.forEach((m) => {
+  currentConv().messages.forEach((m) => {
     const row = document.createElement("div");
     row.className = "message-row " + m.role;
     const bubble = document.createElement("div");
@@ -279,97 +232,95 @@ function renderMessages() {
   });
   box.scrollTop = box.scrollHeight;
 }
-
 function addMessage(role, text) {
-  const conv = currentConversation();
+  const conv = currentConv();
   conv.messages.push({ role, text });
-  if (!conv.title && role === "user" && text) {
-    conv.title = text.slice(0, 25);
-  }
+  if (!conv.title && role === "user" && text) conv.title = text.slice(0, 25);
   saveState();
   renderConversationList();
   renderMessages();
 }
 
-// ====== UI ======
+// ===== UI UPDATE =====
 function updatePlanAndCreditsUI() {
-  const pck = pack();
+  const T = P();
   const planLabel = document.getElementById("planLabel");
   const creditsLabel = document.getElementById("creditsLabel");
   const watchAdBtn = document.getElementById("watchAdBtn");
   const planStatus = document.getElementById("planStatus");
   const subscribeBlock = document.getElementById("subscribeBlock");
-  const subscribeTitle = document.getElementById("subscribeTitle");
-  const subscribeText = document.getElementById("subscribeText");
   const subscribeBtn = document.getElementById("subscribeBtn");
   const changeEmailBtn = document.getElementById("changeEmailBtn");
 
   if (planLabel)
-    planLabel.textContent =
-      currentPlan === "pro" ? pck.plan_pro_label : pck.plan_free_label;
-
+    planLabel.textContent = currentPlan === "pro" ? T.planPro : T.planFree;
   if (creditsLabel) {
-    if (currentPlan === "free") creditsLabel.textContent = pck.credits_free(credits);
-    else creditsLabel.textContent = pck.credits_unlimited;
+    creditsLabel.textContent =
+      currentPlan === "free" ? T.credits(credits) : T.creditsInf;
   }
-
   if (watchAdBtn) {
-    if (currentPlan === "free") {
-      watchAdBtn.classList.remove("hidden");
-      watchAdBtn.textContent = pck.btn_watch_ad;
-    } else watchAdBtn.classList.add("hidden");
+    watchAdBtn.textContent = T.btnWatchAd;
+    if (currentPlan === "free") watchAdBtn.classList.remove("hidden");
+    else watchAdBtn.classList.add("hidden");
   }
-
   if (planStatus)
     planStatus.textContent =
-      currentPlan === "pro" ? pck.plan_status_pro : pck.plan_status_free;
-
+      currentPlan === "pro" ? T.planStatusPro : T.planStatusFree;
   if (subscribeBlock) {
     if (currentPlan === "pro") subscribeBlock.classList.add("hidden");
     else subscribeBlock.classList.remove("hidden");
   }
-
-  if (subscribeTitle) subscribeTitle.textContent = pck.subscribe_title;
-  if (subscribeText) subscribeText.textContent = pck.subscribe_text;
-  if (subscribeBtn) subscribeBtn.textContent = pck.btn_subscribe;
-  if (changeEmailBtn) changeEmailBtn.textContent = pck.btn_change_email;
+  if (subscribeBtn) subscribeBtn.textContent = T.btnSub;
+  if (changeEmailBtn) changeEmailBtn.textContent = T.btnChangeEmail;
 }
-
 function updateAccountEmailUI() {
   const el = document.getElementById("accountEmail");
   if (el) el.textContent = currentEmail || "Kayıtlı değil";
 }
-
-function renderHelpPanelContent(onClose) {
-  const pck = pack();
-  const helpPanel = document.getElementById("helpPanel");
-  if (!helpPanel) return;
-
-  helpPanel.innerHTML = `
-    <h2>${pck.help_title}</h2>
-    <h3>${pck.help_info_heading}</h3>
-    <p>${pck.help_info_intro}</p>
-    <p>${pck.help_info_howto}</p>
-    <p>${pck.help_info_credits}</p>
-    <p><strong>${pck.help_info_price}</strong></p>
-    <h3>${pck.help_pro_benefits_title}</h3>
+function renderHelpPanel(onClose) {
+  const T = P();
+  const help = document.getElementById("helpPanel");
+  if (!help) return;
+  help.innerHTML = `
+    <h2>${T.helpTitle}</h2>
+    <h3>${T.helpInfoTitle}</h3>
+    <p>${T.helpIntro}</p>
+    <p>${T.helpHowTo}</p>
+    <p>${T.helpCredits}</p>
+    <p><strong>${T.helpPricePrefix}${priceText()}</strong></p>
+    <h3>${T.helpBenefitsTitle}</h3>
     <ul>
-      <li>${pck.help_pro_benefit1}</li>
-      <li>${pck.help_pro_benefit2}</li>
-      <li>${pck.help_pro_benefit3}</li>
+      <li>${T.helpB1}</li>
+      <li>${T.helpB2}</li>
+      <li>${T.helpB3}</li>
     </ul>
-    <h3>${pck.help_support_heading}</h3>
-    <p>${pck.help_support_intro}</p>
-    <p>${pck.help_support_email_prefix}
+    <h3>${T.helpSupportTitle}</h3>
+    <p>${T.helpSupportIntro}</p>
+    <p>${T.helpSupportLabel}
       <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
     </p>
-    <button id="closeHelpBtn" class="pill-button">${pck.btn_close}</button>
+    <button id="closeHelpBtn" class="pill-button">${T.btnClose}</button>
   `;
-  const closeBtn = document.getElementById("closeHelpBtn");
-  if (closeBtn && onClose) closeBtn.addEventListener("click", onClose);
+  const btn = document.getElementById("closeHelpBtn");
+  if (btn && onClose) btn.addEventListener("click", onClose);
+}
+function updateOnboardingTexts() {
+  const T = P();
+  const lt = document.getElementById("onboardLangTitle");
+  const lx = document.getElementById("onboardLangText");
+  const lb = document.getElementById("onboardLangSaveBtn");
+  const et = document.getElementById("onboardEmailTitle");
+  const ex = document.getElementById("onboardEmailText");
+  const eb = document.getElementById("onboardEmailSaveBtn");
+  if (lt) lt.textContent = T.onboardLangTitle;
+  if (lx) lx.textContent = T.onboardLangText;
+  if (lb) lb.textContent = T.onboardLangBtn;
+  if (et) et.textContent = T.onboardEmailTitle;
+  if (ex) ex.textContent = T.onboardEmailText;
+  if (eb) eb.textContent = T.onboardEmailBtn;
 }
 
-// ====== API ======
+// ===== API =====
 async function callIdeasAPI(prompt, platform, langCode) {
   const langName = LANG_NAMES[langCode] || "Turkish";
   try {
@@ -385,13 +336,13 @@ async function callIdeasAPI(prompt, platform, langCode) {
     } catch {
       if (text) return text;
     }
-    return pack().api_error_generic;
+    return P().apiGeneric;
   } catch {
-    return pack().api_error_network;
+    return P().apiNetwork;
   }
 }
 
-// ====== MAIN ======
+// ===== DOM READY =====
 document.addEventListener("DOMContentLoaded", () => {
   const sidebar = document.getElementById("sidebar");
   const helpPanel = document.getElementById("helpPanel");
@@ -418,7 +369,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const adContinueBtn = document.getElementById("adContinueBtn");
   const adConfirmCloseBtn = document.getElementById("adConfirmCloseBtn");
 
-  // Onboarding
   const onboardingOverlay = document.getElementById("onboardingOverlay");
   const onboardStepLang = document.getElementById("onboardStepLang");
   const onboardStepEmail = document.getElementById("onboardStepEmail");
@@ -427,7 +377,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const onboardEmailInput = document.getElementById("onboardEmailInput");
   const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
-  // Durum yükle
   loadState();
   renderConversationList();
   renderMessages();
@@ -435,25 +384,22 @@ document.addEventListener("DOMContentLoaded", () => {
   updateAccountEmailUI();
   if (langSelect) langSelect.value = currentLangCode;
 
-  // Yardım paneli için close handler
   const closeHelp = () => helpPanel && helpPanel.classList.add("hidden");
-  renderHelpPanelContent(closeHelp);
+  renderHelpPanel(closeHelp);
+  updateOnboardingTexts();
 
-  // Menü
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener("click", () => {
-      sidebar.classList.toggle("hidden");
-    });
-  }
-
-  if (helpToggle && helpPanel) {
-    helpToggle.addEventListener("click", () => {
-      helpPanel.classList.remove("hidden");
-    });
-  }
+  // Menü & yardım
+  if (menuToggle && sidebar)
+    menuToggle.addEventListener("click", () =>
+      sidebar.classList.toggle("hidden")
+    );
+  if (helpToggle && helpPanel)
+    helpToggle.addEventListener("click", () =>
+      helpPanel.classList.remove("hidden")
+    );
 
   // Yeni sohbet
-  if (newChatBtn) {
+  if (newChatBtn)
     newChatBtn.addEventListener("click", () => {
       conversations.unshift({
         id: Date.now().toString(),
@@ -466,35 +412,31 @@ document.addEventListener("DOMContentLoaded", () => {
       renderConversationList();
       renderMessages();
     });
-  }
 
   // Reklam modalı
-  function openAdModal() {
+  function openAd() {
     if (!modalBackdrop || !adModal || !adStepMain || !adStepConfirm) return;
     adStepMain.classList.remove("hidden");
     adStepConfirm.classList.add("hidden");
     modalBackdrop.classList.remove("hidden");
     adModal.classList.remove("hidden");
   }
-  function closeAdModal() {
+  function closeAd() {
     if (!modalBackdrop || !adModal) return;
     modalBackdrop.classList.add("hidden");
     adModal.classList.add("hidden");
   }
-
-  if (watchAdBtn) {
+  if (watchAdBtn)
     watchAdBtn.addEventListener("click", () => {
-      if (currentPlan !== "free") return;
-      openAdModal();
+      if (currentPlan === "free") openAd();
     });
-  }
-  if (adCancelBtn) adCancelBtn.addEventListener("click", closeAdModal);
+  if (adCancelBtn) adCancelBtn.addEventListener("click", closeAd);
   if (adWatchedBtn)
     adWatchedBtn.addEventListener("click", () => {
       credits += 1;
       saveCredits();
       updatePlanAndCreditsUI();
-      closeAdModal();
+      closeAd();
     });
   if (adCloseIcon)
     adCloseIcon.addEventListener("click", () => {
@@ -506,30 +448,15 @@ document.addEventListener("DOMContentLoaded", () => {
       adStepConfirm.classList.add("hidden");
       adStepMain.classList.remove("hidden");
     });
-  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", closeAdModal);
-  if (modalBackdrop) modalBackdrop.addEventListener("click", closeAdModal);
+  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", closeAd);
+  if (modalBackdrop) modalBackdrop.addEventListener("click", closeAd);
 
   // Onboarding
   function showOnboardingIfNeeded() {
-    if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
+    if (!onboardingOverlay) return;
     const hasLang = !!localStorage.getItem(LANG_KEY);
     const hasEmail = !!localStorage.getItem(EMAIL_KEY);
-    const pck = pack();
-
-    // başlıkları güncelle
-    const langTitle = document.getElementById("onboardLangTitle");
-    const langText = document.getElementById("onboardLangText");
-    const emailTitle = document.getElementById("onboardEmailTitle");
-    const emailText = document.getElementById("onboardEmailText");
-    const emailBtn = document.getElementById("onboardEmailButton");
-    const langBtn = document.getElementById("onboardLangButton");
-    if (langTitle) langTitle.textContent = pck.onboard_lang_title;
-    if (langText) langText.textContent = pck.onboard_lang_text;
-    if (langBtn) langBtn.textContent = pck.onboard_lang_button;
-    if (emailTitle) emailTitle.textContent = pck.onboard_email_title;
-    if (emailText) emailText.textContent = pck.onboard_email_text;
-    if (emailBtn) emailBtn.textContent = pck.onboard_email_button;
-
+    updateOnboardingTexts();
     if (hasLang && hasEmail) {
       onboardingOverlay.classList.add("hidden");
       return;
@@ -543,8 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
       onboardStepEmail.classList.remove("hidden");
     }
   }
-
-  if (onboardLangSaveBtn && onboardLangSelect) {
+  if (onboardLangSaveBtn && onboardLangSelect)
     onboardLangSaveBtn.addEventListener("click", () => {
       const code = onboardLangSelect.value || "tr";
       if (!LANG_NAMES[code]) return;
@@ -552,9 +478,75 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem(LANG_KEY, code);
       if (langSelect) langSelect.value = code;
       updatePlanAndCreditsUI();
-      renderHelpPanelContent(closeHelp);
-      onboardStepLang.classList.add("hidden");
-      onboardStepEmail.classList.remove("hidden");
+      renderHelpPanel(closeHelp);
       showOnboardingIfNeeded();
     });
-  
+  if (onboardEmailSaveBtn && onboardEmailInput)
+    onboardEmailSaveBtn.addEventListener("click", () => {
+      const email = onboardEmailInput.value.trim();
+      if (!email) return;
+      currentEmail = email;
+      saveEmail();
+      updateAccountEmailUI();
+      if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
+    });
+  showOnboardingIfNeeded();
+
+  // Menüden e-posta değiştirme
+  if (changeEmailBtn)
+    changeEmailBtn.addEventListener("click", () => {
+      if (!onboardingOverlay) return;
+      onboardStepLang.classList.add("hidden");
+      onboardStepEmail.classList.remove("hidden");
+      onboardingOverlay.classList.remove("hidden");
+      updateOnboardingTexts();
+    });
+
+  // Pro’ya geç – şimdilik demo
+  if (subscribeBtn)
+    subscribeBtn.addEventListener("click", () => {
+      currentPlan = "pro";
+      savePlan();
+      updatePlanAndCreditsUI();
+      alert(P().subActivated);
+    });
+
+  // Ana ekrandan dil değişimi
+  if (langSelect)
+    langSelect.addEventListener("change", () => {
+      const code = langSelect.value;
+      if (!LANG_NAMES[code]) return;
+      currentLangCode = code;
+      localStorage.setItem(LANG_KEY, code);
+      updatePlanAndCreditsUI();
+      renderHelpPanel(closeHelp);
+      updateOnboardingTexts();
+    });
+
+  // Mesaj gönderme
+  if (chatForm)
+    chatForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text =
+        (messageInput && messageInput.value.trim()) ||
+        (topicInput && topicInput.value.trim());
+      if (!text) return;
+      if (currentPlan === "free" && credits <= 0) {
+        openAd();
+        return;
+      }
+      const platform = platformSelect ? platformSelect.value : "youtube";
+      addMessage("user", text);
+      if (messageInput) messageInput.value = "";
+      if (topicInput) topicInput.value = "";
+      if (loadingEl) loadingEl.classList.remove("hidden");
+      const reply = await callIdeasAPI(text, platform, currentLangCode);
+      if (loadingEl) loadingEl.classList.add("hidden");
+      addMessage("assistant", reply);
+      if (currentPlan === "free") {
+        credits = Math.max(credits - 1, 0);
+        saveCredits();
+        updatePlanAndCreditsUI();
+      }
+    });
+});
