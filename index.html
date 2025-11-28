@@ -54,50 +54,8 @@
       </section>
     </aside>
 
-    <!-- Sağdan kayan Bilgi & Destek paneli -->
-    <aside id="helpPanel" class="help-panel hidden">
-      <h2>Bilgi &amp; Destek</h2>
-
-      <h3>Bilgi</h3>
-      <p>
-        InspireApp, kısa video içerikleri (YouTube Shorts, TikTok, Reels)
-        için fikir üreten bir asistandır.
-      </p>
-      <p>
-        Sohbet alanında konu veya mesajını yaz, platform ve dili seç,
-        <strong>Gönder</strong> butonuna bas. Uygulama sana madde madde,
-        platforma uygun fikirler üretir.
-      </p>
-      <p>
-        Ücretsiz kullanıcılar için günlük <strong>4 puan</strong> vardır.
-        Her istek 1 puan tüketir. Ek puan kazanmak için reklam izleyebilirsin.
-      </p>
-      <p>
-        <strong>Pro plan fiyatı:</strong><br />
-        • Türkiye'de <strong>299 TL/ay</strong><br />
-        • Zengin ülkelerde (örneğin ABD, Kanada, Almanya, Fransa,
-        BAE, Suudi Arabistan, Katar vb.) <strong>19.99 USD/ay</strong><br />
-        • Diğer ülkelerde <strong>9.99 USD/ay</strong>
-      </p>
-      <ul>
-        <li>Pro: Sınırsız puan</li>
-        <li>Öncelikli istek işleme</li>
-        <li>Daha uzun ve detaylı içerik önerileri</li>
-      </ul>
-
-      <h3>Destek</h3>
-      <p>
-        Herhangi bir sorun, istek veya hata bildirimi için bize e-posta
-        gönderebilirsin:
-      </p>
-      <p>
-        <a href="mailto:insprireappdestek@gmail.com">
-          insprireappdestek@gmail.com
-        </a>
-      </p>
-
-      <button id="closeHelpBtn" class="pill-button">Kapat</button>
-    </aside>
+    <!-- Sağdan kayan Bilgi & Destek paneli (içini JS dolduracak) -->
+    <aside id="helpPanel" class="help-panel hidden"></aside>
 
     <!-- Orta: Chat alanı -->
     <main class="chat-area">
@@ -211,8 +169,10 @@
 
       <!-- Adım 1: Dil seçimi -->
       <div id="onboardStepLang">
-        <h2>Dil seçin</h2>
-        <p>Uygulama dilini seçin. Bu ayar sohbet üretim dilini belirler.</p>
+        <h2 id="onboardLangTitle">Dil seçin</h2>
+        <p id="onboardLangText">
+          Uygulama dilini seçin. Bu ayar sohbet üretim dilini belirler.
+        </p>
         <select id="onboardLangSelect">
           <option value="tr">Türkçe</option>
           <option value="en">English</option>
@@ -243,8 +203,10 @@
 
       <!-- Adım 2: E-posta -->
       <div id="onboardStepEmail" class="hidden">
-        <h2>Başlamak için e-posta adresinizi girin</h2>
-        <p>Sohbetleriniz bu cihazda e-posta bilginizle eşleşerek saklanır.</p>
+        <h2 id="onboardEmailTitle">Başlamak için e-posta adresinizi girin</h2>
+        <p id="onboardEmailText">
+          Sohbetleriniz bu cihazda e-posta bilginizle eşleşerek saklanır.
+        </p>
         <input
           id="onboardEmailInput"
           type="email"
@@ -260,3 +222,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+      
