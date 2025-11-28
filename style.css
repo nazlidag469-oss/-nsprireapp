@@ -11,10 +11,6 @@
   --purple: #7c3aed;
   --purple-soft: #ede9fe;
 
-  --blue: #2563eb;
-  --red-soft: #fee2e2;
-  --red-border: #fca5a5;
-
   --assistant-bubble: #ffffff;
   --user-bubble: linear-gradient(135deg, #7c3aed, #4f46e5);
 
@@ -40,9 +36,9 @@ body {
   overflow-x: hidden;
 }
 
-/* Genel hidden sınıfı (JS bununla çalışıyor) */
+/* === GİZLEME SINIFI === */
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 /* === TOP BAR / HEADER === */
@@ -72,7 +68,7 @@ body {
   font-weight: 900;
   color: #000000;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.16em;
 }
 
 /* === ICON BUTTONS === */
@@ -82,7 +78,7 @@ body {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 
   display: flex;
@@ -106,8 +102,7 @@ body {
 .chat-area {
   margin-top: 58px;
   flex: 1;
-  /* altta ekstra boşluk: yazı çubuğu ekranın dibine yapışmasın */
-  padding: 14px 12px 40px;
+  padding: 14px 12px 40px; /* altta ekstra boşluk */
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -116,14 +111,14 @@ body {
   margin-right: auto;
 }
 
-/* === SIDEBAR (Left menu) === */
+/* === SOL SIDEBAR === */
 
 .sidebar {
   position: fixed;
   top: 58px;
   left: 0;
   bottom: 0;
-  width: 250px;
+  width: 260px;
   max-width: 80%;
   padding: 14px;
 
@@ -149,9 +144,16 @@ body {
   font-weight: 700;
 }
 
+.sidebar-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--glass-border);
+  font-size: 13px;
+}
+
 .conversation-list {
   margin-top: 10px;
-  flex: 1;
+  max-height: 200px;
   overflow-y: auto;
 }
 
@@ -168,19 +170,24 @@ body {
   color: #fff;
 }
 
-/* === HELP PANEL (Right side) === */
+.muted {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* === HELP PANEL (SAĞ) === */
 
 .help-panel {
   position: fixed;
   top: 58px;
   right: 0;
   bottom: 0;
-  width: 250px;
+  width: 260px;
   max-width: 80%;
   padding: 16px;
 
-  background: var(--red-soft);
-  border-left: 1px solid var(--red-border);
+  background: #fef2f2;
+  border-left: 1px solid #fecaca;
   box-shadow: -10px 0 30px rgba(127, 29, 29, 0.25);
 
   border-top-left-radius: 16px;
@@ -198,12 +205,6 @@ body {
   margin-top: 0;
   font-size: 18px;
   color: #b91c1c;
-}
-
-.help-panel h3 {
-  margin-top: 12px;
-  margin-bottom: 6px;
-  font-size: 15px;
 }
 
 /* === CHAT MESSAGES === */
@@ -248,7 +249,7 @@ body {
   border-bottom-left-radius: 6px;
 }
 
-/* === FORM CONTROLS === */
+/* === CONTROLS / FORM ELEMANLARI === */
 
 .controls {
   padding: 14px;
@@ -258,10 +259,19 @@ body {
   box-shadow: var(--shadow);
 }
 
+.control-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.control-row:last-child {
+  margin-bottom: 0;
+}
+
 input,
 select,
 textarea {
-  width: 100%;
   padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid var(--glass-border);
@@ -274,7 +284,7 @@ textarea {
   min-height: 48px;
 }
 
-/* === SEND BUTTON === */
+/* === BUTONLAR === */
 
 .pill-button {
   padding: 10px 16px;
@@ -292,6 +302,11 @@ textarea {
 .pill-button.primary {
   background: var(--purple);
   color: white;
+}
+
+.pill-button.small {
+  font-size: 12px;
+  padding: 6px 10px;
 }
 
 .pill-button:active {
@@ -316,7 +331,7 @@ textarea {
   color: var(--text-muted);
 }
 
-/* === MODAL === */
+/* === MODAL (REKLAM) === */
 
 .backdrop {
   position: fixed;
@@ -432,7 +447,7 @@ textarea {
   }
 
   .chat-area {
-    padding: 10px 10px 40px;
+    padding: 10px 10px 50px;
   }
 
   .sidebar,
