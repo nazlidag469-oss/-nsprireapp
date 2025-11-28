@@ -40,6 +40,10 @@ body {
   overflow-x: hidden;
 }
 
+/* Genel hidden sınıfı (JS bununla çalışıyor) */
+.hidden {
+  display: none;
+}
 
 /* === TOP BAR / HEADER === */
 
@@ -71,7 +75,6 @@ body {
   letter-spacing: 1px;
 }
 
-
 /* === ICON BUTTONS === */
 
 .icon-button {
@@ -94,7 +97,6 @@ body {
   transform: scale(0.92);
 }
 
-
 /* === LAYOUT === */
 
 #app {
@@ -104,7 +106,8 @@ body {
 .chat-area {
   margin-top: 58px;
   flex: 1;
-  padding: 14px 12px 20px;
+  /* altta ekstra boşluk: yazı çubuğu ekranın dibine yapışmasın */
+  padding: 14px 12px 40px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -112,7 +115,6 @@ body {
   margin-left: auto;
   margin-right: auto;
 }
-
 
 /* === SIDEBAR (Left menu) === */
 
@@ -166,7 +168,6 @@ body {
   color: #fff;
 }
 
-
 /* === HELP PANEL (Right side) === */
 
 .help-panel {
@@ -199,6 +200,11 @@ body {
   color: #b91c1c;
 }
 
+.help-panel h3 {
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
 
 /* === CHAT MESSAGES === */
 
@@ -242,7 +248,6 @@ body {
   border-bottom-left-radius: 6px;
 }
 
-
 /* === FORM CONTROLS === */
 
 .controls {
@@ -256,6 +261,7 @@ body {
 input,
 select,
 textarea {
+  width: 100%;
   padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid var(--glass-border);
@@ -267,7 +273,6 @@ textarea {
   resize: none;
   min-height: 48px;
 }
-
 
 /* === SEND BUTTON === */
 
@@ -293,7 +298,6 @@ textarea {
   transform: scale(0.95);
 }
 
-
 /* === CHAT INPUT ROW === */
 
 .chat-input-row {
@@ -302,8 +306,7 @@ textarea {
   align-items: flex-end;
 }
 
-
-/* === CREDITS === */
+/* === CREDITS / PUAN === */
 
 .credits-row {
   display: flex;
@@ -312,7 +315,6 @@ textarea {
   font-size: 13px;
   color: var(--text-muted);
 }
-
 
 /* === MODAL === */
 
@@ -333,6 +335,7 @@ textarea {
 }
 
 .modal-content {
+  position: relative; /* X ikonunun doğru yerde durması için */
   width: 90%;
   max-width: 380px;
   background: #fff;
@@ -341,6 +344,71 @@ textarea {
   box-shadow: var(--shadow-strong);
 }
 
+/* Reklam modalındaki X (kapat) butonu */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-close:active {
+  transform: scale(0.96);
+  opacity: 0.8;
+}
+
+/* === ONBOARDING OVERLAY (Dil + E-posta ekranı) === */
+
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80;
+}
+
+.onboarding-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 20px;
+  max-width: 360px;
+  width: calc(100% - 40px);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.4);
+  text-align: center;
+}
+
+.onboarding-title {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.onboarding-card h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.onboarding-card p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.onboarding-card select,
+.onboarding-card input {
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
 
 /* === ANIMATIONS === */
 
@@ -355,7 +423,6 @@ textarea {
   }
 }
 
-
 /* === RESPONSIVE === */
 
 @media (max-width: 768px) {
@@ -365,11 +432,11 @@ textarea {
   }
 
   .chat-area {
-    padding: 10px;
+    padding: 10px 10px 40px;
   }
 
   .sidebar,
   .help-panel {
     width: 230px;
   }
-                  }
+}
