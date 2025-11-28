@@ -1,12 +1,23 @@
 :root {
-  --bg: #f4f5fb;
-  --bg-alt: #ffffff;
-  --accent: #4f46e5;
-  --accent-soft: #e0e7ff;
-  --border-soft: #e5e7eb;
-  --text-main: #111827;
-  --text-muted: #6b7280;
-  --user-bubble: #4f46e5;
+  /* Genel renk paleti */
+  --bg: #f4ebff;           /* çok açık mor / ana zemin */
+  --bg-alt: #ffffff;       /* kart zemini */
+  --bg-soft: #f1f5f9;      /* çok açık gri */
+
+  --accent: #7c3aed;       /* ana mor */
+  --accent-soft: #e9d5ff;  /* morun yumuşak hali */
+
+  --blue-soft: #dbeafe;    /* sol menü */
+  --red-soft: #fee2e2;     /* yardım paneli zemin */
+  --red-border: #fecaca;
+
+  --border-soft: #e2e8f0;
+  --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.08);
+
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+
+  --user-bubble: #7c3aed;
   --assistant-bubble: #e5e7eb;
 }
 
@@ -18,11 +29,12 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  background: var(--bg);
   color: var(--text-main);
+  /* yumuşak mor-mavi degrade arka plan */
+  background: radial-gradient(circle at top, #e0f2fe 0, #f4ebff 40%, #f9fafb 100%);
 }
 
-/* Üst bar */
+/* ÜST BAR --------------------------------------------------- */
 
 .top-bar {
   position: fixed;
@@ -33,17 +45,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
-  background: var(--bg-alt);
-  border-bottom: 1px solid var(--border-soft);
+  padding: 0 14px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f9fafb;
+  backdrop-filter: blur(10px);
   z-index: 50;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35);
 }
 
 .top-title {
   font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
-/* Genel layout */
+/* GENEL LAYOUT ---------------------------------------------- */
 
 #app {
   display: flex;
@@ -53,21 +68,21 @@ body {
 .chat-area {
   margin-top: 56px;
   flex: 1;
-  padding: 12px;
+  padding: 16px 12px 20px;
   display: flex;
   flex-direction: column;
   max-width: 900px;
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  gap: 8px;
+  gap: 10px;
 }
 
-/* Chat mesajları */
+/* CHAT MESAJLARI ------------------------------------------- */
 
 .chat-messages {
   flex: 1;
-  padding: 12px 0;
+  padding: 10px 0 4px;
   overflow-y: auto;
 }
 
@@ -87,35 +102,38 @@ body {
 .bubble {
   max-width: 80%;
   padding: 10px 12px;
-  border-radius: 16px;
+  border-radius: 18px;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
+  box-shadow: var(--shadow-soft);
 }
 
 .user .bubble {
-  background: var(--user-bubble);
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 
 .assistant .bubble {
-  background: var(--assistant-bubble);
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
   border-bottom-left-radius: 4px;
 }
 
-/* Kontroller */
+/* KONTROLLER / FORMLAR ------------------------------------- */
 
 .controls {
-  border-radius: 16px;
+  border-radius: 20px;
   background: var(--bg-alt);
-  padding: 10px;
+  padding: 12px 12px 10px;
   border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
 }
 
 .control-row {
   display: flex;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .control-row:last-child {
@@ -127,26 +145,36 @@ select,
 textarea {
   width: 100%;
   padding: 8px 10px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid var(--border-soft);
   font-size: 14px;
+  background: var(--bg-soft);
+  color: var(--text-main);
 }
 
-/* Chat giriş satırı */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* CHAT GİRİŞ SATIRI ---------------------------------------- */
 
 .chat-input-row {
   display: flex;
   gap: 8px;
   align-items: flex-end;
+  margin-top: 6px;
 }
 
 .chat-input-row textarea {
   resize: none;
-  min-height: 40px;
-  max-height: 120px;
+  min-height: 44px;
+  max-height: 140px;
 }
 
-/* Kredi satırı */
+/* KREDİ / PLAN SATIRI -------------------------------------- */
 
 .credits-row {
   display: flex;
@@ -154,9 +182,11 @@ textarea {
   justify-content: space-between;
   gap: 8px;
   font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
-/* Butonlar */
+/* BUTONLAR ------------------------------------------------- */
 
 .pill-button {
   padding: 8px 14px;
@@ -165,46 +195,53 @@ textarea {
   background: var(--accent-soft);
   color: var(--accent);
   font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
 }
 
 .pill-button.primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
   color: #fff;
 }
 
 .pill-button.small {
   font-size: 12px;
   padding: 6px 10px;
+  box-shadow: 0 3px 8px rgba(79, 70, 229, 0.25);
 }
 
 .pill-button:active {
-  opacity: 0.85;
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.3);
 }
 
 .icon-button {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   border: none;
-  background: var(--bg);
+  background: rgba(15, 23, 42, 0.08);
   font-size: 18px;
+  color: #f9fafb;
 }
 
-/* Sol sidebar */
+/* SOL SIDEBAR (SOHBETLER + KAYIT + PLAN) ------------------- */
 
 .sidebar {
   position: fixed;
   top: 56px;
   left: 0;
   bottom: 0;
-  width: 260px;
-  background: #ffffff;
+  width: 240px;
+  max-width: 75%;
+  background: var(--blue-soft);
   border-right: 1px solid var(--border-soft);
-  padding: 10px;
+  padding: 10px 10px 14px;
   display: flex;
   flex-direction: column;
   z-index: 40;
   transition: transform 0.2s ease-out;
+  box-shadow: 10px 0 20px rgba(15, 23, 42, 0.12);
 }
 
 .sidebar.hidden {
@@ -215,6 +252,11 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.sidebar-header h2 {
+  font-size: 18px;
+  margin: 0;
 }
 
 .conversation-list {
@@ -229,7 +271,8 @@ textarea {
   border-radius: 10px;
   font-size: 14px;
   margin-bottom: 6px;
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.4);
 }
 
 .conversation-item.active {
@@ -238,7 +281,7 @@ textarea {
 }
 
 .sidebar-section {
-  border-top: 1px solid var(--border-soft);
+  border-top: 1px solid rgba(148, 163, 184, 0.5);
   padding-top: 8px;
   margin-top: 8px;
   font-size: 13px;
@@ -250,42 +293,55 @@ textarea {
 }
 
 .sidebar-footer {
-  border-top: 1px solid var(--border-soft);
-  margin-top: 8px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+  margin-top: 10px;
   padding-top: 8px;
   font-size: 13px;
 }
 
 .sidebar-footer a {
-  color: var(--accent);
+  color: #1d4ed8;
   text-decoration: none;
 }
 
-/* Yardım paneli */
+/* SAĞ YARDIM PANELİ ---------------------------------------- */
 
 .help-panel {
   position: fixed;
   top: 56px;
   right: 0;
   bottom: 0;
-  width: 260px;
-  background: #ffffff;
-  border-left: 1px solid var(--border-soft);
-  padding: 12px;
+  width: 240px;
+  max-width: 75%;
+  background: var(--red-soft);
+  border-left: 1px solid var(--red-border);
+  padding: 12px 12px 16px;
   z-index: 40;
   transition: transform 0.2s ease-out;
+  box-shadow: -10px 0 20px rgba(127, 29, 29, 0.18);
 }
 
 .help-panel.hidden {
   transform: translateX(100%);
 }
 
-/* Modal + backdrop */
+.help-panel h3 {
+  margin-top: 0;
+  font-size: 15px;
+  color: #b91c1c;
+}
+
+.help-panel p {
+  font-size: 13px;
+  color: #7f1d1d;
+}
+
+/* MODAL + BACKDROP ----------------------------------------- */
 
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(15, 23, 42, 0.45);
   z-index: 60;
 }
 
@@ -299,19 +355,19 @@ textarea {
 }
 
 .modal-content {
-  max-width: 360px;
+  max-width: 380px;
   width: calc(100% - 40px);
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.3);
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px 16px 14px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.45);
 }
 
 .hidden {
   display: none;
 }
 
-/* Diğer */
+/* DİĞER ---------------------------------------------------- */
 
 .loading {
   font-size: 13px;
@@ -324,8 +380,24 @@ textarea {
   color: var(--text-muted);
 }
 
+/* MOBİL / TABLET İÇİN -------------------------------------- */
+
 @media (max-width: 768px) {
   .chat-area {
-    padding: 8px;
+    padding: 10px 8px 16px;
+  }
+
+  .controls {
+    border-radius: 16px;
+  }
+
+  .sidebar,
+  .help-panel {
+    width: 220px;
+    max-width: 80%;
+  }
+
+  .bubble {
+    max-width: 88%;
   }
 }
