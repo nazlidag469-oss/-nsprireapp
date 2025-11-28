@@ -1,6 +1,6 @@
 // api/ideas.js
-// YouTube + TikTok + Instagram verisini kullanarak OpenAI'den içerik fikri üretir.
-// Tüm API anahtarları environment variable üzerinden alınır.
+// YouTube + TikTok + Instagram verisini (opsiyonel) kullanarak
+// OpenAI'den NET cevap + kısa video fikirleri üretir.
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -87,8 +87,38 @@ export default async function handler(req, res) {
     }
   }
 
-  // 4) OpenAI ile içerik üret
+  // 4) OpenAI ile içerik üret (NET cevap + 5 fikir)
   try {
+    const PLATFORM_LABELS = {
+      youtube: "YouTube Shorts",
+      tiktok: "TikTok",
+      instagram: "Instagram Reels",
+    };
+    const platformLabel = PLATFORM_LABELS[platform] || "kısa video";
+
+    const systemPrompt = `
+Sen InspireApp adlı bir kısa video içerik koçusun.
+Kullanıcı hangi dili seçmişse cevabın TAMAMINI o dilde yazacaksın: ${langName}.
+
+Her istekte şu sırayı izle:
+1) Önce kullanıcının sorusunu veya isteğini doğrudan ve NET bir şekilde açıkla (3–6 cümle).
+2) Sonra aynı konuda ${platformLabel} için 5 kısa video fikri üret.
+3) Fikirleri numaralı liste olarak ver (1., 2., 3. ...).
+4) Her fikir en fazla 2–3 cümle olsun; lafı uzatma, pratik ve uygulanabilir öneriler ver.
+5) Aşağıda sana verilen YouTube/TikTok/Instagram bağlamını kullan ama konu dışına ASLA çıkma.
+`;
+
+    const userPrompt = `
+Kullanıcının mesajı / konusu:
+"${topic}"
+
+Seçilen platform: ${platformLabel}
+Cevap dili: ${langName}
+
+Ek bağlam (YouTube / RapidAPI verisi olabilir, yoksa boş olabilir):
+${extraContext}
+`;
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -96,39 +126,44 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4o-mini", // istersen burada modeli değiştirebilirsin
         messages: [
-          {
-            role: "system",
-            content:
-              "Sen kısa video içerik fikirleri üreten bir asistansın. Cevabı " +
-              langName +
-              " dilinde, madde madde ve platforma uygun şekilde yaz.",
-          },
-          {
-            role: "user",
-            content: `Konu: ${topic}\nPlatform: ${platform}\nEk bağlam:\n${extraContext}`,
-          },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
-        max_tokens: 700,
+        temperature: 0.6,
+        max_tokens: 800,
       }),
     });
 
-    const data = await response.json();
+    const dataText = await response.text();
+    let data;
+
+    try {
+      data = JSON.parse(dataText);
+    } catch (e) {
+      // JSON parse edemediysek ham metni dön
+      return res.status(200).json({
+        message: dataText || "OpenAI'dan beklenmeyen bir cevap geldi.",
+      });
+    }
 
     if (!response.ok) {
-      const msg = data?.error?.message || "OpenAI isteğinde hata oluştu.";
-      return res.status(500).json({ message: msg });
+      const msg =
+        data?.error?.message ||
+        "OpenAI isteğinde hata oluştu. Kota veya faturalandırma ayarlarını kontrol edin.";
+      return res.status(response.status).json({ message: msg });
     }
 
     const text =
-      data.choices?.[0]?.message?.content ||
+      data.choices?.[0]?.message?.content?.trim() ||
       "Herhangi bir içerik üretilmedi.";
 
     return res.status(200).json({ message: text });
   } catch (e) {
+    console.error("OpenAI error:", e);
     return res
       .status(500)
       .json({ message: "OpenAI isteği sırasında beklenmeyen hata oluştu." });
   }
-          }
+      }
