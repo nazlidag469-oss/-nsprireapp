@@ -8,14 +8,14 @@
 </head>
 <body>
   <div id="app">
-    <!-- Üst bar -->
+    <!-- ÜST BAR -->
     <header class="top-bar">
       <button id="sidebarToggle" class="icon-button">☰</button>
       <div class="top-title">INSPIREAPP</div>
       <button id="helpToggle" class="icon-button">?</button>
     </header>
 
-    <!-- Sol: sohbetler + kayıt/abonelik -->
+    <!-- SOL MENÜ: SOHBETLER + KAYIT / ABONELİK -->
     <aside id="sidebar" class="sidebar hidden">
       <div class="sidebar-header">
         <h2>Sohbetler</h2>
@@ -36,8 +36,33 @@
 
         <label class="muted" for="countrySelect">Ülke</label>
         <select id="countrySelect">
+          <!-- Türkiye -->
           <option value="tr">Türkiye</option>
-          <option value="other">Diğer ülkeler</option>
+
+          <!-- Zengin ülkeler (19.99 USD) -->
+          <option value="us">Amerika Birleşik Devletleri</option>
+          <option value="gb">Birleşik Krallık</option>
+          <option value="de">Almanya</option>
+          <option value="fr">Fransa</option>
+          <option value="ca">Kanada</option>
+          <option value="au">Avustralya</option>
+          <option value="jp">Japonya</option>
+          <option value="kr">Güney Kore</option>
+          <option value="sa">Suudi Arabistan</option>
+          <option value="ae">Birleşik Arap Emirlikleri</option>
+          <option value="qa">Katar</option>
+          <option value="kw">Kuveyt</option>
+          <option value="bh">Bahreyn</option>
+
+          <!-- Diğer popüler ülkeler (9.99 USD) -->
+          <option value="es">İspanya</option>
+          <option value="it">İtalya</option>
+          <option value="pt">Portekiz</option>
+          <option value="ru">Rusya</option>
+          <option value="in">Hindistan</option>
+          <option value="id">Endonezya</option>
+          <option value="br">Brezilya</option>
+          <option value="other">Diğer</option>
         </select>
 
         <h4>Plan</h4>
@@ -51,8 +76,9 @@
         <p id="planSavedText" class="muted"></p>
 
         <p class="muted" id="pricingText">
-          Pro plan fiyatı: Türkiye'de <strong>299 TL / ay</strong>, diğer ülkelerde
-          <strong>9.99 USD / ay</strong>.
+          Pro plan fiyatı: Türkiye'de <strong>299 TL / ay</strong>,
+          zengin ülkelerde <strong>19.99 USD / ay</strong>,
+          diğer ülkelerde <strong>9.99 USD / ay</strong>.
         </p>
 
         <button id="payBtn" class="pill-button primary small">
@@ -61,7 +87,7 @@
       </div>
     </aside>
 
-    <!-- Sağdan kayan yardım paneli -->
+    <!-- SAĞ YARDIM PANELİ: BİLGİ + DESTEK -->
     <aside id="helpPanel" class="help-panel hidden">
       <h2>Bilgi &amp; Destek</h2>
 
@@ -79,9 +105,9 @@
         tüketir. Ek puan kazanmak için reklam izleyebilirsin.
       </p>
       <p>
-        Pro plan: Türkiye'de <strong>299 TL/ay</strong>, diğer ülkelerde
-        <strong>9.99 USD/ay</strong>. Takım planı daha yüksek fiyatlıdır ve
-        ekip kullanımı içindir.
+        Pro plan: Türkiye'de <strong>299 TL/ay</strong>,
+        zengin ülkelerde <strong>19.99 USD/ay</strong>,
+        diğer ülkelerde <strong>9.99 USD/ay</strong>.
       </p>
       <ul>
         <li>Pro: Sınırsız puan</li>
@@ -95,13 +121,13 @@
         gönderebilirsin:
       </p>
       <p>
-        <a href="mailto: insprireappdestek@gmail.com">insprireappdestek@gmail.com</a>
+        <a href="mailto:insprireappdestek@gmail.com">insprireappdestek@gmail.com</a>
       </p>
 
       <button id="closeHelpBtn" class="pill-button">Kapat</button>
     </aside>
 
-    <!-- Chat Alanı -->
+    <!-- ANA CHAT ALANI -->
     <main class="chat-area">
       <div id="chatMessages" class="chat-messages"></div>
 
@@ -122,18 +148,40 @@
           />
         </div>
         <div class="control-row">
+          <!-- Platform seçimi -->
           <select id="platformSelect">
             <option value="youtube">YouTube Shorts</option>
             <option value="tiktok">TikTok</option>
             <option value="instagram">Instagram Reels</option>
           </select>
 
+          <!-- 20+ dil seçimi -->
           <select id="langSelect">
             <option value="tr">Türkçe</option>
             <option value="en">English</option>
             <option value="es">Español</option>
             <option value="de">Deutsch</option>
             <option value="fr">Français</option>
+            <option value="it">Italiano</option>
+            <option value="pt">Português</option>
+            <option value="ar">العربية (Arabic)</option>
+            <option value="ru">Русский</option>
+            <option value="ja">日本語 (Japanese)</option>
+            <option value="ko">한국어 (Korean)</option>
+            <option value="hi">Hindi</option>
+            <option value="id">Bahasa Indonesia</option>
+            <option value="zh">中文 (Chinese)</option>
+            <option value="pl">Polski</option>
+            <option value="nl">Nederlands</option>
+            <option value="sv">Svenska</option>
+            <option value="no">Norsk</option>
+            <option value="da">Dansk</option>
+            <option value="fi">Suomi</option>
+            <option value="el">Ελληνικά</option>
+            <option value="cs">Čeština</option>
+            <option value="he">עברית (Hebrew)</option>
+            <option value="th">ไทย (Thai)</option>
+            <option value="vi">Tiếng Việt</option>
           </select>
         </div>
       </div>
@@ -151,14 +199,14 @@
     </main>
   </div>
 
-  <!-- Reklam Modalı (iki adımlı) -->
+  <!-- REKLAM MODALI (2 AŞAMALI) -->
   <div id="modalBackdrop" class="backdrop hidden"></div>
   <div id="adModal" class="modal hidden">
     <div class="modal-content">
       <!-- X ikonu -->
       <button id="adCloseIcon" class="icon-button modal-close">×</button>
 
-      <!-- 1. Adım: normal reklam açıklaması -->
+      <!-- 1. adım -->
       <div id="adStepMain">
         <h2>Reklam izleyerek puan kazan</h2>
         <p>Gerçek uygulamada burada video reklam oynayacak.</p>
@@ -170,7 +218,7 @@
         </button>
       </div>
 
-      <!-- 2. Adım: uyarı -->
+      <!-- 2. adım uyarı -->
       <div id="adStepConfirm" class="hidden">
         <h3>Puanı kaçırmak üzeresin</h3>
         <p>
@@ -186,7 +234,7 @@
     </div>
   </div>
 
-  <!-- Açılış ekranı: Dil + E-posta -->
+  <!-- AÇILIŞ EKRANI: DİL + E-POSTA -->
   <div id="onboardingOverlay" class="onboarding-overlay hidden">
     <div class="onboarding-card">
       <h1 class="onboarding-title">INSPIREAPP</h1>
@@ -201,6 +249,26 @@
           <option value="es">Español</option>
           <option value="de">Deutsch</option>
           <option value="fr">Français</option>
+          <option value="it">Italiano</option>
+          <option value="pt">Português</option>
+          <option value="ar">العربية (Arabic)</option>
+          <option value="ru">Русский</option>
+          <option value="ja">日本語 (Japanese)</option>
+          <option value="ko">한국어 (Korean)</option>
+          <option value="hi">Hindi</option>
+          <option value="id">Bahasa Indonesia</option>
+          <option value="zh">中文 (Chinese)</option>
+          <option value="pl">Polski</option>
+          <option value="nl">Nederlands</option>
+          <option value="sv">Svenska</option>
+          <option value="no">Norsk</option>
+          <option value="da">Dansk</option>
+          <option value="fi">Suomi</option>
+          <option value="el">Ελληνικά</option>
+          <option value="cs">Čeština</option>
+          <option value="he">עברית (Hebrew)</option>
+          <option value="th">ไทย (Thai)</option>
+          <option value="vi">Tiếng Việt</option>
         </select>
         <button id="onboardLangSaveBtn" class="pill-button primary">
           Devam et
@@ -216,7 +284,11 @@
           type="email"
           placeholder="ornek@mail.com"
         />
-        <button id="onboardEmailSaveBtn" class="pill-button primary">
+        <button
+          id="onboardEmailSaveBtn"
+          type="button"
+          class="pill-button primary"
+        >
           Sohbete başla
         </button>
       </div>
@@ -225,4 +297,4 @@
 
   <script src="app.js"></script>
 </body>
-      </html>
+</html>
