@@ -2,22 +2,43 @@ const STORAGE_KEY = "inspireapp_conversations_v1";
 const CREDITS_KEY = "inspireapp_credits_v1";
 const MAX_FREE_CREDITS = 4;
 
+// 20+ dil desteği
 const LANG_NAMES = {
   tr: "Turkish",
   en: "English",
   es: "Spanish",
   de: "German",
   fr: "French",
+  it: "Italian",
+  pt: "Portuguese",
+  ar: "Arabic",
+  ru: "Russian",
+  ja: "Japanese",
+  ko: "Korean",
+  hi: "Hindi",
+  id: "Indonesian",
+  zh: "Chinese",
+  pl: "Polish",
+  nl: "Dutch",
+  sv: "Swedish",
+  no: "Norwegian",
+  da: "Danish",
+  fi: "Finnish",
+  el: "Greek",
+  cs: "Czech",
+  he: "Hebrew",
+  th: "Thai",
+  vi: "Vietnamese",
 };
 
 let conversations = [];
 let currentId = null;
 let currentPlan = "free";
 let credits = MAX_FREE_CREDITS;
-let currentCountry = "tr"; // "tr" veya "other"
+let currentCountry = "tr"; // ülke kodu (tr, us, sa, ae, ... )
 let currentLangCode = "tr"; // onboarding ile seçilecek dil
 
-/* ======= SOHBET DURUMU ======= */
+/* ======= STATE YÜKLEME / KAYDETME ======= */
 
 function loadState() {
   try {
@@ -26,6 +47,7 @@ function loadState() {
   } catch {
     conversations = [];
   }
+
   if (!conversations.length) {
     const first = {
       id: Date.now().toString(),
@@ -41,9 +63,9 @@ function loadState() {
   const savedPlan = localStorage.getItem("inspireapp_plan");
   if (savedPlan) currentPlan = savedPlan;
 
-  // Ülke
+  // Ülke (her kodu kabul et)
   const savedCountry = localStorage.getItem("inspireapp_country");
-  if (savedCountry === "tr" || savedCountry === "other") {
+  if (savedCountry) {
     currentCountry = savedCountry;
   }
 
@@ -71,9 +93,42 @@ function saveCredits() {
   localStorage.setItem(CREDITS_KEY, String(credits));
 }
 
+/* ======= YARDIMCI FONKSİYONLAR ======= */
+
 function getCurrent() {
   return conversations.find((c) => c.id === currentId);
 }
+
+// Ülkeye göre PRO plan fiyatını belirle
+function getProPriceForCountry(code) {
+  if (code === "tr") return "299 TL / ay";
+
+  // zengin ülkeler: 19.99 USD
+  const richCountries = [
+    "us",
+    "gb",
+    "de",
+    "fr",
+    "ca",
+    "au",
+    "jp",
+    "kr",
+    "sa",
+    "ae",
+    "qa",
+    "kw",
+    "bh",
+  ];
+
+  if (richCountries.includes(code)) {
+    return "19.99 USD / ay";
+  }
+
+  // diğer ülkeler: 9.99 USD
+  return "9.99 USD / ay";
+}
+
+/* ======= SOHBET LİSTESİ / MESAJLAR ======= */
 
 function renderConversationList() {
   const listEl = document.getElementById("conversationList");
@@ -131,6 +186,8 @@ function updatePlanAndCreditsUI() {
   const planLabel = document.getElementById("planLabel");
   const creditsLabel = document.getElementById("creditsLabel");
   const watchAdBtn = document.getElementById("watchAdBtn");
+  const countrySelectEl = document.getElementById("countrySelect");
+  const pricingText = document.getElementById("pricingText");
 
   if (!planLabel || !creditsLabel || !watchAdBtn) return;
 
@@ -138,10 +195,24 @@ function updatePlanAndCreditsUI() {
   if (currentPlan === "pro") planText = "Plan: Pro (sınırsız)";
   if (currentPlan === "team") planText = "Plan: Takım (sınırsız)";
 
-  const countryText =
-    currentCountry === "tr" ? "Ülke: Türkiye" : "Ülke: Diğer ülkeler";
+  // Ülke ismini option'dan oku
+  let countryLabel = "Diğer";
+  if (countrySelectEl) {
+    const opt =
+      countrySelectEl.querySelector(`option[value="${currentCountry}"]`) ||
+      countrySelectEl.selectedOptions[0];
+    if (opt) countryLabel = opt.textContent || countryLabel;
+  }
 
-  planLabel.textContent = `${countryText} | ${planText}`;
+  planLabel.textContent = `Ülke: ${countryLabel} | ${planText}`;
+
+  // Fiyat bilgisini dinamik yaz
+  if (pricingText) {
+    const price = getProPriceForCountry(currentCountry);
+    pricingText.innerHTML =
+      `Pro plan fiyatı: <strong>${price}</strong> (Seçili ülke: ${countryLabel}).` +
+      `<br/>Türkiye: 299 TL/ay · Zengin ülkeler: 19.99 USD/ay · Diğer ülkeler: 9.99 USD/ay.`;
+  }
 
   if (currentPlan === "free") {
     creditsLabel.textContent = `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`;
@@ -179,6 +250,7 @@ async function callIdeasAPI(prompt, platform, langCode) {
   }
 }
 
+// Ödeme sağlayıcıya yönlendirme (dummy)
 async function startPayment(plan) {
   try {
     const res = await fetch("/api/checkout", {
@@ -471,17 +543,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (chatForm) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const text = messageInput.value.trim() || topicInput.value.trim();
+      const text = messageInput.value.trim() || (topicInput && topicInput.value.trim());
       if (!text) return;
 
       const platform = platformSelect ? platformSelect.value : "youtube";
       const langCode = currentLangCode;
 
-      if (currentPlan === "free") {
-        if (credits <= 0) {
-          openAdModal();
-          return;
-        }
+      if (currentPlan === "free" && credits <= 0) {
+        openAdModal();
+        return;
       }
 
       addMessage("user", text);
