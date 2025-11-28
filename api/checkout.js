@@ -14,7 +14,7 @@ export default function handler(req, res) {
 
   if (plan === "pro") {
     if (c === "tr") {
-      // Türkiye için 250 TL fiyatlı Pro checkout linkini buraya koyacaksın
+      // Türkiye için 299 TL fiyatlı Pro checkout linkini buraya koyacaksın
       url = process.env.PRO_TR_CHECKOUT_URL || null;
     } else {
       // Diğer ülkeler için 9.99 USD fiyatlı Pro checkout linki
