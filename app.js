@@ -15,6 +15,7 @@ let currentId = null;
 let currentPlan = "free";
 let credits = MAX_FREE_CREDITS;
 let currentCountry = "tr"; // "tr" veya "other"
+let currentLangCode = "tr"; // onboarding ile seçilecek dil
 
 /* ======= SOHBET DURUMU ======= */
 
@@ -46,7 +47,13 @@ function loadState() {
     currentCountry = savedCountry;
   }
 
-  // Krediler (sadece free için anlamlı)
+  // Dil
+  const savedLangCode = localStorage.getItem("inspireapp_lang");
+  if (savedLangCode && LANG_NAMES[savedLangCode]) {
+    currentLangCode = savedLangCode;
+  }
+
+  // Puanlar (sadece free için anlamlı)
   const savedCredits = localStorage.getItem(CREDITS_KEY);
   if (savedCredits !== null) {
     credits = parseInt(savedCredits, 10);
@@ -70,6 +77,8 @@ function getCurrent() {
 
 function renderConversationList() {
   const listEl = document.getElementById("conversationList");
+  if (!listEl) return;
+
   listEl.innerHTML = "";
   conversations
     .slice()
@@ -90,6 +99,7 @@ function renderConversationList() {
 
 function renderMessages() {
   const container = document.getElementById("chatMessages");
+  if (!container) return;
   const conv = getCurrent();
   container.innerHTML = "";
   conv.messages.forEach((m) => {
@@ -115,12 +125,14 @@ function addMessage(role, text) {
   renderMessages();
 }
 
-/* ======= PLAN & KREDİ UI ======= */
+/* ======= PLAN & PUAN UI ======= */
 
 function updatePlanAndCreditsUI() {
   const planLabel = document.getElementById("planLabel");
   const creditsLabel = document.getElementById("creditsLabel");
   const watchAdBtn = document.getElementById("watchAdBtn");
+
+  if (!planLabel || !creditsLabel || !watchAdBtn) return;
 
   let planText = "Plan: Ücretsiz";
   if (currentPlan === "pro") planText = "Plan: Pro (sınırsız)";
@@ -132,17 +144,16 @@ function updatePlanAndCreditsUI() {
   planLabel.textContent = `${countryText} | ${planText}`;
 
   if (currentPlan === "free") {
-    creditsLabel.textContent = `Kalan hak: ${credits}/${MAX_FREE_CREDITS}`;
+    creditsLabel.textContent = `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`;
     watchAdBtn.classList.remove("hidden");
   } else {
-    creditsLabel.textContent = "Kalan hak: Sınırsız";
+    creditsLabel.textContent = "Kalan puan: Sınırsız";
     watchAdBtn.classList.add("hidden");
   }
 }
 
 /* ======= API ÇAĞRILARI ======= */
 
-// /api/ideas (OpenAI + YouTube + TikTok + Instagram)
 async function callIdeasAPI(prompt, platform, langCode) {
   const langName = LANG_NAMES[langCode] || "Turkish";
 
@@ -168,7 +179,6 @@ async function callIdeasAPI(prompt, platform, langCode) {
   }
 }
 
-// /api/checkout (ödeme sağlayıcı linki)
 async function startPayment(plan) {
   try {
     const res = await fetch("/api/checkout", {
@@ -215,145 +225,279 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const modalBackdrop = document.getElementById("modalBackdrop");
   const adModal = document.getElementById("adModal");
+
+  const adStepMain = document.getElementById("adStepMain");
+  const adStepConfirm = document.getElementById("adStepConfirm");
   const adWatchedBtn = document.getElementById("adWatchedBtn");
-  const adCloseBtn = document.getElementById("adCloseBtn");
+  const adCancelBtn = document.getElementById("adCancelBtn");
+  const adCloseIcon = document.getElementById("adCloseIcon");
+  const adContinueBtn = document.getElementById("adContinueBtn");
+  const adConfirmCloseBtn = document.getElementById("adConfirmCloseBtn");
+
+  // Onboarding elemanları
+  const onboardingOverlay = document.getElementById("onboardingOverlay");
+  const onboardStepLang = document.getElementById("onboardStepLang");
+  const onboardStepEmail = document.getElementById("onboardStepEmail");
+  const onboardLangSelect = document.getElementById("onboardLangSelect");
+  const onboardLangSaveBtn = document.getElementById("onboardLangSaveBtn");
+  const onboardEmailInput = document.getElementById("onboardEmailInput");
+  const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
   /* Durumu yükle */
   loadState();
   renderConversationList();
   renderMessages();
 
-  // Plan & ülke select ilk hal
-  planSelect.value = currentPlan;
-  countrySelect.value = currentCountry;
+  // Plan & ülke & dil select ilk hal
+  if (planSelect) planSelect.value = currentPlan;
+  if (countrySelect) countrySelect.value = currentCountry;
+  if (langSelect) langSelect.value = currentLangCode;
   updatePlanAndCreditsUI();
 
   /* Ülke seçimi */
-  countrySelect.addEventListener("change", () => {
-    currentCountry = countrySelect.value;
-    localStorage.setItem("inspireapp_country", currentCountry);
-    updatePlanAndCreditsUI();
-  });
+  if (countrySelect) {
+    countrySelect.addEventListener("change", () => {
+      currentCountry = countrySelect.value;
+      localStorage.setItem("inspireapp_country", currentCountry);
+      updatePlanAndCreditsUI();
+    });
+  }
+
+  /* Dil seçimi (ana kontrollerde) */
+  if (langSelect) {
+    langSelect.addEventListener("change", () => {
+      currentLangCode = langSelect.value;
+      localStorage.setItem("inspireapp_lang", currentLangCode);
+    });
+  }
 
   /* Sol menü */
-  sidebarToggle.addEventListener("click", () => {
-    sidebar.classList.toggle("hidden");
-  });
+  if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener("click", () => {
+      sidebar.classList.toggle("hidden");
+    });
+  }
 
   /* Yardım */
-  helpToggle.addEventListener("click", () => {
-    helpPanel.classList.remove("hidden");
-  });
-  closeHelpBtn.addEventListener("click", () => {
-    helpPanel.classList.add("hidden");
-  });
+  if (helpToggle && helpPanel) {
+    helpToggle.addEventListener("click", () => {
+      helpPanel.classList.remove("hidden");
+    });
+  }
+  if (closeHelpBtn && helpPanel) {
+    closeHelpBtn.addEventListener("click", () => {
+      helpPanel.classList.add("hidden");
+    });
+  }
 
   /* Yeni sohbet */
-  newChatBtn.addEventListener("click", () => {
-    const conv = {
-      id: Date.now().toString(),
-      title: "Yeni sohbet",
-      messages: [],
-      createdAt: Date.now(),
-    };
-    conversations.unshift(conv);
-    currentId = conv.id;
-    saveState();
-    renderConversationList();
-    renderMessages();
-  });
+  if (newChatBtn) {
+    newChatBtn.addEventListener("click", () => {
+      const conv = {
+        id: Date.now().toString(),
+        title: "Yeni sohbet",
+        messages: [],
+        createdAt: Date.now(),
+      };
+      conversations.unshift(conv);
+      currentId = conv.id;
+      saveState();
+      renderConversationList();
+      renderMessages();
+    });
+  }
 
-  /* E-posta kaydet */
+  /* E-posta kaydet (sidebar) */
   const savedEmail = localStorage.getItem("inspireapp_email");
-  if (savedEmail) {
+  if (savedEmail && emailInput && emailSavedText) {
     emailInput.value = savedEmail;
     emailSavedText.textContent = "Kayıtlı: " + savedEmail;
   }
-  emailSaveBtn.addEventListener("click", () => {
-    const email = emailInput.value.trim();
-    if (!email) return;
-    localStorage.setItem("inspireapp_email", email);
-    emailSavedText.textContent = "Kayıt edildi: " + email;
-  });
+  if (emailSaveBtn && emailInput && emailSavedText) {
+    emailSaveBtn.addEventListener("click", () => {
+      const email = emailInput.value.trim();
+      if (!email) return;
+      localStorage.setItem("inspireapp_email", email);
+      emailSavedText.textContent = "Kayıt edildi: " + email;
+    });
+  }
 
   /* Plan kaydet */
-  if (currentPlan) {
+  if (currentPlan && planSelect && planSavedText) {
     planSelect.value = currentPlan;
     planSavedText.textContent = "Aktif plan: " + currentPlan;
   }
-  planSaveBtn.addEventListener("click", () => {
-    const plan = planSelect.value;
-    currentPlan = plan;
-    localStorage.setItem("inspireapp_plan", plan);
-    planSavedText.textContent = "Aktif plan: " + plan;
+  if (planSaveBtn && planSelect && planSavedText) {
+    planSaveBtn.addEventListener("click", () => {
+      const plan = planSelect.value;
+      currentPlan = plan;
+      localStorage.setItem("inspireapp_plan", plan);
+      planSavedText.textContent = "Aktif plan: " + plan;
 
-    if (plan === "free" && credits > MAX_FREE_CREDITS) {
-      credits = MAX_FREE_CREDITS;
-      saveCredits();
-    }
-    updatePlanAndCreditsUI();
-  });
+      if (plan === "free" && credits > MAX_FREE_CREDITS) {
+        credits = MAX_FREE_CREDITS;
+        saveCredits();
+      }
+      updatePlanAndCreditsUI();
+    });
+  }
 
   /* Ödeme */
-  payBtn.addEventListener("click", () => {
-    const plan = planSelect.value;
-    startPayment(plan);
-  });
+  if (payBtn && planSelect) {
+    payBtn.addEventListener("click", () => {
+      const plan = planSelect.value;
+      startPayment(plan);
+    });
+  }
 
-  /* Reklam izleme butonu (free kullanıcılar için) */
-  watchAdBtn.addEventListener("click", () => {
-    if (currentPlan !== "free") return; // aboneler için gerek yok
+  /* ======= REKLAM MODALI ======= */
+
+  function openAdModal() {
+    if (!modalBackdrop || !adModal || !adStepMain || !adStepConfirm) return;
+    adStepMain.classList.remove("hidden");
+    adStepConfirm.classList.add("hidden");
     modalBackdrop.classList.remove("hidden");
     adModal.classList.remove("hidden");
-  });
+  }
 
-  adCloseBtn.addEventListener("click", () => {
+  function closeAdModal() {
+    if (!modalBackdrop || !adModal) return;
     modalBackdrop.classList.add("hidden");
     adModal.classList.add("hidden");
-  });
+  }
 
-  adWatchedBtn.addEventListener("click", () => {
-    // Gerçekte burada video reklam tamamlandığında tetiklenir.
-    credits += 1;
-    saveCredits();
-    updatePlanAndCreditsUI();
-    modalBackdrop.classList.add("hidden");
-    adModal.classList.add("hidden");
-  });
+  if (watchAdBtn) {
+    watchAdBtn.addEventListener("click", () => {
+      if (currentPlan !== "free") return;
+      openAdModal();
+    });
+  }
 
-  /* Mesaj gönderme */
-  chatForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const text = messageInput.value.trim() || topicInput.value.trim();
-    if (!text) return;
+  if (adCancelBtn) {
+    adCancelBtn.addEventListener("click", () => {
+      closeAdModal();
+    });
+  }
 
-    const platform = platformSelect.value;
-    const langCode = langSelect.value;
-
-    // FREE kullanıcı için hak kontrolü
-    if (currentPlan === "free") {
-      if (credits <= 0) {
-        // Hak yok → reklam modalı aç
-        modalBackdrop.classList.remove("hidden");
-        adModal.classList.remove("hidden");
-        return;
-      }
-    }
-
-    addMessage("user", text);
-    messageInput.value = "";
-    topicInput.value = "";
-
-    loadingEl.classList.remove("hidden");
-    const reply = await callIdeasAPI(text, platform, langCode);
-    loadingEl.classList.add("hidden");
-    addMessage("assistant", reply);
-
-    // Free kullanıcı ise 1 hak düş
-    if (currentPlan === "free") {
-      credits = Math.max(credits - 1, 0);
+  if (adWatchedBtn) {
+    adWatchedBtn.addEventListener("click", () => {
+      credits += 1;
       saveCredits();
       updatePlanAndCreditsUI();
+      closeAdModal();
+    });
+  }
+
+  if (adCloseIcon && adStepMain && adStepConfirm) {
+    adCloseIcon.addEventListener("click", () => {
+      adStepMain.classList.add("hidden");
+      adStepConfirm.classList.remove("hidden");
+    });
+  }
+
+  if (adContinueBtn && adStepMain && adStepConfirm) {
+    adContinueBtn.addEventListener("click", () => {
+      adStepConfirm.classList.add("hidden");
+      adStepMain.classList.remove("hidden");
+    });
+  }
+
+  if (adConfirmCloseBtn) {
+    adConfirmCloseBtn.addEventListener("click", () => {
+      closeAdModal();
+    });
+  }
+
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener("click", () => {
+      closeAdModal();
+    });
+  }
+
+  /* ======= ONBOARDING (Dil + E-posta) ======= */
+
+  function showOnboardingIfNeeded() {
+    if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
+
+    const hasLang = !!localStorage.getItem("inspireapp_lang");
+    const hasEmail = !!localStorage.getItem("inspireapp_email");
+
+    if (hasLang && hasEmail) {
+      onboardingOverlay.classList.add("hidden");
+      return;
     }
-  });
+
+    onboardingOverlay.classList.remove("hidden");
+
+    if (!hasLang) {
+      onboardStepLang.classList.remove("hidden");
+      onboardStepEmail.classList.add("hidden");
+    } else if (!hasEmail) {
+      onboardStepLang.classList.add("hidden");
+      onboardStepEmail.classList.remove("hidden");
+    }
+  }
+
+  if (onboardLangSaveBtn && onboardLangSelect) {
+    onboardLangSaveBtn.addEventListener("click", () => {
+      const code = onboardLangSelect.value || "tr";
+      currentLangCode = code;
+      localStorage.setItem("inspireapp_lang", code);
+      if (langSelect) langSelect.value = code;
+      if (onboardStepLang && onboardStepEmail) {
+        onboardStepLang.classList.add("hidden");
+        onboardStepEmail.classList.remove("hidden");
+      }
+    });
+  }
+
+  if (onboardEmailSaveBtn && onboardEmailInput) {
+    onboardEmailSaveBtn.addEventListener("click", () => {
+      const email = onboardEmailInput.value.trim();
+      if (!email) return;
+      localStorage.setItem("inspireapp_email", email);
+
+      if (emailInput) emailInput.value = email;
+      if (emailSavedText) emailSavedText.textContent = "Kayıt edildi: " + email;
+
+      if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
+    });
+  }
+
+  showOnboardingIfNeeded();
+
+  /* ======= MESAJ GÖNDERME ======= */
+
+  if (chatForm) {
+    chatForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = messageInput.value.trim() || topicInput.value.trim();
+      if (!text) return;
+
+      const platform = platformSelect ? platformSelect.value : "youtube";
+      const langCode = currentLangCode;
+
+      if (currentPlan === "free") {
+        if (credits <= 0) {
+          openAdModal();
+          return;
+        }
+      }
+
+      addMessage("user", text);
+      messageInput.value = "";
+      if (topicInput) topicInput.value = "";
+
+      if (loadingEl) loadingEl.classList.remove("hidden");
+      const reply = await callIdeasAPI(text, platform, langCode);
+      if (loadingEl) loadingEl.classList.add("hidden");
+      addMessage("assistant", reply);
+
+      if (currentPlan === "free") {
+        credits = Math.max(credits - 1, 0);
+        saveCredits();
+        updatePlanAndCreditsUI();
+      }
+    });
+  }
 });
