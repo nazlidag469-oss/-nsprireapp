@@ -1,8 +1,13 @@
+// Basit sabitler
 const STORAGE_KEY = "inspireapp_conversations_v1";
 const CREDITS_KEY = "inspireapp_credits_v1";
+const PLAN_KEY = "inspireapp_plan_v1";
+const EMAIL_KEY = "inspireapp_email_v1";
+const LANG_KEY = "inspireapp_lang_v1";
+
 const MAX_FREE_CREDITS = 4;
 
-// 20+ dil desteği
+// Dil kodu -> OpenAI'ye gidecek isim
 const LANG_NAMES = {
   tr: "Turkish",
   en: "English",
@@ -11,34 +16,30 @@ const LANG_NAMES = {
   fr: "French",
   it: "Italian",
   pt: "Portuguese",
-  ar: "Arabic",
   ru: "Russian",
-  ja: "Japanese",
-  ko: "Korean",
+  ar: "Arabic",
+  fa: "Persian",
   hi: "Hindi",
   id: "Indonesian",
-  zh: "Chinese",
-  pl: "Polish",
+  ms: "Malay",
+  th: "Thai",
+  ja: "Japanese",
+  ko: "Korean",
   nl: "Dutch",
   sv: "Swedish",
   no: "Norwegian",
   da: "Danish",
-  fi: "Finnish",
-  el: "Greek",
-  cs: "Czech",
-  he: "Hebrew",
-  th: "Thai",
-  vi: "Vietnamese",
+  pl: "Polish",
 };
 
 let conversations = [];
 let currentId = null;
-let currentPlan = "free";
+let currentPlan = "free"; // "free" veya "pro"
 let credits = MAX_FREE_CREDITS;
-let currentCountry = "tr"; // ülke kodu (tr, us, sa, ae, ... )
-let currentLangCode = "tr"; // onboarding ile seçilecek dil
+let currentLangCode = "tr";
+let currentEmail = "";
 
-/* ======= STATE YÜKLEME / KAYDETME ======= */
+/* ========= DURUM YÜKLE / KAYDET ========= */
 
 function loadState() {
   try {
@@ -59,30 +60,24 @@ function loadState() {
   }
   currentId = conversations[0].id;
 
-  // Plan
-  const savedPlan = localStorage.getItem("inspireapp_plan");
-  if (savedPlan) currentPlan = savedPlan;
-
-  // Ülke (her kodu kabul et)
-  const savedCountry = localStorage.getItem("inspireapp_country");
-  if (savedCountry) {
-    currentCountry = savedCountry;
+  const savedPlan = localStorage.getItem(PLAN_KEY);
+  if (savedPlan === "pro" || savedPlan === "free") {
+    currentPlan = savedPlan;
   }
 
-  // Dil
-  const savedLangCode = localStorage.getItem("inspireapp_lang");
-  if (savedLangCode && LANG_NAMES[savedLangCode]) {
-    currentLangCode = savedLangCode;
-  }
-
-  // Puanlar (sadece free için anlamlı)
   const savedCredits = localStorage.getItem(CREDITS_KEY);
   if (savedCredits !== null) {
-    credits = parseInt(savedCredits, 10);
-    if (Number.isNaN(credits)) credits = MAX_FREE_CREDITS;
+    const n = parseInt(savedCredits, 10);
+    credits = Number.isNaN(n) ? MAX_FREE_CREDITS : n;
   } else {
     credits = MAX_FREE_CREDITS;
   }
+
+  const savedLang = localStorage.getItem(LANG_KEY);
+  if (savedLang && LANG_NAMES[savedLang]) currentLangCode = savedLang;
+
+  const savedEmail = localStorage.getItem(EMAIL_KEY);
+  if (savedEmail) currentEmail = savedEmail;
 }
 
 function saveState() {
@@ -93,48 +88,29 @@ function saveCredits() {
   localStorage.setItem(CREDITS_KEY, String(credits));
 }
 
-/* ======= YARDIMCI FONKSİYONLAR ======= */
+function savePlan() {
+  localStorage.setItem(PLAN_KEY, currentPlan);
+}
 
-function getCurrent() {
+function saveEmail() {
+  if (currentEmail) {
+    localStorage.setItem(EMAIL_KEY, currentEmail);
+  } else {
+    localStorage.removeItem(EMAIL_KEY);
+  }
+}
+
+/* ========= YARDIMCI ========= */
+
+function getCurrentConversation() {
   return conversations.find((c) => c.id === currentId);
 }
-
-// Ülkeye göre PRO plan fiyatını belirle
-function getProPriceForCountry(code) {
-  if (code === "tr") return "299 TL / ay";
-
-  // zengin ülkeler: 19.99 USD
-  const richCountries = [
-    "us",
-    "gb",
-    "de",
-    "fr",
-    "ca",
-    "au",
-    "jp",
-    "kr",
-    "sa",
-    "ae",
-    "qa",
-    "kw",
-    "bh",
-  ];
-
-  if (richCountries.includes(code)) {
-    return "19.99 USD / ay";
-  }
-
-  // diğer ülkeler: 9.99 USD
-  return "9.99 USD / ay";
-}
-
-/* ======= SOHBET LİSTESİ / MESAJLAR ======= */
 
 function renderConversationList() {
   const listEl = document.getElementById("conversationList");
   if (!listEl) return;
-
   listEl.innerHTML = "";
+
   conversations
     .slice()
     .sort((a, b) => b.createdAt - a.createdAt)
@@ -155,7 +131,7 @@ function renderConversationList() {
 function renderMessages() {
   const container = document.getElementById("chatMessages");
   if (!container) return;
-  const conv = getCurrent();
+  const conv = getCurrentConversation();
   container.innerHTML = "";
   conv.messages.forEach((m) => {
     const row = document.createElement("div");
@@ -170,7 +146,7 @@ function renderMessages() {
 }
 
 function addMessage(role, text) {
-  const conv = getCurrent();
+  const conv = getCurrentConversation();
   conv.messages.push({ role, text });
   if (!conv.title && role === "user" && text) {
     conv.title = text.slice(0, 25);
@@ -180,50 +156,58 @@ function addMessage(role, text) {
   renderMessages();
 }
 
-/* ======= PLAN & PUAN UI ======= */
+/* ========= PLAN / PUAN UI ========= */
 
 function updatePlanAndCreditsUI() {
   const planLabel = document.getElementById("planLabel");
   const creditsLabel = document.getElementById("creditsLabel");
   const watchAdBtn = document.getElementById("watchAdBtn");
-  const countrySelectEl = document.getElementById("countrySelect");
-  const pricingText = document.getElementById("pricingText");
+  const planStatus = document.getElementById("planStatus");
+  const subscribeBlock = document.getElementById("subscribeBlock");
 
-  if (!planLabel || !creditsLabel || !watchAdBtn) return;
-
-  let planText = "Plan: Ücretsiz";
-  if (currentPlan === "pro") planText = "Plan: Pro (sınırsız)";
-  if (currentPlan === "team") planText = "Plan: Takım (sınırsız)";
-
-  // Ülke ismini option'dan oku
-  let countryLabel = "Diğer";
-  if (countrySelectEl) {
-    const opt =
-      countrySelectEl.querySelector(`option[value="${currentCountry}"]`) ||
-      countrySelectEl.selectedOptions[0];
-    if (opt) countryLabel = opt.textContent || countryLabel;
+  if (planLabel) {
+    planLabel.textContent =
+      currentPlan === "pro" ? "Plan: Pro (sınırsız puan)" : "Plan: Ücretsiz";
   }
 
-  planLabel.textContent = `Ülke: ${countryLabel} | ${planText}`;
-
-  // Fiyat bilgisini dinamik yaz
-  if (pricingText) {
-    const price = getProPriceForCountry(currentCountry);
-    pricingText.innerHTML =
-      `Pro plan fiyatı: <strong>${price}</strong> (Seçili ülke: ${countryLabel}).` +
-      `<br/>Türkiye: 299 TL/ay · Zengin ülkeler: 19.99 USD/ay · Diğer ülkeler: 9.99 USD/ay.`;
+  if (creditsLabel) {
+    if (currentPlan === "free") {
+      creditsLabel.textContent = `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`;
+    } else {
+      creditsLabel.textContent = "Kalan puan: Sınırsız";
+    }
   }
 
-  if (currentPlan === "free") {
-    creditsLabel.textContent = `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`;
-    watchAdBtn.classList.remove("hidden");
-  } else {
-    creditsLabel.textContent = "Kalan puan: Sınırsız";
-    watchAdBtn.classList.add("hidden");
+  if (watchAdBtn) {
+    if (currentPlan === "free") {
+      watchAdBtn.classList.remove("hidden");
+    } else {
+      watchAdBtn.classList.add("hidden");
+    }
+  }
+
+  if (planStatus) {
+    planStatus.textContent =
+      currentPlan === "pro" ? "Plan: Pro (aktif)" : "Plan: Ücretsiz";
+  }
+
+  if (subscribeBlock) {
+    if (currentPlan === "pro") {
+      subscribeBlock.classList.add("hidden");
+    } else {
+      subscribeBlock.classList.remove("hidden");
+    }
   }
 }
 
-/* ======= API ÇAĞRILARI ======= */
+function updateAccountEmailUI() {
+  const accountEmail = document.getElementById("accountEmail");
+  if (accountEmail) {
+    accountEmail.textContent = currentEmail || "Kayıtlı değil";
+  }
+}
+
+/* ========= API ========= */
 
 async function callIdeasAPI(prompt, platform, langCode) {
   const langName = LANG_NAMES[langCode] || "Turkish";
@@ -250,31 +234,35 @@ async function callIdeasAPI(prompt, platform, langCode) {
   }
 }
 
-// Ödeme sağlayıcıya yönlendirme (dummy)
-async function startPayment(plan) {
+// Şimdilik demo: gerçek ödeme entegrasyonunda /api/checkout yazılacak
+async function startPayment() {
   try {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan, country: currentCountry }),
+      body: JSON.stringify({ plan: "pro" }),
     });
-    const data = await res.json();
-    if (data.url) {
+
+    const data = await res.json().catch(() => null);
+    if (data && data.url) {
       window.location.href = data.url;
     } else {
-      alert("Ödeme oturumu oluşturulamadı.");
+      alert(
+        "Ödeme entegrasyonu henüz tam bağlanmadı. Backend tarafında /api/checkout ayarlanmalı."
+      );
     }
   } catch (e) {
     alert("Ödeme başlatılırken hata oluştu.");
   }
 }
 
-/* ======= DOM EVENTS ======= */
+/* ========= DOM BAŞLANGIÇ ========= */
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Elemanları al
   const sidebar = document.getElementById("sidebar");
   const helpPanel = document.getElementById("helpPanel");
-  const sidebarToggle = document.getElementById("sidebarToggle");
+  const menuToggle = document.getElementById("menuToggle");
   const helpToggle = document.getElementById("helpToggle");
   const closeHelpBtn = document.getElementById("closeHelpBtn");
   const chatForm = document.getElementById("chatForm");
@@ -284,20 +272,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const messageInput = document.getElementById("messageInput");
   const loadingEl = document.getElementById("loading");
   const newChatBtn = document.getElementById("newChatBtn");
-
-  const emailInput = document.getElementById("emailInput");
-  const emailSaveBtn = document.getElementById("emailSaveBtn");
-  const emailSavedText = document.getElementById("emailSavedText");
-  const planSelect = document.getElementById("planSelect");
-  const planSaveBtn = document.getElementById("planSaveBtn");
-  const planSavedText = document.getElementById("planSavedText");
-  const payBtn = document.getElementById("payBtn");
   const watchAdBtn = document.getElementById("watchAdBtn");
-  const countrySelect = document.getElementById("countrySelect");
+  const subscribeBtn = document.getElementById("subscribeBtn");
+  const changeEmailBtn = document.getElementById("changeEmailBtn");
 
   const modalBackdrop = document.getElementById("modalBackdrop");
   const adModal = document.getElementById("adModal");
-
   const adStepMain = document.getElementById("adStepMain");
   const adStepConfirm = document.getElementById("adStepConfirm");
   const adWatchedBtn = document.getElementById("adWatchedBtn");
@@ -306,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const adContinueBtn = document.getElementById("adContinueBtn");
   const adConfirmCloseBtn = document.getElementById("adConfirmCloseBtn");
 
-  // Onboarding elemanları
+  // Onboarding
   const onboardingOverlay = document.getElementById("onboardingOverlay");
   const onboardStepLang = document.getElementById("onboardStepLang");
   const onboardStepEmail = document.getElementById("onboardStepEmail");
@@ -315,54 +295,37 @@ document.addEventListener("DOMContentLoaded", () => {
   const onboardEmailInput = document.getElementById("onboardEmailInput");
   const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
-  /* Durumu yükle */
+  // Durumu yükle
   loadState();
   renderConversationList();
   renderMessages();
-
-  // Plan & ülke & dil select ilk hal
-  if (planSelect) planSelect.value = currentPlan;
-  if (countrySelect) countrySelect.value = currentCountry;
-  if (langSelect) langSelect.value = currentLangCode;
   updatePlanAndCreditsUI();
+  updateAccountEmailUI();
 
-  /* Ülke seçimi */
-  if (countrySelect) {
-    countrySelect.addEventListener("change", () => {
-      currentCountry = countrySelect.value;
-      localStorage.setItem("inspireapp_country", currentCountry);
-      updatePlanAndCreditsUI();
-    });
-  }
+  if (langSelect) langSelect.value = currentLangCode;
 
-  /* Dil seçimi (ana kontrollerde) */
-  if (langSelect) {
-    langSelect.addEventListener("change", () => {
-      currentLangCode = langSelect.value;
-      localStorage.setItem("inspireapp_lang", currentLangCode);
-    });
-  }
+  /* === Menü & Yardım === */
 
-  /* Sol menü */
-  if (sidebarToggle && sidebar) {
-    sidebarToggle.addEventListener("click", () => {
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener("click", () => {
       sidebar.classList.toggle("hidden");
     });
   }
 
-  /* Yardım */
   if (helpToggle && helpPanel) {
     helpToggle.addEventListener("click", () => {
       helpPanel.classList.remove("hidden");
     });
   }
+
   if (closeHelpBtn && helpPanel) {
     closeHelpBtn.addEventListener("click", () => {
       helpPanel.classList.add("hidden");
     });
   }
 
-  /* Yeni sohbet */
+  /* === Yeni sohbet === */
+
   if (newChatBtn) {
     newChatBtn.addEventListener("click", () => {
       const conv = {
@@ -379,50 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* E-posta kaydet (sidebar) */
-  const savedEmail = localStorage.getItem("inspireapp_email");
-  if (savedEmail && emailInput && emailSavedText) {
-    emailInput.value = savedEmail;
-    emailSavedText.textContent = "Kayıtlı: " + savedEmail;
-  }
-  if (emailSaveBtn && emailInput && emailSavedText) {
-    emailSaveBtn.addEventListener("click", () => {
-      const email = emailInput.value.trim();
-      if (!email) return;
-      localStorage.setItem("inspireapp_email", email);
-      emailSavedText.textContent = "Kayıt edildi: " + email;
-    });
-  }
-
-  /* Plan kaydet */
-  if (currentPlan && planSelect && planSavedText) {
-    planSelect.value = currentPlan;
-    planSavedText.textContent = "Aktif plan: " + currentPlan;
-  }
-  if (planSaveBtn && planSelect && planSavedText) {
-    planSaveBtn.addEventListener("click", () => {
-      const plan = planSelect.value;
-      currentPlan = plan;
-      localStorage.setItem("inspireapp_plan", plan);
-      planSavedText.textContent = "Aktif plan: " + plan;
-
-      if (plan === "free" && credits > MAX_FREE_CREDITS) {
-        credits = MAX_FREE_CREDITS;
-        saveCredits();
-      }
-      updatePlanAndCreditsUI();
-    });
-  }
-
-  /* Ödeme */
-  if (payBtn && planSelect) {
-    payBtn.addEventListener("click", () => {
-      const plan = planSelect.value;
-      startPayment(plan);
-    });
-  }
-
-  /* ======= REKLAM MODALI ======= */
+  /* === Reklam modalı === */
 
   function openAdModal() {
     if (!modalBackdrop || !adModal || !adStepMain || !adStepConfirm) return;
@@ -486,13 +406,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* ======= ONBOARDING (Dil + E-posta) ======= */
+  /* === Onboarding (Dil + E-posta) === */
 
   function showOnboardingIfNeeded() {
     if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
-
-    const hasLang = !!localStorage.getItem("inspireapp_lang");
-    const hasEmail = !!localStorage.getItem("inspireapp_email");
+    const hasLang = !!localStorage.getItem(LANG_KEY);
+    const hasEmail = !!localStorage.getItem(EMAIL_KEY);
 
     if (hasLang && hasEmail) {
       onboardingOverlay.classList.add("hidden");
@@ -504,7 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!hasLang) {
       onboardStepLang.classList.remove("hidden");
       onboardStepEmail.classList.add("hidden");
-    } else if (!hasEmail) {
+    } else {
       onboardStepLang.classList.add("hidden");
       onboardStepEmail.classList.remove("hidden");
     }
@@ -514,7 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
     onboardLangSaveBtn.addEventListener("click", () => {
       const code = onboardLangSelect.value || "tr";
       currentLangCode = code;
-      localStorage.setItem("inspireapp_lang", code);
+      localStorage.setItem(LANG_KEY, code);
       if (langSelect) langSelect.value = code;
       if (onboardStepLang && onboardStepEmail) {
         onboardStepLang.classList.add("hidden");
@@ -527,23 +446,59 @@ document.addEventListener("DOMContentLoaded", () => {
     onboardEmailSaveBtn.addEventListener("click", () => {
       const email = onboardEmailInput.value.trim();
       if (!email) return;
-      localStorage.setItem("inspireapp_email", email);
-
-      if (emailInput) emailInput.value = email;
-      if (emailSavedText) emailSavedText.textContent = "Kayıt edildi: " + email;
-
+      currentEmail = email;
+      saveEmail();
+      updateAccountEmailUI();
       if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
     });
   }
 
   showOnboardingIfNeeded();
 
-  /* ======= MESAJ GÖNDERME ======= */
+  // Üç nokta menüsünden e-posta değiştirme
+  if (changeEmailBtn) {
+    changeEmailBtn.addEventListener("click", () => {
+      // sadece e-posta adımını tekrar göster
+      if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
+      onboardStepLang.classList.add("hidden");
+      onboardStepEmail.classList.remove("hidden");
+      onboardingOverlay.classList.remove("hidden");
+    });
+  }
+
+  /* === Abone ol butonu === */
+
+  if (subscribeBtn) {
+    subscribeBtn.addEventListener("click", () => {
+      // Şimdilik demo: direkt planı pro yapıyoruz.
+      // İstersen buraya startPayment() çağrısı bağlayabilirsin.
+      // startPayment();
+      currentPlan = "pro";
+      savePlan();
+      updatePlanAndCreditsUI();
+      alert("Pro plan deneme amaçlı olarak aktif edildi.");
+    });
+  }
+
+  /* === Dil seçimi (ana ekran) === */
+
+  if (langSelect) {
+    langSelect.addEventListener("change", () => {
+      const code = langSelect.value;
+      if (LANG_NAMES[code]) {
+        currentLangCode = code;
+        localStorage.setItem(LANG_KEY, code);
+      }
+    });
+  }
+
+  /* === Mesaj gönderme === */
 
   if (chatForm) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const text = messageInput.value.trim() || (topicInput && topicInput.value.trim());
+      const text = (messageInput.value || "").trim() ||
+        (topicInput ? topicInput.value.trim() : "");
       if (!text) return;
 
       const platform = platformSelect ? platformSelect.value : "youtube";
