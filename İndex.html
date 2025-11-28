@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>InspireApp – Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Üst bar -->
+    <header class="top-bar">
+      <button id="sidebarToggle" class="icon-button">☰</button>
+      <div class="top-title">InspireApp</div>
+      <button id="helpToggle" class="icon-button">?</button>
+    </header>
+
+    <!-- Sol: sohbetler + kayıt/abonelik -->
+    <aside id="sidebar" class="sidebar hidden">
+      <div class="sidebar-header">
+        <h2>Sohbetler</h2>
+        <button id="newChatBtn" class="pill-button">+ Yeni sohbet</button>
+      </div>
+      <div id="conversationList" class="conversation-list"></div>
+
+      <div class="sidebar-section">
+        <h3>E-posta ile kayıt</h3>
+        <input id="emailInput" type="email" placeholder="ornek@mail.com" />
+        <button id="emailSaveBtn" class="pill-button">Kaydet</button>
+        <p id="emailSavedText" class="muted"></p>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Ülke ve abonelik</h3>
+
+        <!-- Ülke seçimi: TR / Diğer -->
+        <label class="muted" for="countrySelect">Ülke</label>
+        <select id="countrySelect">
+          <option value="tr">Türkiye</option>
+          <option value="other">Diğer ülkeler</option>
+        </select>
+
+        <h4>Plan</h4>
+        <select id="planSelect">
+          <option value="free">Ücretsiz</option>
+          <option value="pro">Pro</option>
+          <option value="team">Takım</option>
+        </select>
+        <button id="planSaveBtn" class="pill-button">Kaydet</button>
+        <p id="planSavedText" class="muted"></p>
+
+        <!-- Fiyat bilgisi -->
+        <p class="muted" id="pricingText">
+          Pro plan fiyatı: Türkiye'de <strong>250 TL / ay</strong>, diğer ülkelerde
+          <strong>9.99 USD / ay</strong>. (Takım planı daha yüksek fiyatlıdır.)
+        </p>
+
+        <button id="payBtn" class="pill-button primary small">
+          Bu planı satın al
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <a href="admin.html">Admin Paneli</a>
+      </div>
+    </aside>
+
+    <!-- Sağdan kayan yardım paneli -->
+    <aside id="helpPanel" class="help-panel hidden">
+      <h2>Yardım</h2>
+      <p>Soldan sohbetler arasında geçiş yapabilir, “+ Yeni sohbet” ile sıfırdan başlayabilirsin.</p>
+      <p>E-posta, ülke ve plan bilgilerin bu cihazdaki tarayıcıda saklanır.</p>
+      <p>
+        Ücretsiz kullanıcılar için günlük 4 içerik hakkı vardır; ekstra haklar reklam izleyerek açılır.
+      </p>
+      <p>
+        Pro plan: Türkiye'de 250 TL/ay, diğer ülkelerde 9.99 USD/ay olarak sunulur.
+        Gerçek tahsilat, bağladığın ödeme sağlayıcısı üzerinden yapılır.
+      </p>
+      <button id="closeHelpBtn" class="pill-button">Kapat</button>
+    </aside>
+
+    <!-- Orta: Chat alanı -->
+    <main class="chat-area">
+      <div id="chatMessages" class="chat-messages"></div>
+
+      <!-- Kredi ve plan bilgisi -->
+      <div class="credits-row">
+        <span id="planLabel" class="muted"></span>
+        <span id="creditsLabel" class="muted"></span>
+        <button id="watchAdBtn" class="pill-button small">
+          Reklam izle +1 hak
+        </button>
+      </div>
+
+      <!-- Konu / platform / dil ayarları -->
+      <div class="controls">
+        <div class="control-row">
+          <input
+            id="topicInput"
+            type="text"
+            placeholder="Konu... (örn: moda, yemek)"
+          />
+        </div>
+        <div class="control-row">
+          <select id="platformSelect">
+            <option value="youtube">YouTube Shorts</option>
+            <option value="tiktok">TikTok</option>
+            <option value="instagram">Instagram Reels</option>
+          </select>
+
+          <!-- Çok dilli -->
+          <select id="langSelect">
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Chat giriş satırı -->
+      <form id="chatForm" class="chat-input-row">
+        <textarea
+          id="messageInput"
+          rows="1"
+          placeholder="Mesaj yaz veya konu gir..."
+        ></textarea>
+        <button type="submit" class="pill-button primary">Gönder</button>
+      </form>
+
+      <div id="loading" class="loading hidden">Yükleniyor...</div>
+    </main>
+  </div>
+
+  <!-- Reklam modalı -->
+  <div id="modalBackdrop" class="backdrop hidden"></div>
+  <div id="adModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Reklam izleyerek hak kazan</h2>
+      <p>
+        Gerçek uygulamada burada video reklam oynayacak. Şimdilik test için
+        aşağıdaki butona basarak reklamı izlemiş sayılacaksın.
+      </p>
+      <button id="adWatchedBtn" class="pill-button primary">
+        Reklamı izledim (+1 hak)
+      </button>
+      <button id="adCloseBtn" class="pill-button">Vazgeç</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
