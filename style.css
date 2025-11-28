@@ -454,4 +454,39 @@ textarea {
   .help-panel {
     width: 230px;
   }
+}/* === TRENDLER KUTUSU === */
+
+.trends-box {
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+}
+
+.trends-title {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.trends-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 13px;
+}
+
+.trends-item + .trends-item {
+  margin-top: 4px;
+}
+
+.trends-item a {
+  text-decoration: none;
+  color: var(--blue);
+}
+
+.trends-item a:hover {
+  text-decoration: underline;
 }
