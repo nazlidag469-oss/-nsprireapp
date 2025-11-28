@@ -8,86 +8,53 @@
 </head>
 <body>
   <div id="app">
-    <!-- ÜST BAR -->
+    <!-- Üst bar -->
     <header class="top-bar">
-      <button id="sidebarToggle" class="icon-button">☰</button>
+      <!-- Sol: üç nokta menü (hesap + sohbetler) -->
+      <button id="menuToggle" class="icon-button">⋯</button>
+      <!-- Orta: uygulama adı -->
       <div class="top-title">INSPIREAPP</div>
+      <!-- Sağ: Bilgi & Destek -->
       <button id="helpToggle" class="icon-button">?</button>
     </header>
 
-    <!-- SOL MENÜ: SOHBETLER + KAYIT / ABONELİK -->
+    <!-- Sol: üç nokta ile açılan menü (hesap + abonelik + sohbetler) -->
     <aside id="sidebar" class="sidebar hidden">
       <div class="sidebar-header">
-        <h2>Sohbetler</h2>
-        <button id="newChatBtn" class="pill-button">+ Yeni sohbet</button>
+        <h2>Hesap & Sohbetler</h2>
       </div>
 
-      <div id="conversationList" class="conversation-list"></div>
-
-      <div class="sidebar-section">
-        <h3>E-posta ile kayıt</h3>
-        <input id="emailInput" type="email" placeholder="ornek@mail.com" />
-        <button id="emailSaveBtn" class="pill-button">Kaydet</button>
-        <p id="emailSavedText" class="muted"></p>
-      </div>
-
-      <div class="sidebar-section">
-        <h3>Ülke ve abonelik</h3>
-
-        <label class="muted" for="countrySelect">Ülke</label>
-        <select id="countrySelect">
-          <!-- Türkiye -->
-          <option value="tr">Türkiye</option>
-
-          <!-- Zengin ülkeler (19.99 USD) -->
-          <option value="us">Amerika Birleşik Devletleri</option>
-          <option value="gb">Birleşik Krallık</option>
-          <option value="de">Almanya</option>
-          <option value="fr">Fransa</option>
-          <option value="ca">Kanada</option>
-          <option value="au">Avustralya</option>
-          <option value="jp">Japonya</option>
-          <option value="kr">Güney Kore</option>
-          <option value="sa">Suudi Arabistan</option>
-          <option value="ae">Birleşik Arap Emirlikleri</option>
-          <option value="qa">Katar</option>
-          <option value="kw">Kuveyt</option>
-          <option value="bh">Bahreyn</option>
-
-          <!-- Diğer popüler ülkeler (9.99 USD) -->
-          <option value="es">İspanya</option>
-          <option value="it">İtalya</option>
-          <option value="pt">Portekiz</option>
-          <option value="ru">Rusya</option>
-          <option value="in">Hindistan</option>
-          <option value="id">Endonezya</option>
-          <option value="br">Brezilya</option>
-          <option value="other">Diğer</option>
-        </select>
-
-        <h4>Plan</h4>
-        <select id="planSelect">
-          <option value="free">Ücretsiz</option>
-          <option value="pro">Pro</option>
-          <option value="team">Takım</option>
-        </select>
-
-        <button id="planSaveBtn" class="pill-button">Kaydet</button>
-        <p id="planSavedText" class="muted"></p>
-
-        <p class="muted" id="pricingText">
-          Pro plan fiyatı: Türkiye'de <strong>299 TL / ay</strong>,
-          zengin ülkelerde <strong>19.99 USD / ay</strong>,
-          diğer ülkelerde <strong>9.99 USD / ay</strong>.
-        </p>
-
-        <button id="payBtn" class="pill-button primary small">
-          Bu planı satın al
+      <!-- Kullanıcı / abonelik bloğu -->
+      <section class="sidebar-section">
+        <h3>Kullanıcı</h3>
+        <p class="muted small-label">E-posta</p>
+        <div id="accountEmail" class="sidebar-email">Kayıtlı değil</div>
+        <button id="changeEmailBtn" class="pill-button small">
+          E-postayı değiştir
         </button>
-      </div>
+
+        <p class="muted small-label">Durum</p>
+        <div id="planStatus" class="sidebar-plan-status">Plan: Ücretsiz</div>
+
+        <div id="subscribeBlock">
+          <p class="muted">
+            Pro üyelik ile sınırsız puan ve öncelikli öneriler alırsın.
+          </p>
+          <button id="subscribeBtn" class="pill-button primary small">
+            Pro’ya abone ol
+          </button>
+        </div>
+      </section>
+
+      <!-- Sohbet listesi -->
+      <section class="sidebar-section">
+        <h3>Sohbetler</h3>
+        <button id="newChatBtn" class="pill-button">+ Yeni sohbet</button>
+        <div id="conversationList" class="conversation-list"></div>
+      </section>
     </aside>
 
-    <!-- SAĞ YARDIM PANELİ: BİLGİ + DESTEK -->
+    <!-- Sağdan kayan Bilgi & Destek paneli -->
     <aside id="helpPanel" class="help-panel hidden">
       <h2>Bilgi &amp; Destek</h2>
 
@@ -97,17 +64,20 @@
         için fikir üreten bir asistandır.
       </p>
       <p>
-        Soldaki menüden sohbetler arasında geçiş yapabilir, “+ Yeni sohbet”
-        ile yeni bir konuşma başlatabilirsin.
+        Sohbet alanında konu veya mesajını yaz, platform ve dili seç,
+        <strong>Gönder</strong> butonuna bas. Uygulama sana madde madde,
+        platforma uygun fikirler üretir.
       </p>
       <p>
-        Ücretsiz kullanıcılar için günlük 4 puan vardır. Her istek 1 puan
-        tüketir. Ek puan kazanmak için reklam izleyebilirsin.
+        Ücretsiz kullanıcılar için günlük <strong>4 puan</strong> vardır.
+        Her istek 1 puan tüketir. Ek puan kazanmak için reklam izleyebilirsin.
       </p>
       <p>
-        Pro plan: Türkiye'de <strong>299 TL/ay</strong>,
-        zengin ülkelerde <strong>19.99 USD/ay</strong>,
-        diğer ülkelerde <strong>9.99 USD/ay</strong>.
+        <strong>Pro plan fiyatı:</strong><br />
+        • Türkiye'de <strong>299 TL/ay</strong><br />
+        • Zengin ülkelerde (örneğin ABD, Kanada, Almanya, Fransa,
+        BAE, Suudi Arabistan, Katar vb.) <strong>19.99 USD/ay</strong><br />
+        • Diğer ülkelerde <strong>9.99 USD/ay</strong>
       </p>
       <ul>
         <li>Pro: Sınırsız puan</li>
@@ -121,16 +91,19 @@
         gönderebilirsin:
       </p>
       <p>
-        <a href="mailto:insprireappdestek@gmail.com">insprireappdestek@gmail.com</a>
+        <a href="mailto:insprireappdestek@gmail.com">
+          insprireappdestek@gmail.com
+        </a>
       </p>
 
       <button id="closeHelpBtn" class="pill-button">Kapat</button>
     </aside>
 
-    <!-- ANA CHAT ALANI -->
+    <!-- Orta: Chat alanı -->
     <main class="chat-area">
       <div id="chatMessages" class="chat-messages"></div>
 
+      <!-- Plan / puan satırı -->
       <div class="credits-row">
         <span id="planLabel" class="muted"></span>
         <span id="creditsLabel" class="muted"></span>
@@ -139,6 +112,7 @@
         </button>
       </div>
 
+      <!-- Konu / platform / dil -->
       <div class="controls">
         <div class="control-row">
           <input
@@ -148,14 +122,13 @@
           />
         </div>
         <div class="control-row">
-          <!-- Platform seçimi -->
           <select id="platformSelect">
             <option value="youtube">YouTube Shorts</option>
             <option value="tiktok">TikTok</option>
             <option value="instagram">Instagram Reels</option>
           </select>
 
-          <!-- 20+ dil seçimi -->
+          <!-- 20+ dil -->
           <select id="langSelect">
             <option value="tr">Türkçe</option>
             <option value="en">English</option>
@@ -164,28 +137,25 @@
             <option value="fr">Français</option>
             <option value="it">Italiano</option>
             <option value="pt">Português</option>
-            <option value="ar">العربية (Arabic)</option>
             <option value="ru">Русский</option>
-            <option value="ja">日本語 (Japanese)</option>
-            <option value="ko">한국어 (Korean)</option>
-            <option value="hi">Hindi</option>
+            <option value="ar">العربية</option>
+            <option value="fa">فارسی</option>
+            <option value="hi">हिन्दी</option>
             <option value="id">Bahasa Indonesia</option>
-            <option value="zh">中文 (Chinese)</option>
-            <option value="pl">Polski</option>
+            <option value="ms">Bahasa Melayu</option>
+            <option value="th">ไทย</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
             <option value="nl">Nederlands</option>
             <option value="sv">Svenska</option>
             <option value="no">Norsk</option>
             <option value="da">Dansk</option>
-            <option value="fi">Suomi</option>
-            <option value="el">Ελληνικά</option>
-            <option value="cs">Čeština</option>
-            <option value="he">עברית (Hebrew)</option>
-            <option value="th">ไทย (Thai)</option>
-            <option value="vi">Tiếng Việt</option>
+            <option value="pl">Polski</option>
           </select>
         </div>
       </div>
 
+      <!-- Mesaj girişi (biraz yukarıda, alt boşluk var) -->
       <form id="chatForm" class="chat-input-row">
         <textarea
           id="messageInput"
@@ -199,14 +169,14 @@
     </main>
   </div>
 
-  <!-- REKLAM MODALI (2 AŞAMALI) -->
+  <!-- Reklam Modalı (iki adımlı) -->
   <div id="modalBackdrop" class="backdrop hidden"></div>
   <div id="adModal" class="modal hidden">
     <div class="modal-content">
       <!-- X ikonu -->
-      <button id="adCloseIcon" class="icon-button modal-close">×</button>
+      <button id="adCloseIcon" class="modal-close">×</button>
 
-      <!-- 1. adım -->
+      <!-- 1. Adım: normal reklam açıklaması -->
       <div id="adStepMain">
         <h2>Reklam izleyerek puan kazan</h2>
         <p>Gerçek uygulamada burada video reklam oynayacak.</p>
@@ -218,7 +188,7 @@
         </button>
       </div>
 
-      <!-- 2. adım uyarı -->
+      <!-- 2. Adım: uyarı -->
       <div id="adStepConfirm" class="hidden">
         <h3>Puanı kaçırmak üzeresin</h3>
         <p>
@@ -234,7 +204,7 @@
     </div>
   </div>
 
-  <!-- AÇILIŞ EKRANI: DİL + E-POSTA -->
+  <!-- Açılış ekranı: 1) Dil seçimi 2) E-posta -->
   <div id="onboardingOverlay" class="onboarding-overlay hidden">
     <div class="onboarding-card">
       <h1 class="onboarding-title">INSPIREAPP</h1>
@@ -242,7 +212,7 @@
       <!-- Adım 1: Dil seçimi -->
       <div id="onboardStepLang">
         <h2>Dil seçin</h2>
-        <p>Uygulama dilini seçin. Bu ayarı daha sonra değiştirebilirsiniz.</p>
+        <p>Uygulama dilini seçin. Bu ayar sohbet üretim dilini belirler.</p>
         <select id="onboardLangSelect">
           <option value="tr">Türkçe</option>
           <option value="en">English</option>
@@ -251,24 +221,20 @@
           <option value="fr">Français</option>
           <option value="it">Italiano</option>
           <option value="pt">Português</option>
-          <option value="ar">العربية (Arabic)</option>
           <option value="ru">Русский</option>
-          <option value="ja">日本語 (Japanese)</option>
-          <option value="ko">한국어 (Korean)</option>
-          <option value="hi">Hindi</option>
+          <option value="ar">العربية</option>
+          <option value="fa">فارسی</option>
+          <option value="hi">हिन्दी</option>
           <option value="id">Bahasa Indonesia</option>
-          <option value="zh">中文 (Chinese)</option>
-          <option value="pl">Polski</option>
+          <option value="ms">Bahasa Melayu</option>
+          <option value="th">ไทย</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
           <option value="nl">Nederlands</option>
           <option value="sv">Svenska</option>
           <option value="no">Norsk</option>
           <option value="da">Dansk</option>
-          <option value="fi">Suomi</option>
-          <option value="el">Ελληνικά</option>
-          <option value="cs">Čeština</option>
-          <option value="he">עברית (Hebrew)</option>
-          <option value="th">ไทย (Thai)</option>
-          <option value="vi">Tiếng Việt</option>
+          <option value="pl">Polski</option>
         </select>
         <button id="onboardLangSaveBtn" class="pill-button primary">
           Devam et
@@ -284,11 +250,7 @@
           type="email"
           placeholder="ornek@mail.com"
         />
-        <button
-          id="onboardEmailSaveBtn"
-          type="button"
-          class="pill-button primary"
-        >
+        <button id="onboardEmailSaveBtn" class="pill-button primary">
           Sohbete başla
         </button>
       </div>
