@@ -1,17 +1,17 @@
-// api/ideas.js
-// YouTube + TikTok + Instagram verisini (opsiyonel) kullanarak
-// OpenAI'den NET cevap + kısa video fikirleri üretir.
+// pages/api/ideas.js
+// Kısa video içerik koçu – YouTube / TikTok / Instagram verileriyle desteklenmiş fikir üretimi
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Sadece POST destekleniyor." });
   }
 
-  const { prompt, platform, lang } = req.body || {};
-  const topic = prompt || "Belirsiz konu";
-  const langName = lang || "Turkish";
+  const { prompt, platform, lang, mode, format } = req.body || {};
+  const topic = (prompt || "").toString().trim() || "Belirsiz konu";
+  const langName = (lang || "Turkish").toString();
+  const platformSafe = (platform || "youtube").toString();
 
-  // 1) ENV ANAHTARLARI
+  // --- ENV ---
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
     return res
@@ -24,13 +24,16 @@ export default async function handler(req, res) {
 
   let extraContext = "";
 
-  // 2) YouTube (isteğe bağlı)
-  if (platform === "youtube" && youtubeKey) {
+  // --- YouTube bağlamı (isteğe bağlı) ---
+  if (youtubeKey) {
     try {
       const url =
-        "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=" +
+        "https://www.googleapis.com/youtube/v3/search?part=snippet" +
+        "&maxResults=5" +
+        "&q=" +
         encodeURIComponent(topic) +
-        "&type=video&key=" +
+        "&type=video" +
+        "&key=" +
         youtubeKey;
 
       const r = await fetch(url);
@@ -40,7 +43,7 @@ export default async function handler(req, res) {
 
       if (titles.length) {
         extraContext +=
-          "\nYouTube'da benzer başlıklar:\n- " +
+          "\nYouTube'da benzer video başlıkları:\n- " +
           titles.slice(0, 5).join("\n- ") +
           "\n";
       }
@@ -49,8 +52,8 @@ export default async function handler(req, res) {
     }
   }
 
-  // 3) TikTok / Instagram - RapidAPI (isteğe bağlı)
-  if ((platform === "tiktok" || platform === "instagram") && rapidKey) {
+  // --- TikTok / Instagram RapidAPI bağlamı (isteğe bağlı, varsa) ---
+  if (rapidKey && (platformSafe === "tiktok" || platformSafe === "instagram")) {
     try {
       let url = "";
       let headers = {
@@ -59,13 +62,14 @@ export default async function handler(req, res) {
       let method = "GET";
       let body = undefined;
 
-      if (platform === "tiktok") {
+      if (platformSafe === "tiktok") {
+        // Burada gerçekten trending endpoint'i yerine kullanıcının eski search koduna benzer bir örnek var.
         url =
           "https://tiktok-api23.p.rapidapi.com/api/search/account?keyword=" +
           encodeURIComponent(topic) +
           "&cursor=0&search_id=0";
         headers["x-rapidapi-host"] = "tiktok-api23.p.rapidapi.com";
-      } else if (platform === "instagram") {
+      } else if (platformSafe === "instagram") {
         url = "https://instagram120.p.rapidapi.com/api/instagram/posts";
         headers["x-rapidapi-host"] = "instagram120.p.rapidapi.com";
         headers["Content-Type"] = "application/json";
@@ -78,8 +82,8 @@ export default async function handler(req, res) {
 
       extraContext +=
         "\n" +
-        platform.toUpperCase() +
-        " API örnek verisi:\n" +
+        platformSafe.toUpperCase() +
+        " tarafında örnek API verisi (kısaltılmış):\n" +
         JSON.stringify(d).slice(0, 800) +
         "\n";
     } catch (e) {
@@ -87,38 +91,8 @@ export default async function handler(req, res) {
     }
   }
 
-  // 4) OpenAI ile içerik üret (NET cevap + 5 fikir)
+  // --- OpenAI ile asistan cevabı ---
   try {
-    const PLATFORM_LABELS = {
-      youtube: "YouTube Shorts",
-      tiktok: "TikTok",
-      instagram: "Instagram Reels",
-    };
-    const platformLabel = PLATFORM_LABELS[platform] || "kısa video";
-
-    const systemPrompt = `
-Sen InspireApp adlı bir kısa video içerik koçusun.
-Kullanıcı hangi dili seçmişse cevabın TAMAMINI o dilde yazacaksın: ${langName}.
-
-Her istekte şu sırayı izle:
-1) Önce kullanıcının sorusunu veya isteğini doğrudan ve NET bir şekilde açıkla (3–6 cümle).
-2) Sonra aynı konuda ${platformLabel} için 5 kısa video fikri üret.
-3) Fikirleri numaralı liste olarak ver (1., 2., 3. ...).
-4) Her fikir en fazla 2–3 cümle olsun; lafı uzatma, pratik ve uygulanabilir öneriler ver.
-5) Aşağıda sana verilen YouTube/TikTok/Instagram bağlamını kullan ama konu dışına ASLA çıkma.
-`;
-
-    const userPrompt = `
-Kullanıcının mesajı / konusu:
-"${topic}"
-
-Seçilen platform: ${platformLabel}
-Cevap dili: ${langName}
-
-Ek bağlam (YouTube / RapidAPI verisi olabilir, yoksa boş olabilir):
-${extraContext}
-`;
-
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -126,44 +100,66 @@ ${extraContext}
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini", // istersen burada modeli değiştirebilirsin
+        model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          {
+            role: "system",
+            content:
+              "Sen kısa video üreticileri için çalışan profesyonel bir içerik koçusun. " +
+              "Kullanıcıya yukarıdan bakan değil, yanında yürüyen bir ekip arkadaşı gibi konuşursun. " +
+              "Cevabı her zaman **" +
+              langName +
+              "** dilinde ver. " +
+              "Format: dikey 9:16 (Reels / TikTok / Shorts). " +
+              "Amacın: kullanıcının tek başına uygulayabileceği, net ve uygulanabilir fikirler üretmek.\n\n" +
+              "Cevaplarını şu yapıda ver (ama başlıkları da cevabın diline göre çevir):\n" +
+              "1) Kısa Özet (1–2 cümle, videonun ana fikri)\n" +
+              "2) 3 Seçenekli Konsept:\n" +
+              "   - Soft / Güvenli\n" +
+              "   - Orta / Dengeli\n" +
+              "   - Agresif / Cesur\n" +
+              "   Her konsept için:\n" +
+              "   • 1 cümle genel açıklama\n" +
+              "   • 5–7 maddelik sahne kırılımı (HOOK + gelişme + kapanış)\n" +
+              "3) Teknik Rehber:\n" +
+              "   • Kamera açısı (telefonla nasıl tutulsun, tripod vs.)\n" +
+              "   • Işık ayarı (evde, dışarıda, gece/gündüz)\n" +
+              "   • Ses (mikrofon, ortam sesi, müzik)\n" +
+              "   • Süre önerisi (örn: 15–35 sn)\n" +
+              "   • Platforma özel küçük tüyolar (YouTube Shorts / TikTok / Reels farkları)\n" +
+              "4) Ek Seçenekler:\n" +
+              "   • Kullanıcıya \"İstersen bu fikirlerden biri için çekim planını sahne sahne anlatayım\" diye teklif et.\n" +
+              "   • Eğer kullanıcı Pro ise ekstra olarak seri fikir / 30 günlük mini plan önerebileceğini hatırlat.\n\n" +
+              "Boş, generic cümlelerden kaçın. Cümleler dolu ve net olsun. Gerçek bir içerik üreticisine konuşur gibi yaz.",
+          },
+          {
+            role: "user",
+            content:
+              `Konu: ${topic}\n` +
+              `Platform: ${platformSafe}\n` +
+              `İstenen format: ${format || "dikey 9:16 kısa video"}\n` +
+              `Ek bağlam:\n${extraContext}`,
+          },
         ],
-        temperature: 0.6,
-        max_tokens: 800,
+        max_tokens: 900,
       }),
     });
 
-    const dataText = await response.text();
-    let data;
-
-    try {
-      data = JSON.parse(dataText);
-    } catch (e) {
-      // JSON parse edemediysek ham metni dön
-      return res.status(200).json({
-        message: dataText || "OpenAI'dan beklenmeyen bir cevap geldi.",
-      });
-    }
+    const data = await response.json();
 
     if (!response.ok) {
-      const msg =
-        data?.error?.message ||
-        "OpenAI isteğinde hata oluştu. Kota veya faturalandırma ayarlarını kontrol edin.";
-      return res.status(response.status).json({ message: msg });
+      const msg = data?.error?.message || "OpenAI isteğinde hata oluştu.";
+      return res.status(500).json({ message: msg });
     }
 
     const text =
-      data.choices?.[0]?.message?.content?.trim() ||
+      data.choices?.[0]?.message?.content ||
       "Herhangi bir içerik üretilmedi.";
 
     return res.status(200).json({ message: text });
   } catch (e) {
-    console.error("OpenAI error:", e);
     return res
       .status(500)
       .json({ message: "OpenAI isteği sırasında beklenmeyen hata oluştu." });
   }
-      }
+            }
