@@ -1,4 +1,4 @@
-// api/trends.js
+// pages/api/trends.js
 // YouTube "mostPopular" ile haftanın trend videolarını döner.
 
 export default async function handler(req, res) {
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       .json({ message: "YOUTUBE_API_KEY tanımlı değil (server side)." });
   }
 
-  // ?region=TR gibi query parametresi, yoksa varsayılan US
+  // ?region=TR gibi query parametresi, yoksa US
   const region = (req.query.region || "US").toString().toUpperCase();
 
   try {
@@ -41,6 +41,7 @@ export default async function handler(req, res) {
         id: v.id,
         title: v.snippet?.title || "Başlıksız video",
         url: "https://www.youtube.com/watch?v=" + v.id,
+        channel: v.snippet?.channelTitle || "",
       })) || [];
 
     return res.status(200).json({ items });
