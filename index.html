@@ -2,33 +2,35 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>InspireApp – Chat</title>
+  <title>InspireApp – Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <div id="app">
-    <!-- Üst bar -->
+
+    <!-- ---------------- ÜST BAR ---------------- -->
     <header class="top-bar">
-      <!-- Sol: üç nokta menü (hesap + sohbetler) -->
       <button id="menuToggle" class="icon-button">⋯</button>
-      <!-- Orta: uygulama adı -->
       <div class="top-title">INSPIREAPP</div>
-      <!-- Sağ: Bilgi & Destek -->
       <button id="helpToggle" class="icon-button">?</button>
     </header>
 
-    <!-- Sol: üç nokta ile açılan menü (hesap + abonelik + sohbetler) -->
+    <!-- ---------------- SOL PANEL (HESAP + SOHBETLER + MENÜLER) ---------------- -->
     <aside id="sidebar" class="sidebar hidden">
       <div class="sidebar-header">
         <h2>Hesap & Sohbetler</h2>
       </div>
 
-      <!-- Kullanıcı / abonelik bloğu -->
+      <!-- Kullanıcı Bölümü -->
       <section class="sidebar-section">
         <h3>Kullanıcı</h3>
+
         <p class="muted small-label">E-posta</p>
         <div id="accountEmail" class="sidebar-email">Kayıtlı değil</div>
+
         <button id="changeEmailBtn" class="pill-button small">
           E-postayı değiştir
         </button>
@@ -36,236 +38,247 @@
         <p class="muted small-label">Durum</p>
         <div id="planStatus" class="sidebar-plan-status">Plan: Ücretsiz</div>
 
+        <!-- Abonelik alanı -->
         <div id="subscribeBlock">
           <p class="muted">
-            Pro üyelik ile sınırsız puan ve öncelikli öneriler alırsın.
+            <b>PRO</b> ÜYELİK → sınırsız puan + akım analiz + detaylı üretim + premium cevaplar.
           </p>
+
           <button id="subscribeBtn" class="pill-button primary small">
-            Pro’ya abone ol
+            <b>PRO</b>'ya geç
           </button>
         </div>
       </section>
 
-      <!-- Sohbet listesi -->
+      <!-- Sohbet Listesi -->
       <section class="sidebar-section">
         <h3>Sohbetler</h3>
         <button id="newChatBtn" class="pill-button">+ Yeni sohbet</button>
         <div id="conversationList" class="conversation-list"></div>
       </section>
+
+      <!-- Ek Menüler -->
+      <section class="sidebar-section">
+        <h3>Paneller</h3>
+
+        <button class="side-btn" data-panel="chat">💬 Sohbet</button>
+        <button class="side-btn" data-panel="trends">🔥 Trend Akımı</button>
+        <button class="side-btn" data-panel="series">📅 30 Günlük Seri</button>
+        <button class="side-btn" data-panel="hook">⚡ Hook Laboratuvarı</button>
+        <button class="side-btn" data-panel="copy">🎬 Trend Kopya Makinesi</button>
+      </section>
+
+      <button id="helpToggle2" class="help-btn">❓ Yardım</button>
     </aside>
 
-    <!-- Sağdan kayan Bilgi & Destek paneli -->
+    <!-- ---------------- SAĞ: BİLGİ & DESTEK PANELİ ---------------- -->
     <aside id="helpPanel" class="help-panel hidden">
-      <h2>Bilgi &amp; Destek</h2>
+      <h2>Bilgi & Destek</h2>
 
-      <h3>Bilgi</h3>
+      <h3>Uygulama</h3>
       <p>
-        InspireApp, kısa video içerikleri (YouTube Shorts, TikTok, Reels)
-        için fikir üreten bir asistandır.
+        InspireApp, kısa video üreticileri için yapay zekâ destekli
+        <b>profesyonel fikir oluşturma + akım analiz + içerik planlama</b> aracıdır.
       </p>
+
       <p>
-        Sohbet alanında konu veya mesajını yaz, platform ve dili seç,
-        <strong>Gönder</strong> butonuna bas. Uygulama sana madde madde,
-        platforma uygun fikirler üretir.
+        YouTube Shorts, TikTok, Instagram Reels gibi tüm platformlara özel
+        fikir, hook, başlık, akım kopyalama, trend takip özellikleri içerir.
       </p>
-      <p>
-        Ücretsiz kullanıcılar için günlük <strong>4 puan</strong> vardır.
-        Her istek 1 puan tüketir. Ek puan kazanmak için reklam izleyebilirsin.
-      </p>
-      <p>
-        <strong>Pro plan fiyatı örnek:</strong><br />
-        • Türkiye için yaklaşık <strong>299 TL/ay</strong><br />
-        • Bazı ülkelerde <strong>9.99 USD/ay</strong> veya
-        <strong>19.99 USD/ay</strong><br />
-        Tam fiyat, ödeme altyapısında ülkeye göre netleştirilecektir.
-      </p>
+
+      <h3>Ücretsiz Plan</h3>
+      <p>Günlük 4 puan. Reklam izleyerek artırılabilir.</p>
+
+      <h3>PRO Plan</h3>
       <ul>
-        <li>Pro: Sınırsız puan</li>
-        <li>Öncelikli istek işleme</li>
-        <li>Daha uzun ve detaylı içerik önerileri</li>
+        <li>✔ Sınırsız puan</li>
+        <li>✔ Öncelikli istek işleme</li>
+        <li>✔ Akım analizi ve trend verileri</li>
+        <li>✔ Uzun & detaylı video önerileri</li>
+        <li>✔ Hook & senaryo üretimi</li>
+        <li>✔ Premium görsel/video işleme</li>
       </ul>
 
       <h3>Destek</h3>
-      <p>
-        Herhangi bir sorun, istek veya hata bildirimi için bize e-posta
-        gönderebilirsin:
-      </p>
-      <p>
-        <a href="mailto:insprireappdestek@gmail.com">
-          insprireappdestek@gmail.com
-        </a>
-      </p>
+      <p><b>E-posta:</b> insprireappdestek@gmail.com</p>
 
       <button id="closeHelpBtn" class="pill-button">Kapat</button>
     </aside>
 
-    <!-- Orta: Chat alanı -->
+    <!-- ---------------- ANA PANEL ---------------- -->
     <main class="chat-area">
-      <!-- TRENDLER -->
-      <section class="trends-box">
-        <h2 class="trends-title">Trendler (bu hafta)</h2>
-        <ul id="trendsList" class="trends-list">
-          <!-- JS dolduracak -->
-        </ul>
+
+      <!-- ================= TRENDLER (HAFTALIK) ================= -->
+      <section id="panel-trends" class="panel hidden">
+        <h2 class="panel-title">🔥 Trendler (Bu Hafta)</h2>
+        <p>Platformdaki en popüler 5 akım videosu:</p>
+
+        <button id="refreshTrendsBtn" class="pill-button primary small">
+          Trendleri Yenile
+        </button>
+
+        <ul id="trendsList" class="trends-list"></ul>
       </section>
 
-      <!-- Chat mesajları -->
-      <div id="chatMessages" class="chat-messages"></div>
+      <!-- ================= SOHBET ALANI ================= -->
+      <section id="panel-chat" class="panel">
 
-      <!-- Plan / puan satırı -->
-      <div class="credits-row">
-        <span id="planLabel" class="muted"></span>
-        <span id="creditsLabel" class="muted"></span>
-        <button id="watchAdBtn" class="pill-button small">
-          Reklam izle +1 puan
-        </button>
-      </div>
+        <div id="chatMessages" class="chat-messages"></div>
 
-      <!-- Konu / platform / dil -->
-      <div class="controls">
-        <div class="control-row">
-          <input
-            id="topicInput"
-            type="text"
-            placeholder="Konu... (örn: moda, yemek)"
-          />
+        <div class="credits-row">
+          <span id="planLabel" class="muted"></span>
+          <span id="creditsLabel" class="muted"></span>
+
+          <button id="watchAdBtn" class="pill-button small">
+            Reklam izle +1 puan
+          </button>
         </div>
-        <div class="control-row">
+
+        <div class="controls">
+          <input id="topicInput" type="text" placeholder="Konu (örn: moda, yemek)" />
+
           <select id="platformSelect">
             <option value="youtube">YouTube Shorts</option>
             <option value="tiktok">TikTok</option>
             <option value="instagram">Instagram Reels</option>
           </select>
 
-          <!-- 20+ dil -->
           <select id="langSelect">
-            <option value="tr">Türkçe</option>
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="de">Deutsch</option>
-            <option value="fr">Français</option>
-            <option value="it">Italiano</option>
-            <option value="pt">Português</option>
-            <option value="ru">Русский</option>
-            <option value="ar">العربية</option>
-            <option value="fa">فارسی</option>
-            <option value="hi">हिन्दी</option>
-            <option value="id">Bahasa Indonesia</option>
-            <option value="ms">Bahasa Melayu</option>
-            <option value="th">ไทย</option>
-            <option value="ja">日本語</option>
-            <option value="ko">한국어</option>
-            <option value="nl">Nederlands</option>
-            <option value="sv">Svenska</option>
-            <option value="no">Norsk</option>
-            <option value="da">Dansk</option>
-            <option value="pl">Polski</option>
+            <!-- JS tüm dilleri dolduracak -->
           </select>
         </div>
-      </div>
 
-      <!-- Mesaj girişi -->
-      <form id="chatForm" class="chat-input-row">
-        <textarea
-          id="messageInput"
-          rows="1"
-          placeholder="Mesaj yaz veya konu gir..."
-        ></textarea>
-        <button type="submit" class="pill-button primary">Gönder</button>
-      </form>
+        <!-- Kamera + Ses + Gönder -->
+        <form id="chatForm" class="chat-input-row">
+          <button type="button" id="voiceBtn" class="circle-button">🎤</button>
+          <button type="button" id="cameraBtn" class="circle-button">📷</button>
 
-      <div id="loading" class="loading hidden">Yükleniyor...</div>
+          <textarea id="messageInput" rows="1" placeholder="Mesaj yaz veya konu gir..."></textarea>
+
+          <button type="submit" id="sendBtn" class="pill-button primary">
+            Gönder
+          </button>
+        </form>
+
+        <div id="loading" class="loading hidden">Yükleniyor...</div>
+      </section>
+
+      <!-- ================= 30 GÜNLÜK SERİ OLUŞTURUCU ================= -->
+      <section id="panel-series" class="panel hidden">
+        <h2>📅 30 Günlük İçerik Planı</h2>
+
+        <input id="seriesTopic" placeholder="Konu gir..." />
+        <button id="seriesGenerate" class="pill-button primary small">
+          Plan Üret
+        </button>
+
+        <pre id="seriesResult"></pre>
+      </section>
+
+      <!-- ================= HOOK LABORATUVARI ================= -->
+      <section id="panel-hook" class="panel hidden">
+        <h2>⚡ Hook Laboratuvarı</h2>
+
+        <input id="hookTopic" placeholder="Hook için konu..." />
+        <button id="hookGenerate" class="pill-button primary small">
+          Hook Üret
+        </button>
+
+        <pre id="hookResult"></pre>
+      </section>
+
+      <!-- ================= TREND KOPYA MAKİNESİ ================= -->
+      <section id="panel-copy" class="panel hidden">
+        <h2>🎬 Trend Kopya Makinesi</h2>
+
+        <input id="copyTopic" placeholder="Link veya konu gir..." />
+        <button id="copyGenerate" class="pill-button primary small">
+          Kopya Üret
+        </button>
+
+        <pre id="copyResult"></pre>
+      </section>
+
     </main>
-  </div>
 
-  <!-- Reklam Modalı (iki adımlı) -->
-  <div id="modalBackdrop" class="backdrop hidden"></div>
-  <div id="adModal" class="modal hidden">
-    <div class="modal-content">
-      <!-- X ikonu -->
-      <button id="adCloseIcon" class="modal-close">×</button>
+    <!-- ---------------- REKLAM MODALI ---------------- -->
+    <div id="modalBackdrop" class="backdrop hidden"></div>
 
-      <!-- 1. Adım: normal reklam açıklaması -->
-      <div id="adStepMain">
-        <h2>Reklam izleyerek puan kazan</h2>
-        <p>Gerçek uygulamada burada video reklam oynayacak.</p>
-        <button id="adWatchedBtn" class="pill-button primary">
-          Reklamı izledim (+1 puan)
-        </button>
-        <button id="adCancelBtn" class="pill-button">
-          Vazgeç
-        </button>
-      </div>
+    <div id="adModal" class="modal hidden">
+      <div class="modal-content">
 
-      <!-- 2. Adım: uyarı -->
-      <div id="adStepConfirm" class="hidden">
-        <h3>Puanı kaçırmak üzeresin</h3>
-        <p>
-          İzlemeye devam etmezsen bu reklam oturumundan puan kazanamayacaksın.
-        </p>
-        <button id="adContinueBtn" class="pill-button primary">
-          İzlemeye devam et
-        </button>
-        <button id="adConfirmCloseBtn" class="pill-button">
-          Kapat
-        </button>
-      </div>
-    </div>
-  </div>
+        <button id="adCloseIcon" class="modal-close">×</button>
 
-  <!-- Açılış ekranı: 1) Dil seçimi 2) E-posta -->
-  <div id="onboardingOverlay" class="onboarding-overlay hidden">
-    <div class="onboarding-card">
-      <h1 class="onboarding-title">INSPIREAPP</h1>
+        <!-- Adım 1 -->
+        <div id="adStepMain">
+          <h2>Reklam izleyerek puan kazan</h2>
+          <p>Gerçek uygulamada burada video reklam oynayacak.</p>
 
-      <!-- Adım 1: Dil seçimi -->
-      <div id="onboardStepLang">
-        <h2>Dil seçin</h2>
-        <p>Uygulama dilini seçin. Bu ayar içerik üretim dilini belirler.</p>
-        <select id="onboardLangSelect">
-          <option value="tr">Türkçe</option>
-          <option value="en">English</option>
-          <option value="es">Español</option>
-          <option value="de">Deutsch</option>
-          <option value="fr">Français</option>
-          <option value="it">Italiano</option>
-          <option value="pt">Português</option>
-          <option value="ru">Русский</option>
-          <option value="ar">العربية</option>
-          <option value="fa">فارسی</option>
-          <option value="hi">हिन्दी</option>
-          <option value="id">Bahasa Indonesia</option>
-          <option value="ms">Bahasa Melayu</option>
-          <option value="th">ไทย</option>
-          <option value="ja">日本語</option>
-          <option value="ko">한국어</option>
-          <option value="nl">Nederlands</option>
-          <option value="sv">Svenska</option>
-          <option value="no">Norsk</option>
-          <option value="da">Dansk</option>
-          <option value="pl">Polski</option>
-        </select>
-        <button id="onboardLangSaveBtn" class="pill-button primary">
-          Devam et
-        </button>
-      </div>
+          <button id="adWatchedBtn" class="pill-button primary">
+            Reklamı izledim (+1 puan)
+          </button>
 
-      <!-- Adım 2: E-posta -->
-      <div id="onboardStepEmail" class="hidden">
-        <h2>Başlamak için e-posta adresinizi girin</h2>
-        <p>Sohbetleriniz bu cihazda e-posta bilginizle eşleşerek saklanır.</p>
-        <input
-          id="onboardEmailInput"
-          type="email"
-          placeholder="ornek@mail.com"
-        />
-        <button id="onboardEmailSaveBtn" class="pill-button primary">
-          Sohbete başla
-        </button>
+          <button id="adCancelBtn" class="pill-button">Vazgeç</button>
+        </div>
+
+        <!-- Adım 2 -->
+        <div id="adStepConfirm" class="hidden">
+          <h3>Puanı kaçırmak üzeresin</h3>
+          <p>
+            İzlemeyi yarıda bırakırsan puan kazanamayacaksın.
+          </p>
+
+          <button id="adContinueBtn" class="pill-button primary">
+            İzlemeye devam et
+          </button>
+
+          <button id="adConfirmCloseBtn" class="pill-button">
+            Kapat
+          </button>
+        </div>
       </div>
     </div>
+
+    <!-- ---------------- ONBOARDING → DİL + EPOSTA ---------------- -->
+    <div id="onboardingOverlay" class="onboarding-overlay hidden">
+      <div class="onboarding-card">
+
+        <h1 class="onboarding-title">INSPIREAPP</h1>
+
+        <!-- Dil -->
+        <div id="onboardStepLang">
+          <h2>Dil seçin</h2>
+
+          <p>Uygulamanın arayüz ve üretim dilini seçin.</p>
+
+          <select id="onboardLangSelect">
+            <!-- JS dolduracak -->
+          </select>
+
+          <button id="onboardLangSaveBtn" class="pill-button primary">
+            Devam et
+          </button>
+        </div>
+
+        <!-- E-posta -->
+        <div id="onboardStepEmail" class="hidden">
+          <h2>E-posta adresinizi girin</h2>
+
+          <p>
+            Sohbetler cihazınızda e-posta ile eşleştirilerek kaydedilir.
+          </p>
+
+          <input id="onboardEmailInput" type="email" placeholder="ornek@mail.com" />
+
+          <button id="onboardEmailSaveBtn" class="pill-button primary">
+            Sohbete başla
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="app.js"></script>
 </body>
-  </html>
+        </html>
