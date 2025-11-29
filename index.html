@@ -4,24 +4,23 @@
   <meta charset="UTF-8" />
   <title>InspireApp – Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
   <div id="app">
 
-    <!-- ---------------- ÜST BAR ---------------- -->
+    <!-- ============ ÜST BAR ============ -->
     <header class="top-bar">
       <button id="menuToggle" class="icon-button">⋯</button>
       <div class="top-title">INSPIREAPP</div>
       <button id="helpToggle" class="icon-button">?</button>
     </header>
 
-    <!-- ---------------- SOL PANEL (HESAP + SOHBETLER + MENÜLER) ---------------- -->
+    <!-- ============ SOL PANEL (HESAP + SOHBETLER + MENÜLER) ============ -->
     <aside id="sidebar" class="sidebar hidden">
       <div class="sidebar-header">
-        <h2>Hesap & Sohbetler</h2>
+        <h2>Hesap &amp; Sohbetler</h2>
       </div>
 
       <!-- Kullanıcı Bölümü -->
@@ -57,7 +56,7 @@
         <div id="conversationList" class="conversation-list"></div>
       </section>
 
-      <!-- Ek Menüler -->
+      <!-- Panel Butonları -->
       <section class="sidebar-section">
         <h3>Paneller</h3>
 
@@ -71,9 +70,9 @@
       <button id="helpToggle2" class="help-btn">❓ Yardım</button>
     </aside>
 
-    <!-- ---------------- SAĞ: BİLGİ & DESTEK PANELİ ---------------- -->
+    <!-- ============ SAĞ: BİLGİ & DESTEK PANELİ ============ -->
     <aside id="helpPanel" class="help-panel hidden">
-      <h2>Bilgi & Destek</h2>
+      <h2>Bilgi &amp; Destek</h2>
 
       <h3>Uygulama</h3>
       <p>
@@ -94,8 +93,8 @@
         <li>✔ Sınırsız puan</li>
         <li>✔ Öncelikli istek işleme</li>
         <li>✔ Akım analizi ve trend verileri</li>
-        <li>✔ Uzun & detaylı video önerileri</li>
-        <li>✔ Hook & senaryo üretimi</li>
+        <li>✔ Uzun &amp; detaylı video önerileri</li>
+        <li>✔ Hook &amp; senaryo üretimi</li>
         <li>✔ Premium görsel/video işleme</li>
       </ul>
 
@@ -105,10 +104,10 @@
       <button id="closeHelpBtn" class="pill-button">Kapat</button>
     </aside>
 
-    <!-- ---------------- ANA PANEL ---------------- -->
+    <!-- ============ ANA PANEL ============ -->
     <main class="chat-area">
 
-      <!-- ================= TRENDLER (HAFTALIK) ================= -->
+      <!-- ---- TRENDLER ---- -->
       <section id="panel-trends" class="panel hidden">
         <h2 class="panel-title">🔥 Trendler (Bu Hafta)</h2>
         <p>Platformdaki en popüler 5 akım videosu:</p>
@@ -120,7 +119,7 @@
         <ul id="trendsList" class="trends-list"></ul>
       </section>
 
-      <!-- ================= SOHBET ALANI ================= -->
+      <!-- ---- SOHBET ALANI ---- -->
       <section id="panel-chat" class="panel">
 
         <div id="chatMessages" class="chat-messages"></div>
@@ -135,17 +134,23 @@
         </div>
 
         <div class="controls">
-          <input id="topicInput" type="text" placeholder="Konu (örn: moda, yemek)" />
+          <div class="control-row">
+            <input
+              id="topicInput"
+              type="text"
+              placeholder="Konu (örn: moda, yemek)" />
+          </div>
+          <div class="control-row">
+            <select id="platformSelect">
+              <option value="youtube">YouTube Shorts</option>
+              <option value="tiktok">TikTok</option>
+              <option value="instagram">Instagram Reels</option>
+            </select>
 
-          <select id="platformSelect">
-            <option value="youtube">YouTube Shorts</option>
-            <option value="tiktok">TikTok</option>
-            <option value="instagram">Instagram Reels</option>
-          </select>
-
-          <select id="langSelect">
-            <!-- JS tüm dilleri dolduracak -->
-          </select>
+            <select id="langSelect">
+              <!-- JS dolduracak -->
+            </select>
+          </div>
         </div>
 
         <!-- Kamera + Ses + Gönder -->
@@ -153,7 +158,10 @@
           <button type="button" id="voiceBtn" class="circle-button">🎤</button>
           <button type="button" id="cameraBtn" class="circle-button">📷</button>
 
-          <textarea id="messageInput" rows="1" placeholder="Mesaj yaz veya konu gir..."></textarea>
+          <textarea
+            id="messageInput"
+            rows="1"
+            placeholder="Mesaj yaz veya konu gir..."></textarea>
 
           <button type="submit" id="sendBtn" class="pill-button primary">
             Gönder
@@ -163,7 +171,7 @@
         <div id="loading" class="loading hidden">Yükleniyor...</div>
       </section>
 
-      <!-- ================= 30 GÜNLÜK SERİ OLUŞTURUCU ================= -->
+      <!-- ---- 30 GÜNLÜK SERİ ---- -->
       <section id="panel-series" class="panel hidden">
         <h2>📅 30 Günlük İçerik Planı</h2>
 
@@ -175,7 +183,7 @@
         <pre id="seriesResult"></pre>
       </section>
 
-      <!-- ================= HOOK LABORATUVARI ================= -->
+      <!-- ---- HOOK LAB ---- -->
       <section id="panel-hook" class="panel hidden">
         <h2>⚡ Hook Laboratuvarı</h2>
 
@@ -187,7 +195,7 @@
         <pre id="hookResult"></pre>
       </section>
 
-      <!-- ================= TREND KOPYA MAKİNESİ ================= -->
+      <!-- ---- TREND KOPYA MAKİNESİ ---- -->
       <section id="panel-copy" class="panel hidden">
         <h2>🎬 Trend Kopya Makinesi</h2>
 
@@ -201,7 +209,7 @@
 
     </main>
 
-    <!-- ---------------- REKLAM MODALI ---------------- -->
+    <!-- ============ REKLAM MODALI ============ -->
     <div id="modalBackdrop" class="backdrop hidden"></div>
 
     <div id="adModal" class="modal hidden">
@@ -239,7 +247,7 @@
       </div>
     </div>
 
-    <!-- ---------------- ONBOARDING → DİL + EPOSTA ---------------- -->
+    <!-- ============ ONBOARDING (DİL + E-POSTA) ============ -->
     <div id="onboardingOverlay" class="onboarding-overlay hidden">
       <div class="onboarding-card">
 
@@ -268,7 +276,10 @@
             Sohbetler cihazınızda e-posta ile eşleştirilerek kaydedilir.
           </p>
 
-          <input id="onboardEmailInput" type="email" placeholder="ornek@mail.com" />
+          <input
+            id="onboardEmailInput"
+            type="email"
+            placeholder="ornek@mail.com" />
 
           <button id="onboardEmailSaveBtn" class="pill-button primary">
             Sohbete başla
@@ -281,4 +292,4 @@
 
   <script src="app.js"></script>
 </body>
-        </html>
+          </html>
