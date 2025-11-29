@@ -1,4 +1,5 @@
-// ========== SABİTLER ==========
+// ===================== SABİT ANAHTARLAR =====================
+
 const STORAGE_KEY = "inspireapp_conversations_v1";
 const CREDITS_KEY = "inspireapp_credits_v1";
 const PLAN_KEY = "inspireapp_plan_v1";
@@ -7,7 +8,7 @@ const LANG_KEY = "inspireapp_lang_v1";
 
 const MAX_FREE_CREDITS = 4;
 
-// Dil kodu -> OpenAI dil adı
+// Dil kodu -> OpenAI'ye gidecek isim
 const LANG_NAMES = {
   tr: "Turkish",
   en: "English",
@@ -57,191 +58,30 @@ const LANG_REGION = {
   pl: "PL",
 };
 
-// Dil -> UI kısa metinleri
-const UI_STRINGS = {
+// Buton/metin için basit çeviriler (UI)
+const UI_TEXT = {
   tr: {
     send: "Gönder",
-    msgPlaceholder: "Mesaj yaz veya konu gir...",
-    topicPlaceholder: "Konu (örn: moda, yemek)",
-    watchAd: "Reklam izle +1 puan",
-    loading: "Yükleniyor...",
+    ad: "Reklam izle +1 puan",
+    placeholder: "Mesaj yaz veya konu gir...",
   },
   en: {
     send: "Send",
-    msgPlaceholder: "Type a message or topic...",
-    topicPlaceholder: "Topic (e.g. fashion, food)",
-    watchAd: "Watch ad +1 credit",
-    loading: "Loading...",
-  },
-  es: {
-    send: "Enviar",
-    msgPlaceholder: "Escribe un mensaje o tema...",
-    topicPlaceholder: "Tema (ej: moda, comida)",
-    watchAd: "Ver anuncio +1 punto",
-    loading: "Cargando...",
-  },
-  de: {
-    send: "Senden",
-    msgPlaceholder: "Nachricht oder Thema eingeben...",
-    topicPlaceholder: "Thema (z.B. Mode, Essen)",
-    watchAd: "Werbung ansehen +1 Punkt",
-    loading: "Lädt...",
-  },
-  fr: {
-    send: "Envoyer",
-    msgPlaceholder: "Écrire un message ou un sujet...",
-    topicPlaceholder: "Sujet (ex : mode, cuisine)",
-    watchAd: "Regarder une pub +1 point",
-    loading: "Chargement...",
-  },
-  it: {
-    send: "Invia",
-    msgPlaceholder: "Scrivi un messaggio o un tema...",
-    topicPlaceholder: "Tema (es: moda, cibo)",
-    watchAd: "Guarda annuncio +1 punto",
-    loading: "Caricamento...",
-  },
-  pt: {
-    send: "Enviar",
-    msgPlaceholder: "Digite uma mensagem ou tema...",
-    topicPlaceholder: "Tema (ex: moda, comida)",
-    watchAd: "Assistir anúncio +1 ponto",
-    loading: "Carregando...",
-  },
-  ru: {
-    send: "Отправить",
-    msgPlaceholder: "Напишите сообщение или тему...",
-    topicPlaceholder: "Тема (напр. мода, еда)",
-    watchAd: "Смотреть рекламу +1 балл",
-    loading: "Загрузка...",
-  },
-  ar: {
-    send: "إرسال",
-    msgPlaceholder: "اكتب رسالة أو موضوع...",
-    topicPlaceholder: "الموضوع (مثال: الموضة، الطعام)",
-    watchAd: "شاهد إعلانًا +1 نقطة",
-    loading: "جار التحميل...",
-  },
-  fa: {
-    send: "ارسال",
-    msgPlaceholder: "یک پیام یا موضوع بنویسید...",
-    topicPlaceholder: "موضوع (مثلاً مد، غذا)",
-    watchAd: "تماشای تبلیغ +۱ امتیاز",
-    loading: "در حال بارگذاری...",
-  },
-  hi: {
-    send: "भेजें",
-    msgPlaceholder: "संदेश या विषय लिखें...",
-    topicPlaceholder: "विषय (जैसे फैशन, फूड)",
-    watchAd: "विज्ञापन देखें +1 पॉइंट",
-    loading: "लोड हो रहा है...",
-  },
-  id: {
-    send: "Kirim",
-    msgPlaceholder: "Tulis pesan atau topik...",
-    topicPlaceholder: "Topik (mis: fashion, makanan)",
-    watchAd: "Tonton iklan +1 poin",
-    loading: "Memuat...",
-  },
-  ms: {
-    send: "Hantar",
-    msgPlaceholder: "Tulis mesej atau topik...",
-    topicPlaceholder: "Topik (cth: fesyen, makanan)",
-    watchAd: "Tonton iklan +1 mata",
-    loading: "Memuatkan...",
-  },
-  th: {
-    send: "ส่ง",
-    msgPlaceholder: "พิมพ์ข้อความหรือหัวข้อ...",
-    topicPlaceholder: "หัวข้อ (เช่น แฟชั่น อาหาร)",
-    watchAd: "ดูโฆษณา +1 แต้ม",
-    loading: "กำลังโหลด...",
-  },
-  ja: {
-    send: "送信",
-    msgPlaceholder: "メッセージまたはトピックを入力...",
-    topicPlaceholder: "トピック（例：ファッション、料理）",
-    watchAd: "広告を見る +1ポイント",
-    loading: "読み込み中...",
-  },
-  ko: {
-    send: "보내기",
-    msgPlaceholder: "메시지나 주제를 입력하세요...",
-    topicPlaceholder: "주제 (예: 패션, 음식)",
-    watchAd: "광고 보기 +1 포인트",
-    loading: "불러오는 중...",
-  },
-  nl: {
-    send: "Verzenden",
-    msgPlaceholder: "Typ een bericht of onderwerp...",
-    topicPlaceholder: "Onderwerp (bijv. mode, eten)",
-    watchAd: "Advertentie bekijken +1 punt",
-    loading: "Laden...",
-  },
-  sv: {
-    send: "Skicka",
-    msgPlaceholder: "Skriv ett meddelande eller ämne...",
-    topicPlaceholder: "Ämne (t.ex. mode, mat)",
-    watchAd: "Titta på annons +1 poäng",
-    loading: "Laddar...",
-  },
-  no: {
-    send: "Send",
-    msgPlaceholder: "Skriv en melding eller et tema...",
-    topicPlaceholder: "Tema (f.eks. mote, mat)",
-    watchAd: "Se annonse +1 poeng",
-    loading: "Laster...",
-  },
-  da: {
-    send: "Send",
-    msgPlaceholder: "Skriv en besked eller et emne...",
-    topicPlaceholder: "Emne (f.eks. mode, mad)",
-    watchAd: "Se reklame +1 point",
-    loading: "Indlæser...",
-  },
-  pl: {
-    send: "Wyślij",
-    msgPlaceholder: "Wpisz wiadomość lub temat...",
-    topicPlaceholder: "Temat (np. moda, jedzenie)",
-    watchAd: "Obejrzyj reklamę +1 punkt",
-    loading: "Ładowanie...",
+    ad: "Watch Ad +1 credit",
+    placeholder: "Type a message or topic...",
   },
 };
 
-// Dil kodu -> arayüz etiketi
-const LANG_LABELS = {
-  tr: "Türkçe",
-  en: "English",
-  es: "Español",
-  de: "Deutsch",
-  fr: "Français",
-  it: "Italiano",
-  pt: "Português",
-  ru: "Русский",
-  ar: "العربية",
-  fa: "فارسی",
-  hi: "हिन्दी",
-  id: "Bahasa Indonesia",
-  ms: "Bahasa Melayu",
-  th: "ไทย",
-  ja: "日本語",
-  ko: "한국어",
-  nl: "Nederlands",
-  sv: "Svenska",
-  no: "Norsk",
-  da: "Dansk",
-  pl: "Polski",
-};
+// ===================== GLOBAL DURUM =====================
 
-// Global durum
 let conversations = [];
 let currentId = null;
 let currentPlan = "free"; // "free" | "pro"
 let credits = MAX_FREE_CREDITS;
-let currentLangCode = localStorage.getItem(LANG_KEY) || "tr";
+let currentLangCode = "tr";
 let currentEmail = "";
 
-// ========== DURUM YÜKLE / KAYDET ==========
+// ===================== DURUM YÜKLE / KAYDET =====================
 
 function loadState() {
   try {
@@ -252,12 +92,13 @@ function loadState() {
   }
 
   if (!conversations.length) {
-    conversations.push({
+    const first = {
       id: Date.now().toString(),
       title: "Yeni sohbet",
       messages: [],
       createdAt: Date.now(),
-    });
+    };
+    conversations.push(first);
   }
   currentId = conversations[0].id;
 
@@ -293,7 +134,8 @@ function saveEmail() {
   else localStorage.removeItem(EMAIL_KEY);
 }
 
-// ========== YARDIMCI ==========
+// ===================== YARDIMCI FONKSİYONLAR =====================
+
 function getCurrentConversation() {
   return conversations.find((c) => c.id === currentId);
 }
@@ -301,7 +143,6 @@ function getCurrentConversation() {
 function renderConversationList() {
   const listEl = document.getElementById("conversationList");
   if (!listEl) return;
-
   listEl.innerHTML = "";
   conversations
     .slice()
@@ -341,7 +182,7 @@ function addMessage(role, text) {
   const conv = getCurrentConversation();
   conv.messages.push({ role, text });
   if (!conv.title && role === "user" && text) {
-    conv.title = text.slice(0, 40);
+    conv.title = text.slice(0, 25);
   }
   saveState();
   renderConversationList();
@@ -360,10 +201,11 @@ function updatePlanAndCreditsUI() {
       currentPlan === "pro" ? "Plan: Pro (sınırsız puan)" : "Plan: Ücretsiz";
   }
   if (creditsLabel) {
-    creditsLabel.textContent =
-      currentPlan === "free"
-        ? `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`
-        : "Kalan puan: Sınırsız";
+    if (currentPlan === "free") {
+      creditsLabel.textContent = `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`;
+    } else {
+      creditsLabel.textContent = "Kalan puan: Sınırsız";
+    }
   }
   if (watchAdBtn) {
     if (currentPlan === "free") watchAdBtn.classList.remove("hidden");
@@ -371,7 +213,7 @@ function updatePlanAndCreditsUI() {
   }
   if (planStatus) {
     planStatus.textContent =
-      currentPlan === "pro" ? "Plan: Pro (AKTİF)" : "Plan: Ücretsiz";
+      currentPlan === "pro" ? "Plan: Pro (aktif)" : "Plan: Ücretsiz";
   }
   if (subscribeBlock) {
     if (currentPlan === "pro") subscribeBlock.classList.add("hidden");
@@ -386,42 +228,28 @@ function updateAccountEmailUI() {
   }
 }
 
-// UI dilini uygula
-function applyLanguageUI() {
-  const lang = currentLangCode in UI_STRINGS ? currentLangCode : "en";
-  const t = UI_STRINGS[lang];
-
+function applyUITextForLang(code) {
+  const t = UI_TEXT[code] || UI_TEXT.en;
   const sendBtn = document.getElementById("sendBtn");
-  const msgInput = document.getElementById("messageInput");
-  const topicInput = document.getElementById("topicInput");
   const watchAdBtn = document.getElementById("watchAdBtn");
-  const loadingEl = document.getElementById("loading");
+  const messageInput = document.getElementById("messageInput");
 
   if (sendBtn) sendBtn.textContent = t.send;
-  if (msgInput) msgInput.placeholder = t.msgPlaceholder;
-  if (topicInput) topicInput.placeholder = t.topicPlaceholder;
-  if (watchAdBtn) watchAdBtn.textContent = t.watchAd;
-  if (loadingEl) loadingEl.textContent = t.loading;
+  if (watchAdBtn) watchAdBtn.textContent = t.ad;
+  if (messageInput) messageInput.placeholder = t.placeholder;
 }
 
-// ========== API YARDIMCILARI ==========
+// ===================== API FONKSİYONLARI =====================
 
-// Ana sohbet için – burada senin asistan karakterini backend'de güçlendiriyoruz.
 async function callIdeasAPI(prompt, platform, langCode) {
   const langName = LANG_NAMES[langCode] || "Turkish";
+
   try {
     const res = await fetch("/api/ideas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt,
-        platform,
-        lang: langName,
-        mode: "assistant_v2", // backend'de istersen buna göre özel prompt kullan
-        format: "reel_9_16", // dikey reel mantığı
-      }),
+      body: JSON.stringify({ prompt, platform, lang: langName }),
     });
-
     const text = await res.text();
     try {
       const data = JSON.parse(text);
@@ -435,34 +263,74 @@ async function callIdeasAPI(prompt, platform, langCode) {
   }
 }
 
-// Series / Hook / Copy için basit helper
-async function callToolAPI(route, payload, loadingEl) {
+async function callSimpleAPI(route, payload) {
+  // /api/series, /api/hook, /api/copy gibi
   try {
-    if (loadingEl) loadingEl.classList.remove("hidden");
     const res = await fetch(`/api/${route}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload || {}),
+      body: JSON.stringify(payload),
     });
-    const text = await res.text();
-    try {
-      const data = JSON.parse(text);
-      if (data && data.message) return data.message;
-    } catch {
-      if (text) return text;
-    }
+    const data = await res.json().catch(() => null);
+    if (data && data.message) return data.message;
     return "Sunucudan anlamlı bir cevap alınamadı.";
   } catch (e) {
-    return "Sunucuya bağlanırken hata oluştu.";
-  } finally {
-    if (loadingEl) loadingEl.classList.add("hidden");
+    return "Sunucuya bağlanırken bir hata oluştu.";
   }
 }
 
-// ========== DOM BAŞLANGIÇ ==========
+async function startPayment() {
+  // Şimdilik sadece demo – gerçek ödeme için backend ayarlanmalı
+  alert(
+    "Ödeme entegrasyonu için backend'de /api/checkout ayarlanmalı. Şimdilik Pro planı test için elle aktifleştirebilirsin."
+  );
+}
+
+// ===================== TRENDLER =====================
+
+async function loadTrends(code) {
+  const trendsList = document.getElementById("trendsList");
+  if (!trendsList) return;
+
+  const region = (LANG_REGION[code] || "US").toUpperCase();
+  trendsList.innerHTML = "<li>Yükleniyor...</li>";
+
+  try {
+    const res = await fetch(`/api/trends?region=${region}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      trendsList.innerHTML =
+        "<li>Trendler alınırken hata: " + (data.message || "") + "</li>";
+      return;
+    }
+    if (!data.items || !data.items.length) {
+      trendsList.innerHTML = "<li>Bu hafta trend bulunamadı.</li>";
+      return;
+    }
+
+    trendsList.innerHTML = "";
+    data.items.forEach((item) => {
+      const li = document.createElement("li");
+      li.className = "trends-item";
+      const a = document.createElement("a");
+      a.href = item.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = item.title;
+      li.appendChild(a);
+      trendsList.appendChild(li);
+    });
+  } catch (e) {
+    trendsList.innerHTML =
+      "<li>Trendler alınırken beklenmeyen bir hata oluştu.</li>";
+  }
+}
+
+// ===================== DOM YÜKLENDİĞİNDE =====================
 
 document.addEventListener("DOMContentLoaded", () => {
-  // ---- Elementler ----
+  // ---- DOM Elemanları ----
   const sidebar = document.getElementById("sidebar");
   const helpPanel = document.getElementById("helpPanel");
   const menuToggle = document.getElementById("menuToggle");
@@ -480,16 +348,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const watchAdBtn = document.getElementById("watchAdBtn");
   const subscribeBtn = document.getElementById("subscribeBtn");
   const changeEmailBtn = document.getElementById("changeEmailBtn");
-  const trendsList = document.getElementById("trendsList");
 
   const voiceBtn = document.getElementById("voiceBtn");
   const cameraBtn = document.getElementById("cameraBtn");
 
-  const panelChat = document.getElementById("panel-chat");
-  const panels = document.querySelectorAll(".panel");
-  const sideButtons = document.querySelectorAll(".side-btn");
+  const refreshTrendsBtn = document.getElementById("refreshTrendsBtn");
+  const seriesGenerate = document.getElementById("seriesGenerate");
+  const seriesTopic = document.getElementById("seriesTopic");
+  const seriesResult = document.getElementById("seriesResult");
+  const hookGenerate = document.getElementById("hookGenerate");
+  const hookTopic = document.getElementById("hookTopic");
+  const hookResult = document.getElementById("hookResult");
+  const copyGenerate = document.getElementById("copyGenerate");
+  const copyTopic = document.getElementById("copyTopic");
+  const copyResult = document.getElementById("copyResult");
 
-  // Reklam modalı
+  // Reklam modal
   const modalBackdrop = document.getElementById("modalBackdrop");
   const adModal = document.getElementById("adModal");
   const adStepMain = document.getElementById("adStepMain");
@@ -509,105 +383,70 @@ document.addEventListener("DOMContentLoaded", () => {
   const onboardEmailInput = document.getElementById("onboardEmailInput");
   const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
-  const seriesTopic = document.getElementById("seriesTopic");
-  const seriesGenerate = document.getElementById("seriesGenerate");
-  const seriesResult = document.getElementById("seriesResult");
+  // ---- Durum başlangıç ----
+  loadState();
 
-  const hookTopic = document.getElementById("hookTopic");
-  const hookGenerate = document.getElementById("hookGenerate");
-  const hookResult = document.getElementById("hookResult");
-
-  const copyTopic = document.getElementById("copyTopic");
-  const copyGenerate = document.getElementById("copyGenerate");
-  const copyResult = document.getElementById("copyResult");
-
-  // ---- Dil seçeneklerini doldur ----
-  function fillLanguageSelect(selectEl) {
-    if (!selectEl) return;
-    selectEl.innerHTML = "";
-    Object.keys(LANG_LABELS).forEach((code) => {
+  // Dil dropdownlarını doldur
+  if (langSelect) {
+    langSelect.innerHTML = "";
+    Object.keys(LANG_NAMES).forEach((code) => {
       const opt = document.createElement("option");
       opt.value = code;
-      opt.textContent = LANG_LABELS[code];
-      selectEl.appendChild(opt);
+      opt.textContent =
+        code === "tr"
+          ? "Türkçe"
+          : code === "en"
+          ? "English"
+          : LANG_NAMES[code];
+      langSelect.appendChild(opt);
     });
-    if (currentLangCode && LANG_LABELS[currentLangCode]) {
-      selectEl.value = currentLangCode;
-    }
+    langSelect.value = currentLangCode;
   }
 
-  fillLanguageSelect(langSelect);
-  fillLanguageSelect(onboardLangSelect);
+  if (onboardLangSelect) {
+    onboardLangSelect.innerHTML = "";
+    Object.keys(LANG_NAMES).forEach((code) => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent =
+        code === "tr"
+          ? "Türkçe"
+          : code === "en"
+          ? "English"
+          : LANG_NAMES[code];
+      onboardLangSelect.appendChild(opt);
+    });
+    onboardLangSelect.value = currentLangCode;
+  }
 
-  // ---- Durumu yükle ----
-  loadState();
   renderConversationList();
   renderMessages();
   updatePlanAndCreditsUI();
   updateAccountEmailUI();
-  applyLanguageUI();
-
-  // ---- Panel switch (sol paneller) ----
-  function showPanel(name) {
-    panels.forEach((p) => {
-      const targetId = "panel-" + name;
-      const isActive = p.id === targetId;
-      p.classList.toggle("hidden", !isActive);
-    });
-  }
-
-  if (panelChat) showPanel("chat");
-
-  sideButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const name = btn.dataset.panel || "chat";
-      showPanel(name);
-    });
-  });
-
-  // ---- TRENDLER ----
-  async function loadTrends(langCode) {
-    if (!trendsList) return;
-    trendsList.innerHTML = "<li>Yükleniyor...</li>";
-    const region = (LANG_REGION[langCode] || "US").toUpperCase();
-    try {
-      const res = await fetch(`/api/trends?region=${encodeURIComponent(region)}`);
-      const data = await res.json();
-      if (!res.ok) {
-        trendsList.innerHTML =
-          "<li>Trendler alınırken hata: " + (data.message || "") + "</li>";
-        return;
-      }
-      if (!data.items || !data.items.length) {
-        trendsList.innerHTML = "<li>Bu hafta trend bulunamadı.</li>";
-        return;
-      }
-      trendsList.innerHTML = "";
-      data.items.forEach((item) => {
-        const li = document.createElement("li");
-        li.className = "trends-item";
-        const a = document.createElement("a");
-        a.href = item.url;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.textContent = item.title;
-        li.appendChild(a);
-        trendsList.appendChild(li);
-      });
-    } catch (e) {
-      trendsList.innerHTML =
-        "<li>Trendler alınırken beklenmeyen bir hata oluştu.</li>";
-    }
-  }
-
+  applyUITextForLang(currentLangCode);
   loadTrends(currentLangCode);
 
-  const refreshTrendsBtn = document.getElementById("refreshTrendsBtn");
-  if (refreshTrendsBtn) {
-    refreshTrendsBtn.addEventListener("click", () => {
-      loadTrends(currentLangCode);
-    });
+  // ---- Onboarding göster / gizle ----
+  function showOnboardingIfNeeded() {
+    if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
+    const hasLang = !!localStorage.getItem(LANG_KEY);
+    const hasEmail = !!localStorage.getItem(EMAIL_KEY);
+
+    if (hasLang && hasEmail) {
+      onboardingOverlay.classList.add("hidden");
+      return;
+    }
+
+    onboardingOverlay.classList.remove("hidden");
+    if (!hasLang) {
+      onboardStepLang.classList.remove("hidden");
+      onboardStepEmail.classList.add("hidden");
+    } else {
+      onboardStepLang.classList.add("hidden");
+      onboardStepEmail.classList.remove("hidden");
+    }
   }
+  showOnboardingIfNeeded();
 
   // ---- Menü & Yardım ----
   if (menuToggle && sidebar) {
@@ -642,7 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---- Reklam modalı ----
+  // ---- Reklam Modal ----
   function openAdModal() {
     if (!modalBackdrop || !adModal || !adStepMain || !adStepConfirm) return;
     adStepMain.classList.remove("hidden");
@@ -665,10 +504,150 @@ document.addEventListener("DOMContentLoaded", () => {
   if (adCancelBtn) adCancelBtn.addEventListener("click", closeAdModal);
   if (adWatchedBtn) {
     adWatchedBtn.addEventListener("click", () => {
-      credits = Math.min(credits + 1, 50); // günlük 50 reklam limiti gibi düşünebilirsin
+      credits += 1;
       saveCredits();
       updatePlanAndCreditsUI();
       closeAdModal();
     });
   }
-  if (adCloseIcon && adStepMain && 
+  if (adCloseIcon && adStepMain && adStepConfirm) {
+    adCloseIcon.addEventListener("click", () => {
+      adStepMain.classList.add("hidden");
+      adStepConfirm.classList.remove("hidden");
+    });
+  }
+  if (adContinueBtn && adStepMain && adStepConfirm) {
+    adContinueBtn.addEventListener("click", () => {
+      adStepConfirm.classList.add("hidden");
+      adStepMain.classList.remove("hidden");
+    });
+  }
+  if (adConfirmCloseBtn) {
+    adConfirmCloseBtn.addEventListener("click", closeAdModal);
+  }
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener("click", closeAdModal);
+  }
+
+  // ---- Onboarding eventleri ----
+  if (onboardLangSaveBtn && onboardLangSelect) {
+    onboardLangSaveBtn.addEventListener("click", () => {
+      const code = onboardLangSelect.value || "tr";
+      currentLangCode = code;
+      localStorage.setItem(LANG_KEY, code);
+      if (langSelect) langSelect.value = code;
+      applyUITextForLang(code);
+      loadTrends(code);
+      onboardStepLang.classList.add("hidden");
+      onboardStepEmail.classList.remove("hidden");
+    });
+  }
+
+  if (onboardEmailSaveBtn && onboardEmailInput) {
+    onboardEmailSaveBtn.addEventListener("click", () => {
+      const email = onboardEmailInput.value.trim();
+      if (!email) return;
+      currentEmail = email;
+      saveEmail();
+      updateAccountEmailUI();
+      onboardingOverlay.classList.add("hidden");
+    });
+  }
+
+  if (changeEmailBtn) {
+    changeEmailBtn.addEventListener("click", () => {
+      if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
+      onboardStepLang.classList.add("hidden");
+      onboardStepEmail.classList.remove("hidden");
+      onboardingOverlay.classList.remove("hidden");
+    });
+  }
+
+  // ---- Abone ol ----
+  if (subscribeBtn) {
+    subscribeBtn.addEventListener("click", () => {
+      // Şimdilik direkt Pro yapıyoruz (demo)
+      currentPlan = "pro";
+      savePlan();
+      updatePlanAndCreditsUI();
+      alert("Pro plan deneme amaçlı olarak aktif edildi.");
+      // Gerçek kullanım: startPayment();
+    });
+  }
+
+  // ---- Dil seçimi (ana ekran) ----
+  if (langSelect) {
+    langSelect.addEventListener("change", () => {
+      const code = langSelect.value;
+      if (LANG_NAMES[code]) {
+        currentLangCode = code;
+        localStorage.setItem(LANG_KEY, code);
+        applyUITextForLang(code);
+        loadTrends(code);
+      }
+    });
+  }
+
+  // ---- Panel geçişleri (Sohbet / Trend / Seri / Hook / Copy) ----
+  document.querySelectorAll(".side-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.panel; // chat | trends | series | hook | copy
+      document
+        .querySelectorAll("main .panel")
+        .forEach((sec) => sec.classList.add("hidden"));
+      const active = document.getElementById(`panel-${target}`);
+      if (active) active.classList.remove("hidden");
+      // Panel değişince yan menüyü mobilde kapatalım
+      if (sidebar) sidebar.classList.add("hidden");
+    });
+  });
+
+  // ---- Kamera & Ses butonları (şimdilik info) ----
+  if (voiceBtn) {
+    voiceBtn.addEventListener("click", () => {
+      alert(
+        "🎤 Sesli komut özelliği yakında eklenecek.\nŞimdilik metin yazarak devam edebilirsin."
+      );
+    });
+  }
+  if (cameraBtn) {
+    cameraBtn.addEventListener("click", () => {
+      alert(
+        "📷 Kamera / video analizi özelliği yakında eklenecek.\nŞimdilik link veya metinle devam edebilirsin."
+      );
+    });
+  }
+
+  // ---- Trendleri elle yenile butonu ----
+  if (refreshTrendsBtn) {
+    refreshTrendsBtn.addEventListener("click", () => {
+      loadTrends(currentLangCode);
+    });
+  }
+
+  // ---- 30 Günlük Seri ----
+  if (seriesGenerate && seriesTopic && seriesResult) {
+    seriesGenerate.addEventListener("click", async () => {
+      const topic = seriesTopic.value.trim();
+      if (!topic) return;
+      seriesResult.textContent = "Yükleniyor...";
+      const text = await callSimpleAPI("series", { topic });
+      seriesResult.textContent = text;
+    });
+  }
+
+  // ---- Hook Lab ----
+  if (hookGenerate && hookTopic && hookResult) {
+    hookGenerate.addEventListener("click", async () => {
+      const topic = hookTopic.value.trim();
+      if (!topic) return;
+      hookResult.textContent = "Yükleniyor...";
+      const text = await callSimpleAPI("hook", { topic });
+      hookResult.textContent = text;
+    });
+  }
+
+  // ---- Trend Kopya Makinesi ----
+  if (copyGenerate && copyTopic && copyResult) {
+    copyGenerate.addEventListener("click", async () => {
+      const topic = copyTopic.va
