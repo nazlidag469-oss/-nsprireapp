@@ -3,6 +3,7 @@
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
     return res.status(405).json({ message: "Sadece GET destekleniyor." });
   }
 
@@ -13,7 +14,6 @@ export default async function handler(req, res) {
       .json({ message: "YOUTUBE_API_KEY tanımlı değil (server side)." });
   }
 
-  // ?region=TR gibi query parametresi, yoksa US
   const region = (req.query.region || "US").toString().toUpperCase();
 
   try {
@@ -46,8 +46,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ items });
   } catch (e) {
-    return res
-      .status(500)
-      .json({ message: "YouTube trend isteği sırasında beklenmeyen hata." });
+    console.error("YOUTUBE_TRENDS_ERROR", e);
+    return res.status(500).json({
+      message: "YouTube trend isteği sırasında beklenmeyen hata.",
+    });
   }
 }
