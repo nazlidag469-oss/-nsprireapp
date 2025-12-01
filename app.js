@@ -1,10 +1,9 @@
-// ========== SABİTLER ==========
+// ====== SABİTLER ======
 const STORAGE_KEY = "inspireapp_conversations_v1";
 const CREDITS_KEY = "inspireapp_credits_v1";
 const PLAN_KEY = "inspireapp_plan_v1";
 const EMAIL_KEY = "inspireapp_email_v1";
 const LANG_KEY = "inspireapp_lang_v1";
-
 const MAX_FREE_CREDITS = 4;
 
 const LANG_NAMES = {
@@ -56,19 +55,11 @@ const LANG_REGION = {
 };
 
 const UI_TEXT = {
-  tr: {
-    send: "Gönder",
-    ad: "Reklam izle +1 puan",
-    placeholder: "Mesaj yaz veya konu gir...",
-  },
-  en: {
-    send: "Send",
-    ad: "Watch Ad +1 credit",
-    placeholder: "Type a message or topic...",
-  },
+  tr: { send: "Gönder", ad: "Reklam izle +1 puan", placeholder: "Mesaj yaz veya konu gir..." },
+  en: { send: "Send", ad: "Watch Ad +1 credit", placeholder: "Type a message or topic..." },
 };
 
-// ========== GLOBAL DURUM ==========
+// ====== GLOBAL STATE ======
 const state = {
   conversations: [],
   currentId: null,
@@ -78,7 +69,7 @@ const state = {
   email: "",
 };
 
-// ========== STORAGE ==========
+// ====== STORAGE ======
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -86,6 +77,7 @@ function loadState() {
   } catch {
     state.conversations = [];
   }
+
   if (!state.conversations.length) {
     const first = {
       id: Date.now().toString(),
@@ -100,11 +92,8 @@ function loadState() {
   const p = localStorage.getItem(PLAN_KEY);
   if (p === "pro" || p === "free") state.plan = p;
 
-  const c = localStorage.getItem(CREDITS_KEY);
-  state.credits =
-    c === null || Number.isNaN(parseInt(c, 10))
-      ? MAX_FREE_CREDITS
-      : parseInt(c, 10);
+  const c = parseInt(localStorage.getItem(CREDITS_KEY) || "", 10);
+  state.credits = Number.isNaN(c) ? MAX_FREE_CREDITS : c;
 
   const l = localStorage.getItem(LANG_KEY);
   if (l && LANG_NAMES[l]) state.lang = l;
@@ -127,9 +116,18 @@ function saveEmail() {
   else localStorage.removeItem(EMAIL_KEY);
 }
 
-// ========== YARDIMCI ==========
+// ====== HELPERS ======
 function currentConv() {
   return state.conversations.find((c) => c.id === state.currentId);
+}
+
+function buildTitleFromText(text) {
+  if (!text) return "Sohbet";
+  let line = text.split("\n")[0];
+  line = line.split(/[.!?]/)[0].trim();
+  if (!line) line = text.trim();
+  if (line.length > 40) line = line.slice(0, 40) + "…";
+  return line || "Sohbet";
 }
 
 function renderConversationList() {
@@ -141,14 +139,34 @@ function renderConversationList() {
     .sort((a, b) => b.createdAt - a.createdAt)
     .forEach((conv) => {
       const item = document.createElement("div");
-      item.className =
-        "conversation-item" + (conv.id === state.currentId ? " active" : "");
+      item.className = "conversation-item" + (conv.id === state.currentId ? " active" : "");
       item.textContent = conv.title || "Sohbet";
-      item.onclick = () => {
+
+      item.addEventListener("click", () => {
         state.currentId = conv.id;
         renderConversationList();
         renderMessages();
-      };
+      });
+
+      item.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        if (!confirm("Bu sohbeti silmek istiyor musun?")) return;
+        state.conversations = state.conversations.filter((c) => c.id !== conv.id);
+        if (!state.conversations.length) {
+          const first = {
+            id: Date.now().toString(),
+            title: "Yeni sohbet",
+            messages: [],
+            createdAt: Date.now(),
+          };
+          state.conversations.push(first);
+        }
+        state.currentId = state.conversations[0].id;
+        saveConversations();
+        renderConversationList();
+        renderMessages();
+      });
+
       listEl.appendChild(item);
     });
 }
@@ -173,7 +191,10 @@ function renderMessages() {
 function addMessage(role, text) {
   const conv = currentConv();
   conv.messages.push({ role, text });
-  if (!conv.title && role === "user" && text) conv.title = text.slice(0, 25);
+  if (!conv.title || conv.title === "Yeni sohbet") {
+    const firstUserMsg = conv.messages.find((m) => m.role === "user");
+    if (firstUserMsg?.text) conv.title = buildTitleFromText(firstUserMsg.text);
+  }
   saveConversations();
   renderConversationList();
   renderMessages();
@@ -186,28 +207,29 @@ function updatePlanAndCreditsUI() {
   const planStatus = document.getElementById("planStatus");
   const subscribeBlock = document.getElementById("subscribeBlock");
 
-  if (planLabel) {
+  if (planLabel)
     planLabel.textContent =
       state.plan === "pro" ? "Plan: Pro (sınırsız puan)" : "Plan: Ücretsiz";
-  }
-  if (creditsLabel) {
+
+  if (creditsLabel)
     creditsLabel.textContent =
       state.plan === "free"
         ? `Kalan puan: ${state.credits}/${MAX_FREE_CREDITS}`
         : "Kalan puan: Sınırsız";
-  }
-  if (watchAdBtn) {
-    if (state.plan === "free") watchAdBtn.classList.remove("hidden");
-    else watchAdBtn.classList.add("hidden");
-  }
-  if (planStatus) {
+
+  if (watchAdBtn)
+    state.plan === "free"
+      ? watchAdBtn.classList.remove("hidden")
+      : watchAdBtn.classList.add("hidden");
+
+  if (planStatus)
     planStatus.textContent =
       state.plan === "pro" ? "Plan: Pro (aktif)" : "Plan: Ücretsiz";
-  }
-  if (subscribeBlock) {
-    if (state.plan === "pro") subscribeBlock.classList.add("hidden");
-    else subscribeBlock.classList.remove("hidden");
-  }
+
+  if (subscribeBlock)
+    state.plan === "pro"
+      ? subscribeBlock.classList.add("hidden")
+      : subscribeBlock.classList.remove("hidden");
 }
 
 function updateAccountEmailUI() {
@@ -231,18 +253,13 @@ function fillLangSelect(selectEl) {
   Object.keys(LANG_NAMES).forEach((code) => {
     const opt = document.createElement("option");
     opt.value = code;
-    opt.textContent =
-      code === "tr"
-        ? "Türkçe"
-        : code === "en"
-        ? "English"
-        : LANG_NAMES[code];
+    opt.textContent = code === "tr" ? "Türkçe" : code === "en" ? "English" : LANG_NAMES[code];
     selectEl.appendChild(opt);
   });
   selectEl.value = state.lang;
 }
 
-// ========== API ==========
+// ====== API CALLS ======
 async function callIdeasAPI(prompt, platform, langCode) {
   const langName = LANG_NAMES[langCode] || "Turkish";
   try {
@@ -254,11 +271,9 @@ async function callIdeasAPI(prompt, platform, langCode) {
     const text = await res.text();
     try {
       const data = JSON.parse(text);
-      if (data && data.message) return data.message;
-    } catch {
-      if (text) return text;
-    }
-    return "API'den anlamlı bir cevap alınamadı.";
+      if (data?.message) return data.message;
+    } catch {}
+    return text || "API'den anlamlı bir cevap alınamadı.";
   } catch {
     return "Sunucuya bağlanırken bir hata oluştu.";
   }
@@ -272,14 +287,13 @@ async function callSimpleAPI(route, payload) {
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => null);
-    if (data && data.message) return data.message;
+    if (data?.message) return data.message;
     return "Sunucudan anlamlı bir cevap alınamadı.";
   } catch {
     return "Sunucuya bağlanırken bir hata oluştu.";
   }
 }
 
-// ========== TRENDLER ==========
 async function loadTrends() {
   const list = document.getElementById("trendsList");
   if (!list) return;
@@ -293,7 +307,7 @@ async function loadTrends() {
         "<li>Trendler alınırken hata: " + (data.message || "") + "</li>";
       return;
     }
-    if (!data.items || !data.items.length) {
+    if (!data.items?.length) {
       list.innerHTML = "<li>Bu hafta trend bulunamadı.</li>";
       return;
     }
@@ -315,7 +329,15 @@ async function loadTrends() {
   }
 }
 
-// ========== DOM READY ==========
+// ====== ANDROID PRO BRIDGE ======
+window.__setProPlanFromAndroid = function () {
+  state.plan = "pro";
+  savePlan();
+  updatePlanAndCreditsUI();
+  alert("🎉 PRO üyelik Google Play üzerinden başarıyla aktif edildi!");
+};
+
+// ====== DOM READY ======
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
 
@@ -398,21 +420,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   showOnboardingIfNeeded();
 
+  // Menü & Yardım
   if (menuToggle && sidebar) {
     menuToggle.addEventListener("click", () => {
       sidebar.classList.toggle("hidden");
     });
   }
-  function openHelp() {
-    if (helpPanel) helpPanel.classList.remove("hidden");
-  }
-  function closeHelp() {
-    if (helpPanel) helpPanel.classList.add("hidden");
-  }
+  const openHelp = () => helpPanel && helpPanel.classList.remove("hidden");
+  const closeHelp = () => helpPanel && helpPanel.classList.add("hidden");
   if (helpToggle) helpToggle.addEventListener("click", openHelp);
   if (helpToggle2) helpToggle2.addEventListener("click", openHelp);
   if (closeHelpBtn) closeHelpBtn.addEventListener("click", closeHelp);
 
+  // Yeni sohbet
   if (newChatBtn) {
     newChatBtn.addEventListener("click", () => {
       const conv = {
@@ -429,10 +449,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Reklam modal
   function openAdModal() {
     if (!modalBackdrop || !adModal) return;
-    adStepMain && adStepMain.classList.remove("hidden");
-    adStepConfirm && adStepConfirm.classList.add("hidden");
+    adStepMain?.classList.remove("hidden");
+    adStepConfirm?.classList.add("hidden");
     modalBackdrop.classList.remove("hidden");
     adModal.classList.remove("hidden");
   }
@@ -448,15 +469,13 @@ document.addEventListener("DOMContentLoaded", () => {
       openAdModal();
     });
   }
-  if (adCancelBtn) adCancelBtn.addEventListener("click", closeAdModal);
-  if (adWatchedBtn) {
-    adWatchedBtn.addEventListener("click", () => {
-      state.credits += 1;
-      saveCredits();
-      updatePlanAndCreditsUI();
-      closeAdModal();
-    });
-  }
+  adCancelBtn?.addEventListener("click", closeAdModal);
+  adWatchedBtn?.addEventListener("click", () => {
+    state.credits += 1;
+    saveCredits();
+    updatePlanAndCreditsUI();
+    closeAdModal();
+  });
   if (adCloseIcon && adStepMain && adStepConfirm) {
     adCloseIcon.addEventListener("click", () => {
       adStepMain.classList.add("hidden");
@@ -469,62 +488,60 @@ document.addEventListener("DOMContentLoaded", () => {
       adStepMain.classList.remove("hidden");
     });
   }
-  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", closeAdModal);
-  if (modalBackdrop) modalBackdrop.addEventListener("click", closeAdModal);
+  adConfirmCloseBtn?.addEventListener("click", closeAdModal);
+  modalBackdrop?.addEventListener("click", closeAdModal);
 
-  if (onboardLangSaveBtn && onboardLangSelect) {
-    onboardLangSaveBtn.addEventListener("click", () => {
-      const code = onboardLangSelect.value || "tr";
-      state.lang = code;
-      localStorage.setItem(LANG_KEY, code);
-      if (langSelect) langSelect.value = code;
-      applyUITextForLang(code);
-      loadTrends();
-      onboardStepLang.classList.add("hidden");
-      onboardStepEmail.classList.remove("hidden");
-    });
-  }
+  // Onboarding
+  onboardLangSaveBtn?.addEventListener("click", () => {
+    const code = onboardLangSelect.value || "tr";
+    state.lang = code;
+    localStorage.setItem(LANG_KEY, code);
+    if (langSelect) langSelect.value = code;
+    applyUITextForLang(code);
+    loadTrends();
+    onboardStepLang.classList.add("hidden");
+    onboardStepEmail.classList.remove("hidden");
+  });
 
-  if (onboardEmailSaveBtn && onboardEmailInput) {
-    onboardEmailSaveBtn.addEventListener("click", () => {
-      const email = onboardEmailInput.value.trim();
-      if (!email) return;
-      state.email = email;
-      saveEmail();
-      updateAccountEmailUI();
-      onboardingOverlay.classList.add("hidden");
-    });
-  }
+  onboardEmailSaveBtn?.addEventListener("click", () => {
+    const email = onboardEmailInput.value.trim();
+    if (!email) return;
+    state.email = email;
+    saveEmail();
+    updateAccountEmailUI();
+    onboardingOverlay.classList.add("hidden");
+  });
 
-  if (changeEmailBtn) {
-    changeEmailBtn.addEventListener("click", () => {
-      if (!onboardingOverlay) return;
-      onboardStepLang.classList.add("hidden");
-      onboardStepEmail.classList.remove("hidden");
-      onboardingOverlay.classList.remove("hidden");
-    });
-  }
+  changeEmailBtn?.addEventListener("click", () => {
+    if (!onboardingOverlay) return;
+    onboardStepLang.classList.add("hidden");
+    onboardStepEmail.classList.remove("hidden");
+    onboardingOverlay.classList.remove("hidden");
+  });
 
-  if (subscribeBtn) {
-    subscribeBtn.addEventListener("click", () => {
-      state.plan = "pro";
-      savePlan();
-      updatePlanAndCreditsUI();
-      alert("Pro plan deneme amaçlı olarak aktif edildi.");
-    });
-  }
+  // PRO satın alma
+  subscribeBtn?.addEventListener("click", () => {
+    if (window.AndroidBilling?.startPurchase) {
+      const sku = state.lang === "tr" ? "pro_monthly_tr" : "pro_monthly_intl";
+      window.AndroidBilling.startPurchase(sku);
+    } else {
+      alert(
+        "PRO üyelik, Google Play içi satın alma ile açılacak.\nBu web demo sürümünde gerçek ödeme aktif değil."
+      );
+    }
+  });
 
-  if (langSelect) {
-    langSelect.addEventListener("change", () => {
-      const code = langSelect.value;
-      if (!LANG_NAMES[code]) return;
-      state.lang = code;
-      localStorage.setItem(LANG_KEY, code);
-      applyUITextForLang(code);
-      loadTrends();
-    });
-  }
+  // Dil seçimi (ana ekran)
+  langSelect?.addEventListener("change", () => {
+    const code = langSelect.value;
+    if (!LANG_NAMES[code]) return;
+    state.lang = code;
+    localStorage.setItem(LANG_KEY, code);
+    applyUITextForLang(code);
+    loadTrends();
+  });
 
+  // Panel geçişleri
   document.querySelectorAll(".side-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.panel;
@@ -533,25 +550,22 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach((sec) => sec.classList.add("hidden"));
       const active = document.getElementById(`panel-${target}`);
       if (active) active.classList.remove("hidden");
-      if (sidebar) sidebar.classList.add("hidden");
+      sidebar?.classList.add("hidden");
     });
   });
 
-  if (voiceBtn) {
-    voiceBtn.addEventListener("click", () => {
-      alert("🎤 Sesli komut yakında. Şimdilik metin yaz.");
-    });
-  }
-  if (cameraBtn) {
-    cameraBtn.addEventListener("click", () => {
-      alert("📷 Kamera/ video analizi yakında. Şimdilik metin veya link gir.");
-    });
-  }
+  // Ses / Kamera
+  voiceBtn?.addEventListener("click", () => {
+    alert("🎤 Sesli komut özelliği yakında. Şimdilik metin yaz.");
+  });
+  cameraBtn?.addEventListener("click", () => {
+    alert("📷 Kamera / video analizi yakında. Şimdilik metin veya link gir.");
+  });
 
-  if (refreshTrendsBtn) {
-    refreshTrendsBtn.addEventListener("click", () => loadTrends());
-  }
+  // Trendleri yenile
+  refreshTrendsBtn?.addEventListener("click", () => loadTrends());
 
+  // 30 Günlük Seri
   if (seriesGenerate && seriesTopic && seriesResult) {
     seriesGenerate.addEventListener("click", async () => {
       const topic = seriesTopic.value.trim();
@@ -562,6 +576,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Hook Lab
   if (hookGenerate && hookTopic && hookResult) {
     hookGenerate.addEventListener("click", async () => {
       const topic = hookTopic.value.trim();
@@ -572,6 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Trend Kopya Makinesi
   if (copyGenerate && copyTopic && copyResult) {
     copyGenerate.addEventListener("click", async () => {
       const topic = copyTopic.value.trim();
@@ -582,36 +598,38 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (chatForm && messageInput) {
+  // Ana chat formu
+  if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const text =
-        (messageInput.value || "").trim() ||
-        (topicInput ? topicInput.value.trim() : "");
-      if (!text) return;
+      const topic = (topicInput.value || "").trim();
+      const extra = (messageInput.value || "").trim();
+      const platform = platformSelect.value || "tiktok";
+      const prompt = extra ? `${topic}\n\n${extra}` : topic;
 
-      const platform = platformSelect ? platformSelect.value : "youtube";
+      if (!prompt) return;
 
       if (state.plan === "free" && state.credits <= 0) {
-        openAdModal();
+        alert("Ücretsiz planda kredi bitti. Reklam izleyerek +1 alabilirsin.");
         return;
       }
 
-      addMessage("user", text);
-      messageInput.value = "";
-      if (topicInput) topicInput.value = "";
+      addMessage("user", prompt);
+      loadingEl.classList.remove("hidden");
 
-      if (loadingEl) loadingEl.classList.remove("hidden");
-      const reply = await callIdeasAPI(text, platform, state.lang);
-      if (loadingEl) loadingEl.classList.add("hidden");
+      const reply = await callIdeasAPI(prompt, platform, state.lang);
 
       addMessage("assistant", reply);
+      loadingEl.classList.add("hidden");
 
       if (state.plan === "free") {
-        state.credits = Math.max(state.credits - 1, 0);
+        state.credits = Math.max(0, state.credits - 1);
         saveCredits();
         updatePlanAndCreditsUI();
       }
+
+      topicInput.value = "";
+      messageInput.value = "";
     });
   }
 });
