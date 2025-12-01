@@ -1,15 +1,48 @@
 // pages/api/ideas.js
 // Kısa video içerik koçu – YouTube / TikTok / Instagram verileriyle desteklenmiş fikir üretimi
 
+const LANG_MAP = {
+  tr: "Turkish",
+  en: "English",
+  es: "Spanish",
+  de: "German",
+  fr: "French",
+  it: "Italian",
+  pt: "Portuguese",
+  ru: "Russian",
+  ar: "Arabic",
+  fa: "Persian",
+  hi: "Hindi",
+  id: "Indonesian",
+  ms: "Malay",
+  th: "Thai",
+  ja: "Japanese",
+  ko: "Korean",
+  nl: "Dutch",
+  sv: "Swedish",
+  no: "Norwegian",
+  da: "Danish",
+  pl: "Polish",
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
     return res.status(405).json({ message: "Sadece POST destekleniyor." });
   }
 
   const { prompt, platform, lang, mode, format } = req.body || {};
   const topic = (prompt || "").toString().trim() || "Belirsiz konu";
-  const langName = (lang || "Turkish").toString();
-  const platformSafe = (platform || "youtube").toString();
+
+  const langName =
+    LANG_MAP[lang] || // "tr"
+    (lang || "").toString() || // "Turkish"
+    "Turkish";
+
+  let platformSafe = (platform || "youtube").toString().toLowerCase();
+  if (!["youtube", "tiktok", "instagram"].includes(platformSafe)) {
+    platformSafe = "youtube";
+  }
 
   // --- ENV ---
   const openaiKey = process.env.OPENAI_API_KEY;
@@ -48,6 +81,7 @@ export default async function handler(req, res) {
           "\n";
       }
     } catch (e) {
+      console.error("YOUTUBE_CONTEXT_ERROR", e);
       // YouTube hatası olursa sessiz geç
     }
   }
@@ -63,7 +97,6 @@ export default async function handler(req, res) {
       let body = undefined;
 
       if (platformSafe === "tiktok") {
-        // Burada gerçekten trending endpoint'i yerine kullanıcının eski search koduna benzer bir örnek var.
         url =
           "https://tiktok-api23.p.rapidapi.com/api/search/account?keyword=" +
           encodeURIComponent(topic) +
@@ -84,9 +117,10 @@ export default async function handler(req, res) {
         "\n" +
         platformSafe.toUpperCase() +
         " tarafında örnek API verisi (kısaltılmış):\n" +
-        JSON.stringify(d).slice(0, 800) +
+        JSON.stringify(d || {}).slice(0, 800) +
         "\n";
     } catch (e) {
+      console.error("RAPIDAPI_CONTEXT_ERROR", e);
       // RapidAPI hatası olursa da sessiz geç
     }
   }
@@ -138,6 +172,7 @@ export default async function handler(req, res) {
               `Konu: ${topic}\n` +
               `Platform: ${platformSafe}\n` +
               `İstenen format: ${format || "dikey 9:16 kısa video"}\n` +
+              (mode ? `Kullanıcının modu / hedefi: ${mode}\n` : "") +
               `Ek bağlam:\n${extraContext}`,
           },
         ],
@@ -158,8 +193,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ message: text });
   } catch (e) {
-    return res
-      .status(500)
-      .json({ message: "OpenAI isteği sırasında beklenmeyen hata oluştu." });
+    console.error("IDEAS_API_ERROR", e);
+    return res.status(500).json({
+      message: "OpenAI isteği sırasında beklenmeyen hata oluştu.",
+    });
   }
-            }
+  }
