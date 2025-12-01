@@ -1,10 +1,35 @@
-// api/video.js
+// pages/api/video.js
 // 15 saniyelik dikey (9:16) video üreten endpoint.
 // Gerçek üretim için: Bir video AI servisine üye ol (Pika, Runway, OpenAI vs.)
 // Sana verdiği API URL'yi VIDEO_API_URL, API KEY'i VIDEO_API_KEY olarak .env dosyana yaz.
 
+const LANG_MAP = {
+  tr: "Turkish",
+  en: "English",
+  es: "Spanish",
+  de: "German",
+  fr: "French",
+  it: "Italian",
+  pt: "Portuguese",
+  ru: "Russian",
+  ar: "Arabic",
+  fa: "Persian",
+  hi: "Hindi",
+  id: "Indonesian",
+  ms: "Malay",
+  th: "Thai",
+  ja: "Japanese",
+  ko: "Korean",
+  nl: "Dutch",
+  sv: "Swedish",
+  no: "Norwegian",
+  da: "Danish",
+  pl: "Polish",
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
     return res.status(405).json({ message: "Sadece POST destekleniyor." });
   }
 
@@ -23,7 +48,8 @@ export default async function handler(req, res) {
     });
   }
 
-  // Uygulamanın karakterine uygun tek bir birleşik prompt:
+  const langName = LANG_MAP[lang] || lang || "Turkish";
+
   const fullPrompt = `
 InspireApp arayüzüne benzeyen, yüz kullanmadan, tamamen UI ve ikon animasyonlu,
 dikey 9:16 formatında, yaklaşık 15 saniyelik bir kısa video üret.
@@ -35,15 +61,13 @@ Kısıtlar:
 - Ekranda INSPIREAPP logosu ve arayüz kartları, butonlar, sohbet balonları hareket etsin.
 - "Hook Laboratuvarı", "Trend Kopya Makinesi", "30 Günlük Seri", "PRO" yazıları kısa kısa gözüksün.
 - Platform: ${platform}
-- Dil: ${lang}
+- Dil: ${langName}
 - Tarz: modern, enerjik, uygulama tanıtım animasyonu, sessiz kullanılmaya uygun.
 
 Output: mp4, 1080x1920, 15 saniye civarı.
 `.trim();
 
   try {
-    // ÖRNEK: Generic bir video API'ye POST atıyoruz.
-    // Burayı kullandığın servisin dökümanına göre düzenleyeceksin.
     const r = await fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -54,9 +78,6 @@ Output: mp4, 1080x1920, 15 saniye civarı.
         prompt: fullPrompt,
         duration_seconds: 15,
         aspect_ratio: "9:16",
-        // Kullanacağın servise göre ek parametreler:
-        // model: "video-1",
-        // fps: 30,
       }),
     });
 
@@ -69,7 +90,6 @@ Output: mp4, 1080x1920, 15 saniye civarı.
       return res.status(r.status).json({ message: msg });
     }
 
-    // Çoğu servis "video_url" gibi bir alan döndürür.
     const videoUrl =
       (data && (data.video_url || data.url || data.output_url)) || null;
 
@@ -79,11 +99,9 @@ Output: mp4, 1080x1920, 15 saniye civarı.
         .json({ message: "Video URL alınamadı (servis cevabı eksik)." });
     }
 
-    // Frontend buradaki url'yi <video> src ve download linki için kullanacak.
     return res.status(200).json({
       message: "Video başarıyla üretildi.",
       url: videoUrl,
-      // İstersen dosya adı da öner:
       filename: "inspireapp-short-15s.mp4",
     });
   } catch (e) {
