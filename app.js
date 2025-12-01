@@ -571,7 +571,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const topic = seriesTopic.value.trim();
       if (!topic) return;
       seriesResult.textContent = "Yükleniyor...";
-      const text = await callSimpleAPI("series", { topic });
+      const text = await callSimpleAPI("series", {
+        topic,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+      });
       seriesResult.textContent = text;
     });
   }
@@ -582,7 +585,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const topic = hookTopic.value.trim();
       if (!topic) return;
       hookResult.textContent = "Yükleniyor...";
-      const text = await callSimpleAPI("hook", { topic });
+      const text = await callSimpleAPI("hook", {
+        topic,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+      });
       hookResult.textContent = text;
     });
   }
@@ -593,7 +599,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const topic = copyTopic.value.trim();
       if (!topic) return;
       copyResult.textContent = "Yükleniyor...";
-      const text = await callSimpleAPI("copy", { topic });
+      const text = await callSimpleAPI("copy", {
+        topic,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+      });
       copyResult.textContent = text;
     });
   }
@@ -624,12 +633,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (state.plan === "free") {
         state.credits = Math.max(0, state.credits - 1);
-        saveCredits();
-        updatePlanAndCreditsUI();
-      }
-
-      topicInput.value = "";
-      messageInput.value = "";
-    });
-  }
-});
+        saveCr
