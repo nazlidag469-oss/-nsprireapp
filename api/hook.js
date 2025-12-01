@@ -1,14 +1,43 @@
 // pages/api/hook.js
 // Hook Laboratuvarı – güçlü açılış cümleleri üretir
 
+const LANG_MAP = {
+  tr: "Turkish",
+  en: "English",
+  es: "Spanish",
+  de: "German",
+  fr: "French",
+  it: "Italian",
+  pt: "Portuguese",
+  ru: "Russian",
+  ar: "Arabic",
+  fa: "Persian",
+  hi: "Hindi",
+  id: "Indonesian",
+  ms: "Malay",
+  th: "Thai",
+  ja: "Japanese",
+  ko: "Korean",
+  nl: "Dutch",
+  sv: "Swedish",
+  no: "Norwegian",
+  da: "Danish",
+  pl: "Polish",
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
     return res.status(405).json({ message: "Sadece POST destekleniyor." });
   }
 
   const { topic, lang } = req.body || {};
   const t = (topic || "").toString().trim() || "Belirsiz konu";
-  const langName = (lang || "Turkish").toString();
+
+  const langName =
+    LANG_MAP[lang] ||
+    (lang || "").toString() ||
+    "Turkish";
 
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
@@ -68,8 +97,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ message: text });
   } catch (e) {
-    return res
-      .status(500)
-      .json({ message: "Hook üretimi sırasında beklenmeyen hata oluştu." });
+    console.error("HOOK_API_ERROR", e);
+    return res.status(500).json({
+      message: "Hook üretimi sırasında beklenmeyen hata oluştu.",
+    });
   }
 }
