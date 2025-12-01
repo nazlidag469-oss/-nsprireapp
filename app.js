@@ -217,8 +217,7 @@ function fillLangSelect(selectEl) {
   Object.keys(LANG_NAMES).forEach((code) => {
     const opt = document.createElement("option");
     opt.value = code;
-    opt.textContent =
-      code === "tr" ? "Türkçe" : code === "en" ? "English" : LANG_NAMES[code];
+    opt.textContent = code === "tr" ? "Türkçe" : code === "en" ? "English" : LANG_NAMES[code];
     selectEl.appendChild(opt);
   });
   selectEl.value = state.lang;
@@ -347,6 +346,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const adContinueBtn = document.getElementById("adContinueBtn");
   const adConfirmCloseBtn = document.getElementById("adConfirmCloseBtn");
 
+  // PRO modal elemanları
+  const proModal = document.getElementById("proModal");
+  const proCloseBtn = document.getElementById("proCloseBtn");
+  const proPriceText = document.getElementById("proPriceText");
+  const proPayBtn = document.getElementById("proPayBtn");
+
   const onboardingOverlay = document.getElementById("onboardingOverlay");
   const onboardStepLang = document.getElementById("onboardStepLang");
   const onboardStepEmail = document.getElementById("onboardStepEmail");
@@ -415,6 +420,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // === Reklam Modal Aç/Kapa ===
   function openAdModal() {
     if (!modalBackdrop || !adModal) return;
     adStepMain?.classList.remove("hidden");
@@ -424,8 +430,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function closeAdModal() {
     if (!modalBackdrop || !adModal) return;
-    modalBackdrop.classList.add("hidden");
     adModal.classList.add("hidden");
+  }
+
+  // === PRO Modal Aç/Kapa ===
+  function openProModal() {
+    if (!modalBackdrop || !proModal) return;
+    const isTr = state.lang === "tr";
+    const priceText = isTr
+      ? "InspireApp PRO – aylık 299 TL (Google Play üzerinden ücretlendirilir)."
+      : "InspireApp PRO – aylık 399 TL (veya yerel para birimi, Google Play üzerinden).";
+    if (proPriceText) proPriceText.textContent = priceText;
+    modalBackdrop.classList.remove("hidden");
+    proModal.classList.remove("hidden");
+  }
+  function closeProModal() {
+    if (!modalBackdrop || !proModal) return;
+    proModal.classList.add("hidden");
   }
 
   if (watchAdBtn) {
@@ -434,7 +455,10 @@ document.addEventListener("DOMContentLoaded", () => {
       openAdModal();
     });
   }
-  if (adCancelBtn) adCancelBtn.addEventListener("click", closeAdModal);
+  if (adCancelBtn) adCancelBtn.addEventListener("click", () => {
+    closeAdModal();
+    modalBackdrop.classList.add("hidden");
+  });
 
   if (adWatchedBtn) {
     adWatchedBtn.addEventListener("click", () => {
@@ -445,6 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (storedCount >= DAILY_AD_LIMIT) {
         alert(`Günlük reklam limiti doldu. (Limit: ${DAILY_AD_LIMIT})`);
         closeAdModal();
+        modalBackdrop.classList.add("hidden");
         return;
       }
       storedCount += 1;
@@ -454,6 +479,7 @@ document.addEventListener("DOMContentLoaded", () => {
       saveCredits();
       updatePlanAndCreditsUI();
       closeAdModal();
+      modalBackdrop.classList.add("hidden");
     });
   }
 
@@ -469,8 +495,52 @@ document.addEventListener("DOMContentLoaded", () => {
       adStepMain.classList.remove("hidden");
     });
   }
-  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", closeAdModal);
-  if (modalBackdrop) modalBackdrop.addEventListener("click", closeAdModal);
+  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", () => {
+    closeAdModal();
+    modalBackdrop.classList.add("hidden");
+  });
+
+  // Backdrop'a tıklayınca her iki modal da kapansın
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener("click", () => {
+      closeAdModal();
+      closeProModal();
+      modalBackdrop.classList.add("hidden");
+    });
+  }
+
+  // PRO modal kapatma
+  if (proCloseBtn) {
+    proCloseBtn.addEventListener("click", () => {
+      closeProModal();
+      modalBackdrop.classList.add("hidden");
+    });
+  }
+
+  // PRO butonuna basınca: önce fiyat + ödeme modalı
+  if (subscribeBtn) {
+    subscribeBtn.addEventListener("click", () => {
+      if (state.plan === "pro") return;
+      openProModal();
+    });
+  }
+
+  // PRO modal içindeki ÖDEME butonu
+  if (proPayBtn) {
+    proPayBtn.addEventListener("click", () => {
+      const isTr = state.lang === "tr";
+      const priceShort = isTr ? "aylık 299 TL" : "aylık 399 TL civarı";
+
+      if (window.AndroidBilling?.startPurchase) {
+        const sku = isTr ? "pro_monthly_tr" : "pro_monthly_intl";
+        window.AndroidBilling.startPurchase(sku);
+      } else {
+        alert(
+          `PRO üyelik ${priceShort} olarak Google Play üzerinden ücretlendirilecektir.\nBu web demo sürümünde gerçek ödeme aktif değil.`
+        );
+      }
+    });
+  }
 
   if (onboardLangSaveBtn && onboardLangSelect) {
     onboardLangSaveBtn.addEventListener("click", () => {
@@ -505,19 +575,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (subscribeBtn) {
-    subscribeBtn.addEventListener("click", () => {
-      if (window.AndroidBilling?.startPurchase) {
-        const sku = state.lang === "tr" ? "pro_monthly_tr" : "pro_monthly_intl";
-        window.AndroidBilling.startPurchase(sku);
-        return;
-      }
-      alert(
-        "PRO üyelik, Google Play içi satın alma ile açılacak.\nBu web demo sürümünde gerçek ödeme aktif değil."
-      );
-    });
-  }
-
   if (langSelect) {
     langSelect.addEventListener("change", () => {
       const code = langSelect.value;
@@ -541,7 +598,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 🎤 SES – Web Speech API ile konuşmayı metne çevir
+  // 🎤 SES – Web Speech API
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -558,9 +615,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       try {
         recognition.start();
-      } catch (e) {
-        // üst üste start atılırsa hata verebilir, yok sayıyoruz
-      }
+      } catch (e) {}
       voiceBtn.disabled = true;
       voiceBtn.textContent = "🎤…";
 
@@ -580,7 +635,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 📷 KAMERA – dosya seçtir (foto/video) ve adı mesaj alanına yaz
+  // 📷 KAMERA – dosya seçtir
   if (cameraBtn && cameraFileInput) {
     cameraBtn.addEventListener("click", () => {
       cameraFileInput.click();
