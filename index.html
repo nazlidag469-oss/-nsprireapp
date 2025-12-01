@@ -35,11 +35,8 @@
         <p class="muted small-label">Durum</p>
         <div id="planStatus" class="sidebar-plan-status">Plan: Ücretsiz</div>
 
+        <!-- Sadece buton, fiyat burada yazmıyor -->
         <div id="subscribeBlock">
-          <p class="muted">
-            <b>PRO</b> ÜYELİK → sınırsız puan + akım analiz + detaylı üretim + premium cevaplar.
-          </p>
-
           <button id="subscribeBtn" class="pill-button primary small">
             <b>PRO</b>'ya geç
           </button>
@@ -82,6 +79,10 @@
       <p>Günlük 4 puan. Reklam izleyerek artırılabilir.</p>
 
       <h3>PRO Plan</h3>
+      <p>
+        Fiyat bilgisi ve ödeme, <b>PRO'ya geç</b> butonuna bastığınızda
+        açılan ekranda gösterilir (Google Play üzerinden satın alma).
+      </p>
       <ul>
         <li>✔ Sınırsız puan</li>
         <li>✔ Öncelikli istek işleme</li>
@@ -182,10 +183,20 @@
         <pre id="copyResult"></pre>
       </section>
 
+      <!-- 📷 Kamera için gizli input -->
+      <input
+        id="cameraFileInput"
+        type="file"
+        accept="image/*,video/*"
+        capture="environment"
+        style="display:none"
+      />
+
     </main>
 
     <!-- REKLAM MODAL -->
     <div id="modalBackdrop" class="backdrop hidden"></div>
+
     <div id="adModal" class="modal hidden">
       <div class="modal-content">
         <button id="adCloseIcon" class="modal-close">×</button>
@@ -209,6 +220,18 @@
             Kapat
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- PRO MODAL (fiyat + ödeme butonu) -->
+    <div id="proModal" class="modal hidden">
+      <div class="modal-content">
+        <button id="proCloseBtn" class="modal-close">×</button>
+        <h2>InspireApp PRO</h2>
+        <p id="proPriceText" class="muted"></p>
+        <button id="proPayBtn" class="pill-button primary">
+          Ödemeye devam et
+        </button>
       </div>
     </div>
 
