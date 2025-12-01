@@ -4,11 +4,12 @@
   <meta charset="UTF-8" />
   <title>InspireApp Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Ana uygulamadaki style.css'i kullanıyoruz -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="chat-area" style="margin-top: 20px;">
-    <h1>Admin Paneli</h1>
+  <div class="chat-area" style="margin-top: 20px; max-width: 900px;">
+    <h1>InspireApp – Admin Paneli</h1>
 
     <div id="loginBox">
       <p>Admin şifresini girin:</p>
@@ -18,11 +19,16 @@
     </div>
 
     <div id="adminContent" class="hidden">
-      <h2>Sohbetler (bu cihaz)</h2>
-      <pre id="conversationsDump"></pre>
+      <h2>Bu cihazdaki InspireApp bilgileri</h2>
 
-      <h2>Kullanıcı bilgileri (bu cihaz)</h2>
-      <p id="userInfo"></p>
+      <h3>Sohbetler (localStorage: inspireapp_conversations_v1)</h3>
+      <pre id="conversationsDump" style="max-height: 300px; overflow: auto; background: rgba(255,255,255,0.8); padding: 10px; border-radius: 10px;"></pre>
+
+      <h3>Kullanıcı bilgileri (bu cihaz)</h3>
+      <p id="userInfo" class="muted"></p>
+
+      <h3>Tüm ilgili anahtarlar</h3>
+      <pre id="allKeysDump" style="max-height: 200px; overflow: auto; background: rgba(255,255,255,0.8); padding: 10px; border-radius: 10px;"></pre>
     </div>
   </div>
 
