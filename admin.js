@@ -1,229 +1,193 @@
-// /admin.js
-// Basit GLOBAL ADMIN PANEL:
-//  - Frontend şifre kontrolü
-//  - /api/admin-users'tan kullanıcı listesi çekme
-//  - Üstte istatistik, altta tablo + bar chart
+// admin.js
+// InspireApp Admin Paneli – HTML + JS sürümü
+// Supabase'ten kullanıcıları çeker ve tabloya basar.
 
-const FRONTEND_ADMIN_PASSWORD = "Aslaunutmam.1"; // sadece sen bileceksin
+const state = {
+  rawUsers: [],
+  filteredUsers: [],
+};
 
-document.addEventListener("DOMContentLoaded", () => {
-  const pwInput = document.getElementById("adminPasswordInput");
-  const loginBtn = document.getElementById("adminLoginBtn");
-  const msgEl = document.getElementById("adminMessage");
-  const loginSection = document.getElementById("loginSection");
-  const adminPanel = document.getElementById("adminPanel");
-  const usersBody = document.getElementById("adminUsersBody");
-  const adminInfo = document.getElementById("adminInfo");
-  const reloadBtn = document.getElementById("reloadBtn");
+function $(id) {
+  return document.getElementById(id);
+}
 
-  const statTotal = document.getElementById("statTotal");
-  const statPro = document.getElementById("statPro");
-  const statFree = document.getElementById("statFree");
-  const statToday = document.getElementById("statToday");
+function setAdminMessage(text, type = "") {
+  const el = $("adminMessage");
+  if (!el) return;
+  el.textContent = text || "";
+  el.classList.remove("error", "success");
+  if (type) el.classList.add(type);
+}
 
-  let chartInstance = null;
+function renderUsers() {
+  const tbody = $("usersTableBody");
+  const countEl = $("userCount");
+  if (!tbody) return;
 
-  function setMessage(text, type = "info") {
-    if (!msgEl) return;
-    msgEl.textContent = text;
-    msgEl.style.color =
-      type === "error"
-        ? "#f97373"
-        : type === "success"
-        ? "#4ade80"
-        : "#e5e7eb";
-  }
+  tbody.innerHTML = "";
 
-  function setInfo(text) {
-    if (adminInfo) adminInfo.textContent = text;
-  }
+  const list = state.filteredUsers.length
+    ? state.filteredUsers
+    : state.rawUsers;
 
-  function formatDate(value) {
-    if (!value) return "";
-    try {
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return String(value);
-      return d.toLocaleString("tr-TR");
-    } catch {
-      return String(value);
-    }
-  }
+  if (!list.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 5;
+    td.textContent = "Kayıtlı kullanıcı bulunamadı.";
+    td.className = "muted";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  } else {
+    list.forEach((u) => {
+      const tr = document.createElement("tr");
 
-  function todayISO() {
-    return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  }
+      const idCell = document.createElement("td");
+      idCell.textContent = u.id || u.user_id || "-";
+      tr.appendChild(idCell);
 
-  function renderStats(users) {
-    const total = users.length;
-    const proCount = users.filter((u) => u.plan === "pro").length;
-    const freeCount = total - proCount;
+      const emailCell = document.createElement("td");
+      emailCell.textContent = u.email || u.user_email || "-";
+      tr.appendChild(emailCell);
 
-    const todayStr = todayISO();
-    const todayCount = users.filter((u) => {
-      if (!u.created_at) return false;
-      return String(u.created_at).startsWith(todayStr);
-    }).length;
+      const planCell = document.createElement("td");
+      const plan = (u.plan || u.subscription_plan || "free").toLowerCase();
+      const span = document.createElement("span");
+      if (plan === "pro") {
+        span.className = "badge-pro";
+        span.textContent = "PRO";
+      } else {
+        span.className = "badge-free";
+        span.textContent = "FREE";
+      }
+      planCell.appendChild(span);
+      tr.appendChild(planCell);
 
-    if (statTotal) statTotal.textContent = String(total);
-    if (statPro) statPro.textContent = String(proCount);
-    if (statFree) statFree.textContent = String(freeCount);
-    if (statToday) statToday.textContent = String(todayCount);
+      const creditsCell = document.createElement("td");
+      creditsCell.textContent =
+        u.credits != null
+          ? String(u.credits)
+          : u.remaining_credits != null
+          ? String(u.remaining_credits)
+          : "-";
+      tr.appendChild(creditsCell);
 
-    // Grafik çiz
-    const ctx = document.getElementById("usersChart");
-    if (!ctx) return;
+      const createdCell = document.createElement("td");
+      const rawDate =
+        u.created_at || u.createdAt || u.signup_at || u.inserted_at;
+      if (rawDate) {
+        try {
+          const d = new Date(rawDate);
+          createdCell.textContent = d.toLocaleString("tr-TR");
+        } catch {
+          createdCell.textContent = rawDate;
+        }
+      } else {
+        createdCell.textContent = "-";
+      }
+      tr.appendChild(createdCell);
 
-    const data = {
-      labels: ["Ücretsiz", "PRO"],
-      datasets: [
-        {
-          label: "Kullanıcı sayısı",
-          data: [freeCount, proCount],
-          backgroundColor: ["#4b5563", "#22c55e"],
-        },
-      ],
-    };
-
-    const options = {
-      responsive: true,
-      plugins: {
-        legend: { labels: { color: "#e5e7eb" } },
-      },
-      scales: {
-        x: {
-          ticks: { color: "#9ca3af" },
-          grid: { color: "rgba(31,41,55,0.6)" },
-        },
-        y: {
-          ticks: { color: "#9ca3af" },
-          grid: { color: "rgba(31,41,55,0.6)" },
-        },
-      },
-    };
-
-    if (chartInstance) {
-      chartInstance.destroy();
-    }
-    chartInstance = new Chart(ctx, {
-      type: "bar",
-      data,
-      options,
+      tbody.appendChild(tr);
     });
   }
 
-  function renderTable(users) {
-    if (!usersBody) return;
-    usersBody.innerHTML = "";
+  if (countEl) {
+    const total = state.rawUsers.length;
+    const shown = list.length;
+    if (!total) countEl.textContent = "";
+    else if (shown === total) countEl.textContent = `· ${total} kullanıcı`;
+    else countEl.textContent = `· ${shown}/${total} kullanıcı`;
+  }
+}
 
-    if (!users.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 8;
-      td.textContent = "Henüz kullanıcı yok.";
-      usersBody.appendChild(tr);
-      tr.appendChild(td);
+async function fetchUsers() {
+  setAdminMessage("Kullanıcı listesi yükleniyor...", "");
+  state.rawUsers = [];
+  state.filteredUsers = [];
+  renderUsers();
+
+  try {
+    const res = await fetch("/api/admin-users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    const text = await res.text();
+    let data = null;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+
+    if (!res.ok) {
+      const msg =
+        (data && (data.message || data.error)) ||
+        `Sunucu hata kodu: ${res.status}`;
+      const detail = data && (data.detail || data.error_description);
+      setAdminMessage(
+        detail ? `Sunucu hatası: ${msg} (${detail})` : `Sunucu hatası: ${msg}`,
+        "error"
+      );
       return;
     }
 
-    users.forEach((u) => {
-      const tr = document.createElement("tr");
+    const users = (data && data.users) || [];
+    state.rawUsers = Array.isArray(users) ? users : [];
+    state.filteredUsers = [];
+    renderUsers();
 
-      function td(v) {
-        const cell = document.createElement("td");
-        cell.textContent = v == null ? "" : String(v);
-        return cell;
-      }
-
-      tr.appendChild(td(u.id || ""));
-      tr.appendChild(td(formatDate(u.created_at)));
-      tr.appendChild(td(u.email || "—"));
-
-      const planTd = document.createElement("td");
-      const planTag = document.createElement("span");
-      planTag.classList.add("tag");
-      if (u.plan === "pro") {
-        planTag.classList.add("pro");
-        planTag.textContent = "PRO";
-      } else {
-        planTag.classList.add("free");
-        planTag.textContent = "Free";
-      }
-      planTd.appendChild(planTag);
-      tr.appendChild(planTd);
-
-      tr.appendChild(td(u.lang || "tr"));
-      tr.appendChild(td(u.credits ?? 0));
-      tr.appendChild(td(u.ad_count ?? 0));
-      tr.appendChild(td(u.last_ad_date || "—"));
-
-      usersBody.appendChild(tr);
-    });
+    setAdminMessage(
+      `Kullanıcı listesi başarıyla yüklendi. (${state.rawUsers.length} kayıt)`,
+      "success"
+    );
+  } catch (e) {
+    console.error("ADMIN_FETCH_ERROR", e);
+    setAdminMessage(
+      "Sunucuya bağlanırken beklenmeyen bir hata oluştu.",
+      "error"
+    );
   }
+}
 
-  async function loadUsers() {
-    setInfo("Kullanıcı listesi yükleniyor...");
-    try {
-      const res = await fetch("/api/admin-users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Şimdilik backend'e şifre göndermiyoruz, sadece Supabase'ten okuyan endpoint
-        body: JSON.stringify({}),
-      });
+function setupSearch() {
+  const searchInput = $("userSearch");
+  if (!searchInput) return;
 
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        console.error("admin-users hata:", res.status, data);
-        setInfo("Sunucu hatası: kullanıcı listesi alınamadı.");
-        setMessage(
-          (data && data.message) || "Sunucu hatası oluştu.",
-          "error"
-        );
-        return;
-      }
-
-      const users =
-        (data && Array.isArray(data.users) && data.users) ||
-        (Array.isArray(data) ? data : []);
-
-      setInfo(`Toplam ${users.length} kullanıcı yüklendi.`);
-      setMessage("Veriler yüklendi.", "success");
-
-      renderStats(users);
-      renderTable(users);
-    } catch (err) {
-      console.error("Admin panel istek hatası:", err);
-      setInfo("Bağlantı hatası.");
-      setMessage("Bağlantı hatası, biraz sonra tekrar dene.", "error");
+  searchInput.addEventListener("input", () => {
+    const q = searchInput.value.trim().toLowerCase();
+    if (!q) {
+      state.filteredUsers = [];
+      renderUsers();
+      return;
     }
-  }
 
-  // Giriş butonu
-  if (loginBtn) {
-    loginBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const val = (pwInput && pwInput.value.trim()) || "";
-      if (!val) {
-        setMessage("Şifre gir.", "error");
-        return;
-      }
-      if (val !== FRONTEND_ADMIN_PASSWORD) {
-        setMessage("Şifre yanlış.", "error");
-        return;
-      }
+    state.filteredUsers = state.rawUsers.filter((u) => {
+      const id = (u.id || u.user_id || "").toString().toLowerCase();
+      const email = (u.email || u.user_email || "").toLowerCase();
+      const plan = (u.plan || u.subscription_plan || "").toLowerCase();
+      return (
+        id.includes(q) || email.includes(q) || plan.includes(q)
+      );
+    });
+    renderUsers();
+  });
+}
 
-      setMessage("Giriş başarılı.", "success");
-      if (loginSection) loginSection.classList.add("hidden");
-      if (adminPanel) adminPanel.classList.remove("hidden");
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = $("adminLoginBtn");
+  const passInput = $("adminPassword");
 
-      loadUsers();
+  if (btn) {
+    btn.addEventListener("click", () => {
+      // Şimdilik şifre kontrolü yok. İstersen buraya sabit şifre koyabiliriz.
+      // Örn: if (passInput.value !== "MEHMET-SUPER-ADMIN") { ... }
+
+      fetchUsers();
     });
   }
 
-  // Yenile butonu
-  if (reloadBtn) {
-    reloadBtn.addEventListener("click", () => {
-      loadUsers();
-    });
-  }
+  setupSearch();
+  renderUsers();
 });
