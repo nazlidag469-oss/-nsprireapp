@@ -21,10 +21,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = req.body || {};
+    // 🔴 ÖNEMLİ KISIM: body string ise JSON.parse ile çözüyoruz
+    let body = {};
+    if (typeof req.body === 'string') {
+      try {
+        body = JSON.parse(req.body || '{}');
+      } catch (e) {
+        console.error('Body parse hatası:', e, 'raw body:', req.body);
+        return res.status(400).json({
+          errorCode: 'INVALID_JSON',
+          message: 'Geçersiz istek gövdesi.',
+        });
+      }
+    } else {
+      body = req.body || {};
+    }
+
     const rawPassword = body.password || '';
 
-    // Burada TR klavye / kopyala-yapıştır boşluk sorunlarını temizliyoruz
     const inputPassword = String(rawPassword).trim();
     const envPassword = String(process.env.ADMIN_PANEL_PASSWORD || '').trim();
 
