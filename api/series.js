@@ -70,7 +70,7 @@ Her gün tek bir video fikrini anlatsın, gereksiz uzun açıklamalardan kaçın
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        max_tokens: 1400, // çok uzun olmadan 30 günü sığdırmak için
+        max_tokens: 1800, // çok uzun olmadan 30 günü sığdırmak için
         temperature: 0.8,
       }),
     });
