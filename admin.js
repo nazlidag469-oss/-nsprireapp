@@ -1,7 +1,9 @@
-// Basit admin şifresi (frontend'de gömülü, sadece kendi kullanımın için)
-// İstediğin zaman değiştir:
-// Örn: const ADMIN_PASSWORD = "BenBileUnuturum_2025!";
-const ADMIN_PASSWORD = "Aslaunutmam.1";
+// Bu dosya sadece admin paneli için.
+// Şifre kontrolü backend'de (/api/admin-users) yapılıyor.
+
+const STORAGE_KEY = "inspireapp_conversations_v1";
+const EMAIL_KEY = "inspireapp_email_v1";
+const PLAN_KEY = "inspireapp_plan_v1";
 
 document.addEventListener("DOMContentLoaded", () => {
   const loginBox = document.getElementById("loginBox");
@@ -10,62 +12,142 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("adminLoginBtn");
   const errorEl = document.getElementById("adminError");
 
+  const summaryText = document.getElementById("summaryText");
+  const usersTableBody = document.querySelector("#usersTable tbody");
   const conversationsDump = document.getElementById("conversationsDump");
-  const userInfo = document.getElementById("userInfo");
-  const allKeysDump = document.getElementById("allKeysDump");
+  const deviceUserInfo = document.getElementById("deviceUserInfo");
 
-  function prettyJson(raw) {
-    if (!raw) return "";
+  // Cihazdaki localStorage özetini doldur
+  function fillDeviceInfo() {
     try {
-      return JSON.stringify(JSON.parse(raw), null, 2);
-    } catch {
-      return raw;
+      const conv = localStorage.getItem(STORAGE_KEY);
+      conversationsDump.textContent =
+        conv || "Bu cihazda kayıtlı sohbet bulunamadı.";
+
+      const email = localStorage.getItem(EMAIL_KEY) || "(kayıtlı değil)";
+      const plan = localStorage.getItem(PLAN_KEY) || "(bilinmiyor)";
+      deviceUserInfo.textContent = `Bu cihaz → E-posta: ${email} | Plan: ${plan}`;
+    } catch (e) {
+      conversationsDump.textContent =
+        "LocalStorage okunurken hata oluştu: " + e.message;
     }
   }
 
-  function loadAdminData() {
-    // Sohbetler
-    const convRaw = localStorage.getItem("inspireapp_conversations_v1");
-    conversationsDump.textContent = convRaw
-      ? prettyJson(convRaw)
-      : "Bu cihazda kayıtlı sohbet yok.";
+  // Supabase'ten gelen kullanıcı listesini tabloya bas
+  function renderUsersTable(users) {
+    if (!usersTableBody) return;
+    usersTableBody.innerHTML = "";
 
-    // Kullanıcı bilgileri
-    const email = localStorage.getItem("inspireapp_email_v1") || "(yok)";
-    const plan = localStorage.getItem("inspireapp_plan_v1") || "(yok)";
-    const credits = localStorage.getItem("inspireapp_credits_v1") || "(yok)";
-    const lang = localStorage.getItem("inspireapp_lang_v1") || "(yok)";
+    if (!users || !users.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 8;
+      td.textContent = "Henüz Supabase'te kullanıcı yok.";
+      tr.appendChild(td);
+      usersTableBody.appendChild(tr);
+      return;
+    }
 
-    userInfo.textContent =
-      `E-posta: ${email} | Plan: ${plan} | Kredi: ${credits} | Dil: ${lang}`;
+    users.forEach((u) => {
+      const tr = document.createElement("tr");
 
-    // İlgili tüm key'leri topluca göster
-    const all = {
-      inspireapp_conversations_v1: convRaw || null,
-      inspireapp_email_v1: email,
-      inspireapp_plan_v1: plan,
-      inspireapp_credits_v1: credits,
-      inspireapp_lang_v1: lang,
-    };
-    allKeysDump.textContent = JSON.stringify(all, null, 2);
+      function tdText(txt) {
+        const td = document.createElement("td");
+        td.textContent = txt == null ? "" : String(txt);
+        return td;
+      }
+
+      tr.appendChild(tdText(u.id));
+      tr.appendChild(tdText(u.email));
+      tr.appendChild(tdText(u.plan));
+      tr.appendChild(tdText(u.lang));
+      tr.appendChild(tdText(u.credits));
+      tr.appendChild(tdText(u.ad_count));
+      tr.appendChild(tdText(u.last_ad_date));
+      tr.appendChild(tdText(u.created_at));
+
+      usersTableBody.appendChild(tr);
+    });
   }
 
-  loginBtn.addEventListener("click", () => {
-    const value = pwInput.value;
-    if (value === ADMIN_PASSWORD) {
-      errorEl.textContent = "";
+  // Supabase özet metni
+  function renderSummary(summary) {
+    if (!summaryText) return;
+
+    if (!summary) {
+      summaryText.textContent = "Supabase'ten özet alınamadı.";
+      return;
+    }
+
+    const {
+      totalUsers,
+      proCount,
+      freeCount,
+      totalCredits,
+      avgCredits,
+    } = summary;
+
+    summaryText.textContent =
+      `Toplam kullanıcı: ${totalUsers} | ` +
+      `PRO: ${proCount} | ` +
+      `Free: ${freeCount} | ` +
+      `Toplam krediler: ${totalCredits} | ` +
+      `Ortalama kredi: ${avgCredits.toFixed ? avgCredits.toFixed(2) : avgCredits}`;
+  }
+
+  async function doLogin() {
+    const pw = (pwInput.value || "").trim();
+    errorEl.textContent = "";
+
+    if (!pw) {
+      errorEl.textContent = "Lütfen şifreyi gir.";
+      return;
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Kontrol ediliyor...";
+
+    try {
+      const res = await fetch("/api/admin-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data || !data.ok) {
+        const msg =
+          (data && data.message) ||
+          "Giriş başarısız. Şifreyi kontrol et.";
+        throw new Error(msg);
+      }
+
+      // Başarılı giriş
       loginBox.classList.add("hidden");
       adminContent.classList.remove("hidden");
-      loadAdminData();
-    } else {
-      errorEl.textContent = "Yanlış şifre.";
-    }
-  });
 
-  // Enter ile login
-  pwInput.addEventListener("keyup", (e) => {
-    if (e.key === "Enter") {
-      loginBtn.click();
+      renderSummary(data.summary);
+      renderUsersTable(data.users || []);
+      fillDeviceInfo();
+    } catch (err) {
+      console.error(err);
+      errorEl.textContent = err.message || "Beklenmeyen bir hata oluştu.";
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Giriş";
     }
-  });
+  }
+
+  if (loginBtn) {
+    loginBtn.addEventListener("click", doLogin);
+  }
+  if (pwInput) {
+    pwInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        doLogin();
+      }
+    });
+  }
 });
