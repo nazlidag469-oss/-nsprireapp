@@ -1,52 +1,95 @@
-// api/admin-users.js
-import { createClient } from '@supabase/supabase-js';
+// admin.js — ŞİFRE KONTROLÜ YOK, GİRİŞ BUTONUNA TIKLA → KULLANICI LİSTESİ
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+document.addEventListener('DOMContentLoaded', () => {
+  const pwInput = document.getElementById('adminPasswordInput');
+  const loginBtn = document.getElementById('adminLoginBtn');
+  const msgEl = document.getElementById('adminMessage');
+  const loginSection = document.getElementById('loginSection');
+  const adminPanel = document.getElementById('adminPanel');
+  const usersBody = document.getElementById('adminUsersBody');
 
-if (!supabaseUrl || !serviceKey) {
-  console.error('Supabase env eksik:', {
-    hasUrl: !!supabaseUrl,
-    hasServiceKey: !!serviceKey,
-  });
-}
-
-const supabase = createClient(supabaseUrl, serviceKey, {
-  auth: { persistSession: false },
-});
-
-export default async function handler(req, res) {
-  // Geçici olarak sadece POST kabul edelim
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (!loginBtn || !adminPanel || !usersBody) {
+    console.error('Admin panel elementleri bulunamadı.');
+    return;
   }
 
-  try {
-    // *** ÖNEMLİ ***
-    // Burada HİÇBİR ŞİFRE KONTROLÜ YOK.
-    // admin.html’den ne yazarsan yaz, direkt kullanıcı listesini dönecek.
+  function setMessage(text, type = 'info') {
+    if (!msgEl) return;
+    msgEl.textContent = text;
+    msgEl.style.color =
+      type === 'error' ? '#e11d48' : type === 'success' ? '#16a34a' : '#111827';
+  }
 
-    const { data, error } = await supabase
-      .from('inspire_users')
-      .select(
-        'id, created_at, email, plan, lang, credits, ad_count, last_ad_date'
-      )
-      .order('id', { ascending: true });
+  async function loadUsers() {
+    setMessage('Kullanıcı listesi yükleniyor...', 'info');
+    loginBtn.disabled = true;
 
-    if (error) {
-      console.error('Supabase kullanıcı listesi hatası:', error);
-      return res.status(500).json({
-        errorCode: 'ADMIN_USERS_DB_ERROR',
-        message: 'Kullanıcı listesi alınamadı.',
+    try {
+      const res = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
-    }
 
-    return res.status(200).json({ users: data || [] });
-  } catch (err) {
-    console.error('ADMIN_USERS_ERROR', err);
-    return res.status(500).json({
-      errorCode: 'ADMIN_USERS_ERROR',
-      message: 'Beklenmeyen bir hata oluştu.',
-    });
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (err) {
+        console.error('JSON parse hatası:', err);
+      }
+
+      if (!res.ok) {
+        console.error('API hata', res.status, data);
+        setMessage(data.message || 'Sunucu hatası: kullanıcı listesi alınamadı.', 'error');
+        return;
+      }
+
+      if (!data || !Array.isArray(data.users)) {
+        console.error('Beklenmeyen yanıt /api/admin-users:', data);
+        setMessage('Sunucu hatası: geçersiz cevap.', 'error');
+        return;
+      }
+
+      // Giriş başarılı → login bölümü gizle, paneli göster
+      if (loginSection) loginSection.classList.add('hidden');
+      adminPanel.classList.remove('hidden');
+
+      setMessage(`Giriş başarılı. Toplam ${data.users.length} kullanıcı bulundu.`, 'success');
+
+      usersBody.innerHTML = '';
+      data.users.forEach((u) => {
+        const tr = document.createElement('tr');
+
+        function td(v) {
+          const cell = document.createElement('td');
+          cell.textContent = v == null ? '' : String(v);
+          return cell;
+        }
+
+        tr.appendChild(td(u.id));
+        tr.appendChild(
+          td(u.created_at ? new Date(u.created_at).toLocaleString('tr-TR') : '')
+        );
+        tr.appendChild(td(u.email || '—'));
+        tr.appendChild(td(u.plan || 'free'));
+        tr.appendChild(td(u.lang || 'tr'));
+        tr.appendChild(td(u.credits ?? 0));
+        tr.appendChild(td(u.ad_count ?? 0));
+        tr.appendChild(td(u.last_ad_date || '—'));
+
+        usersBody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error('Admin panel isteği hatası:', err);
+      setMessage('Bağlantı hatası. Biraz sonra tekrar dene.', 'error');
+    } finally {
+      loginBtn.disabled = false;
+      if (pwInput) pwInput.value = '';
+    }
   }
-}
+
+  // Sadece bu: Giriş butonuna tıklayınca loadUsers çağrılıyor.
+  loginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    loadUsers();
+  });
+});
