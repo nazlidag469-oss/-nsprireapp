@@ -1,11 +1,6 @@
 // pages/api/series.js
-// 30 günlük içerik planı – UZUN METİN, KESME YOK
-
-import OpenAI from "openai";
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// 30 günlük içerik planı – uzun cevap, kesme yok
+// OpenAI SDK YOK, direkt fetch ile çağırıyoruz.
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -20,6 +15,13 @@ export default async function handler(req, res) {
   }
 
   const langName = typeof lang === "string" ? lang : "Turkish";
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return res
+      .status(500)
+      .json({ message: "Sunucuda OPENAI_API_KEY tanımlı değil." });
+  }
 
   const prompt = `
 Sen deneyimli bir içerik stratejisisin.
@@ -39,27 +41,47 @@ Lütfen tam 30 güne kadar detaylı plan üret.
 `.trim();
 
   try {
-    const response = await client.responses.create({
-      model: "gpt-4.1-mini",
-      input: prompt,
-      max_output_tokens: 2200, // UZUN METİN İÇİN YÜKSEK SINIR
+    const r = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        input: prompt,
+        max_output_tokens: 2200, // uzun metin için yüksek sınır
+      }),
     });
 
-    // Yeni Responses API: metni böyle alıyoruz
-    const output = response.output[0]?.content[0]?.text || "";
+    const data = await r.json().catch(() => null);
 
-    if (!output) {
+    if (!r.ok) {
+      console.error("OPENAI_SERIES_ERROR", data);
+      const msg =
+        data?.error?.message ||
+        data?.message ||
+        "OpenAI tarafında bir hata oluştu.";
+      return res.status(500).json({ message: msg });
+    }
+
+    const text =
+      data?.output?.[0]?.content?.[0]?.text ||
+      data?.output_text ||
+      "";
+
+    if (!text || !text.trim()) {
       return res
         .status(500)
         .json({ message: "Modelden metin alınamadı (boş cevap)." });
     }
 
-    // 👇 ÖNEMLİ: BURADA ARTIK slice/substring YOK, HİÇ KESMİYORUZ
-    return res.status(200).json({ message: output });
+    // ÖNEMLİ: Burada hiçbir şekilde slice/substring YOK
+    return res.status(200).json({ message: text });
   } catch (e) {
-    console.error("SERIES_API_ERROR", e);
-    return res
-      .status(500)
-      .json({ message: "30 günlük plan oluşturulurken bir hata oluştu." });
+    console.error("SERIES_API_UNEXPECTED_ERROR", e);
+    return res.status(500).json({
+      message: "30 günlük plan oluşturulurken beklenmeyen bir hata oluştu.",
+    });
   }
 }
