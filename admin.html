@@ -1,69 +1,103 @@
 <!DOCTYPE html>
 <html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <title>InspireApp – Admin Paneli</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <title>InspireApp Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .admin-container {
+        margin: 80px auto;
+        max-width: 900px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+      }
+      .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .admin-header h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .admin-login {
+        margin-bottom: 16px;
+      }
+      .admin-login input {
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid #cbd5f5;
+        margin-right: 8px;
+      }
+      .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .admin-table th,
+      .admin-table td {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 6px 8px;
+        text-align: left;
+      }
+      .admin-table th {
+        background: #f3f4f6;
+      }
+      .hidden {
+        display: none !important;
+      }
+      #adminMessage {
+        font-size: 14px;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin-container">
+      <div class="admin-header">
+        <h1>InspireApp Admin Paneli</h1>
+        <span class="muted" style="font-size: 12px;">Sadece geliştirici için</span>
+      </div>
 
-<body>
-  <div class="chat-area" style="margin-top: 20px; max-width: 960px; margin-left: auto; margin-right: auto;">
-    <h1>InspireApp Admin Paneli</h1>
-    <p class="muted">
-      Bu ekran sadece senin için. Şifre kontrolü <b>sunucu tarafında</b> yapılıyor,
-      uygulama içinde hiçbir yerde açık şifre tutulmuyor.
-    </p>
-
-    <!-- GİRİŞ KUTUSU -->
-    <div id="loginBox">
-      <p>Admin şifresini gir:</p>
-      <input id="adminPasswordInput" type="password" />
-      <button id="adminLoginBtn" class="pill-button primary">Giriş</button>
-      <p id="adminError" class="muted"></p>
-    </div>
-
-    <!-- İÇERİK -->
-    <div id="adminContent" class="hidden">
-
-      <!-- S U P A B A S E   Ö Z E T -->
-      <section style="margin-top: 20px;">
-        <h2>Supabase Kullanıcı Özeti</h2>
-        <p id="summaryText" class="muted">Yükleniyor...</p>
-
-        <h3>Son kullanıcılar</h3>
-        <div class="table-wrapper">
-          <table id="usersTable" class="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>E-posta</th>
-                <th>Plan</th>
-                <th>Dil</th>
-                <th>Krediler</th>
-                <th>Reklam Sayısı</th>
-                <th>Son Reklam Tarihi</th>
-                <th>Oluşturulma</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- JS dolduracak -->
-            </tbody>
-          </table>
-        </div>
+      <!-- GİRİŞ BÖLÜMÜ -->
+      <section id="loginSection" class="admin-login">
+        <p>Admin şifresini gir ve "Giriş" butonuna bas (şimdilik şifre kontrolü yok, sadece tıkla):</p>
+        <input
+          id="adminPasswordInput"
+          type="password"
+          placeholder="Şifre (şimdilik zorunlu değil)"
+        />
+        <button id="adminLoginBtn" class="pill-button primary">
+          Giriş
+        </button>
+        <p id="adminMessage" class="muted"></p>
       </section>
 
-      <!-- C İ H A Z   V E R İ S İ -->
-      <section style="margin-top: 30px;">
-        <h2>Bu Cihazdaki Veriler</h2>
-        <p id="deviceUserInfo" class="muted"></p>
-
-        <h3>Sohbetler (localStorage)</h3>
-        <pre id="conversationsDump" style="max-height: 260px; overflow:auto; background:#111; color:#eee; padding:10px; border-radius:8px;"></pre>
+      <!-- KULLANICI TABLOSU -->
+      <section id="adminPanel" class="hidden">
+        <h2>Kullanıcılar</h2>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Oluşturma</th>
+              <th>E-posta</th>
+              <th>Plan</th>
+              <th>Dil</th>
+              <th>Kredi</th>
+              <th>Reklam Sayısı</th>
+              <th>Son Reklam Tarihi</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersBody"></tbody>
+        </table>
       </section>
     </div>
-  </div>
 
-  <script src="admin.js"></script>
-</body>
+    <script src="admin.js"></script>
+  </body>
 </html>
