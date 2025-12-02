@@ -1,153 +1,94 @@
-// Bu dosya sadece admin paneli için.
-// Şifre kontrolü backend'de (/api/admin-users) yapılıyor.
+// admin.js — ŞİFRE KONTROLÜ YOK, sadece kullanıcı listesi çeker
 
-const STORAGE_KEY = "inspireapp_conversations_v1";
-const EMAIL_KEY = "inspireapp_email_v1";
-const PLAN_KEY = "inspireapp_plan_v1";
+document.addEventListener('DOMContentLoaded', () => {
+  // Sayfadaki ilk form, ilk password input ve submit butonunu bul
+  const form = document.querySelector('form');
+  if (!form) return;
 
-document.addEventListener("DOMContentLoaded", () => {
-  const loginBox = document.getElementById("loginBox");
-  const adminContent = document.getElementById("adminContent");
-  const pwInput = document.getElementById("adminPasswordInput");
-  const loginBtn = document.getElementById("adminLoginBtn");
-  const errorEl = document.getElementById("adminError");
+  const passwordInput = form.querySelector('input[type="password"]') || form.querySelector('input');
+  const submitBtn = form.querySelector('button[type="submit"]') || form.querySelector('button');
 
-  const summaryText = document.getElementById("summaryText");
-  const usersTableBody = document.querySelector("#usersTable tbody");
-  const conversationsDump = document.getElementById("conversationsDump");
-  const deviceUserInfo = document.getElementById("deviceUserInfo");
-
-  // Cihazdaki localStorage özetini doldur
-  function fillDeviceInfo() {
-    try {
-      const conv = localStorage.getItem(STORAGE_KEY);
-      conversationsDump.textContent =
-        conv || "Bu cihazda kayıtlı sohbet bulunamadı.";
-
-      const email = localStorage.getItem(EMAIL_KEY) || "(kayıtlı değil)";
-      const plan = localStorage.getItem(PLAN_KEY) || "(bilinmiyor)";
-      deviceUserInfo.textContent = `Bu cihaz → E-posta: ${email} | Plan: ${plan}`;
-    } catch (e) {
-      conversationsDump.textContent =
-        "LocalStorage okunurken hata oluştu: " + e.message;
-    }
+  // Mesaj gösterecek alan
+  let messageEl = document.getElementById('admin-message');
+  if (!messageEl) {
+    messageEl = document.createElement('p');
+    messageEl.id = 'admin-message';
+    messageEl.style.marginTop = '16px';
+    messageEl.style.fontSize = '14px';
+    form.parentNode.appendChild(messageEl);
   }
 
-  // Supabase'ten gelen kullanıcı listesini tabloya bas
-  function renderUsersTable(users) {
-    if (!usersTableBody) return;
-    usersTableBody.innerHTML = "";
+  // Opsiyonel: eğer tablolu liste varsa doldurmak için tbody
+  const usersTbody = document.getElementById('admin-users-body');
 
-    if (!users || !users.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 8;
-      td.textContent = "Henüz Supabase'te kullanıcı yok.";
-      tr.appendChild(td);
-      usersTableBody.appendChild(tr);
-      return;
-    }
-
-    users.forEach((u) => {
-      const tr = document.createElement("tr");
-
-      function tdText(txt) {
-        const td = document.createElement("td");
-        td.textContent = txt == null ? "" : String(txt);
-        return td;
-      }
-
-      tr.appendChild(tdText(u.id));
-      tr.appendChild(tdText(u.email));
-      tr.appendChild(tdText(u.plan));
-      tr.appendChild(tdText(u.lang));
-      tr.appendChild(tdText(u.credits));
-      tr.appendChild(tdText(u.ad_count));
-      tr.appendChild(tdText(u.last_ad_date));
-      tr.appendChild(tdText(u.created_at));
-
-      usersTableBody.appendChild(tr);
-    });
+  function setMessage(text, type = 'info') {
+    messageEl.textContent = text;
+    messageEl.style.color =
+      type === 'error' ? '#e11d48' : type === 'success' ? '#16a34a' : '#111827';
   }
 
-  // Supabase özet metni
-  function renderSummary(summary) {
-    if (!summaryText) return;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-    if (!summary) {
-      summaryText.textContent = "Supabase'ten özet alınamadı.";
-      return;
-    }
-
-    const {
-      totalUsers,
-      proCount,
-      freeCount,
-      totalCredits,
-      avgCredits,
-    } = summary;
-
-    summaryText.textContent =
-      `Toplam kullanıcı: ${totalUsers} | ` +
-      `PRO: ${proCount} | ` +
-      `Free: ${freeCount} | ` +
-      `Toplam krediler: ${totalCredits} | ` +
-      `Ortalama kredi: ${avgCredits.toFixed ? avgCredits.toFixed(2) : avgCredits}`;
-  }
-
-  async function doLogin() {
-    const pw = (pwInput.value || "").trim();
-    errorEl.textContent = "";
-
-    if (!pw) {
-      errorEl.textContent = "Lütfen şifreyi gir.";
-      return;
-    }
-
-    loginBtn.disabled = true;
-    loginBtn.textContent = "Kontrol ediliyor...";
+    setMessage('Kullanıcı listesi yükleniyor...', 'info');
+    if (submitBtn) submitBtn.disabled = true;
 
     try {
-      const res = await fetch("/api/admin-users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: pw }),
+      // ŞİFRE GÖNDERMİYORUZ, sadece liste istiyoruz
+      const res = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // body: JSON.stringify({ password: passwordInput?.value || '' }), // ARTIK YOK
       });
 
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok || !data || !data.ok) {
-        const msg =
-          (data && data.message) ||
-          "Giriş başarısız. Şifreyi kontrol et.";
-        throw new Error(msg);
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (err) {
+        console.error('JSON parse hatası', err);
       }
 
-      // Başarılı giriş
-      loginBox.classList.add("hidden");
-      adminContent.classList.remove("hidden");
+      if (!data || !Array.isArray(data.users)) {
+        console.error('Beklenmeyen yanıt /api/admin-users:', res.status, data);
+        setMessage('Sunucu hatası: kullanıcı listesi alınamadı.', 'error');
+        return;
+      }
 
-      renderSummary(data.summary);
-      renderUsersTable(data.users || []);
-      fillDeviceInfo();
+      // Buraya geldiysek GİRİŞ BAŞARILI
+      setMessage(`Giriş başarılı. Toplam ${data.users.length} kullanıcı var.`, 'success');
+
+      // Eğer tabloda gövde alanı varsa doldur
+      if (usersTbody) {
+        usersTbody.innerHTML = '';
+
+        data.users.forEach((u) => {
+          const tr = document.createElement('tr');
+
+          function td(text) {
+            const cell = document.createElement('td');
+            cell.textContent = text == null ? '' : String(text);
+            cell.style.padding = '8px 12px';
+            return cell;
+          }
+
+          tr.appendChild(td(u.id));
+          tr.appendChild(td(u.created_at ? new Date(u.created_at).toLocaleString('tr-TR') : ''));
+          tr.appendChild(td(u.email || '—'));
+          tr.appendChild(td(u.plan || 'free'));
+          tr.appendChild(td(u.lang || 'tr'));
+          tr.appendChild(td(u.credits ?? 0));
+          tr.appendChild(td(u.ad_count ?? 0));
+          tr.appendChild(td(u.last_ad_date || '—'));
+
+          usersTbody.appendChild(tr);
+        });
+      }
     } catch (err) {
-      console.error(err);
-      errorEl.textContent = err.message || "Beklenmeyen bir hata oluştu.";
+      console.error('Admin panel isteği hatası:', err);
+      setMessage('Bağlantı hatası. Biraz sonra tekrar dene.', 'error');
     } finally {
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Giriş";
+      if (submitBtn) submitBtn.disabled = false;
+      if (passwordInput) passwordInput.value = '';
     }
-  }
-
-  if (loginBtn) {
-    loginBtn.addEventListener("click", doLogin);
-  }
-  if (pwInput) {
-    pwInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        doLogin();
-      }
-    });
-  }
+  });
 });
