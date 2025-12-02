@@ -10,22 +10,64 @@ const AD_COUNT_KEY = "inspireapp_daily_ad_count_v1";
 const AD_DATE_KEY = "inspireapp_daily_ad_date_v1";
 
 const LANG_NAMES = {
-  tr: "Turkish", en: "English", es: "Spanish", de: "German", fr: "French",
-  it: "Italian", pt: "Portuguese", ru: "Russian", ar: "Arabic", fa: "Persian",
-  hi: "Hindi", id: "Indonesian", ms: "Malay", th: "Thai", ja: "Japanese",
-  ko: "Korean", nl: "Dutch", sv: "Swedish", no: "Norwegian", da: "Danish",
+  tr: "Turkish",
+  en: "English",
+  es: "Spanish",
+  de: "German",
+  fr: "French",
+  it: "Italian",
+  pt: "Portuguese",
+  ru: "Russian",
+  ar: "Arabic",
+  fa: "Persian",
+  hi: "Hindi",
+  id: "Indonesian",
+  ms: "Malay",
+  th: "Thai",
+  ja: "Japanese",
+  ko: "Korean",
+  nl: "Dutch",
+  sv: "Swedish",
+  no: "Norwegian",
+  da: "Danish",
   pl: "Polish",
 };
 
 const LANG_REGION = {
-  tr: "TR", en: "US", es: "ES", de: "DE", fr: "FR", it: "IT", pt: "BR",
-  ru: "RU", ar: "SA", fa: "IR", hi: "IN", id: "ID", ms: "MY", th: "TH",
-  ja: "JP", ko: "KR", nl: "NL", sv: "SE", no: "NO", da: "DK", pl: "PL",
+  tr: "TR",
+  en: "US",
+  es: "ES",
+  de: "DE",
+  fr: "FR",
+  it: "IT",
+  pt: "BR",
+  ru: "RU",
+  ar: "SA",
+  fa: "IR",
+  hi: "IN",
+  id: "ID",
+  ms: "MY",
+  th: "TH",
+  ja: "JP",
+  ko: "KR",
+  nl: "NL",
+  sv: "SE",
+  no: "NO",
+  da: "DK",
+  pl: "PL",
 };
 
 const UI_TEXT = {
-  tr: { send: "Gönder", ad: "Reklam izle +1 puan", placeholder: "Mesaj yaz veya konu gir..." },
-  en: { send: "Send", ad: "Watch Ad +1 credit", placeholder: "Type a message or topic..." },
+  tr: {
+    send: "Gönder",
+    ad: "Reklam izle +1 puan",
+    placeholder: "Mesaj yaz veya konu gir...",
+  },
+  en: {
+    send: "Send",
+    ad: "Watch Ad +1 credit",
+    placeholder: "Type a message or topic...",
+  },
 };
 
 const state = {
@@ -138,20 +180,33 @@ function renderConversationList() {
     });
 }
 
+/**
+ * MESAJLARI EKRANA BASAN YER
+ * Burada <pre class="bubble-text"> kullanıyoruz ki
+ * satır sonları, boşluklar, başlıklar düzgün gözüksün.
+ */
 function renderMessages() {
   const container = document.getElementById("chatMessages");
   if (!container) return;
   const conv = currentConv();
   container.innerHTML = "";
+
   conv.messages.forEach((m) => {
     const row = document.createElement("div");
     row.className = "message-row " + m.role;
+
     const bubble = document.createElement("div");
     bubble.className = "bubble";
-    bubble.textContent = m.text;
+
+    const textEl = document.createElement("pre");
+    textEl.className = "bubble-text";
+    textEl.textContent = m.text;
+
+    bubble.appendChild(textEl);
     row.appendChild(bubble);
     container.appendChild(row);
   });
+
   container.scrollTop = container.scrollHeight;
 }
 
@@ -217,7 +272,8 @@ function fillLangSelect(selectEl) {
   Object.keys(LANG_NAMES).forEach((code) => {
     const opt = document.createElement("option");
     opt.value = code;
-    opt.textContent = code === "tr" ? "Türkçe" : code === "en" ? "English" : LANG_NAMES[code];
+    opt.textContent =
+      code === "tr" ? "Türkçe" : code === "en" ? "English" : LANG_NAMES[code];
     selectEl.appendChild(opt);
   });
   selectEl.value = state.lang;
@@ -346,7 +402,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const adContinueBtn = document.getElementById("adContinueBtn");
   const adConfirmCloseBtn = document.getElementById("adConfirmCloseBtn");
 
-  // PRO modal elemanları
   const proModal = document.getElementById("proModal");
   const proCloseBtn = document.getElementById("proCloseBtn");
   const proPriceText = document.getElementById("proPriceText");
@@ -455,16 +510,21 @@ document.addEventListener("DOMContentLoaded", () => {
       openAdModal();
     });
   }
-  if (adCancelBtn) adCancelBtn.addEventListener("click", () => {
-    closeAdModal();
-    modalBackdrop.classList.add("hidden");
-  });
+  if (adCancelBtn) {
+    adCancelBtn.addEventListener("click", () => {
+      closeAdModal();
+      modalBackdrop.classList.add("hidden");
+    });
+  }
 
   if (adWatchedBtn) {
     adWatchedBtn.addEventListener("click", () => {
       const today = new Date().toISOString().slice(0, 10);
       const storedDate = localStorage.getItem(AD_DATE_KEY);
-      let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
+      let storedCount = parseInt(
+        localStorage.getItem(AD_COUNT_KEY) || "0",
+        10
+      );
       if (storedDate !== today) storedCount = 0;
       if (storedCount >= DAILY_AD_LIMIT) {
         alert(`Günlük reklam limiti doldu. (Limit: ${DAILY_AD_LIMIT})`);
@@ -495,12 +555,14 @@ document.addEventListener("DOMContentLoaded", () => {
       adStepMain.classList.remove("hidden");
     });
   }
-  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", () => {
-    closeAdModal();
-    modalBackdrop.classList.add("hidden");
-  });
+  if (adConfirmCloseBtn) {
+    adConfirmCloseBtn.addEventListener("click", () => {
+      closeAdModal();
+      modalBackdrop.classList.add("hidden");
+    });
+  }
 
-  // Backdrop'a tıklayınca her iki modal da kapansın
+  // Backdrop tıklandığında her iki modal da kapansın
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", () => {
       closeAdModal();
@@ -517,7 +579,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PRO butonuna basınca: önce fiyat + ödeme modalı
+  // PRO butonuna basınca: fiyat + ödeme modalı
   if (subscribeBtn) {
     subscribeBtn.addEventListener("click", () => {
       if (state.plan === "pro") return;
@@ -601,7 +663,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // 🎤 SES – Web Speech API
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRec =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRec();
     recognition.lang = state.lang === "tr" ? "tr-TR" : "en-US";
     recognition.interimResults = false;
