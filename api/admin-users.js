@@ -1,45 +1,66 @@
+// api/admin-users.js
 import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+
+if (!supabaseUrl || !serviceKey) {
+  console.error('Supabase ortam değişkenleri eksik:', {
+    hasUrl: !!supabaseUrl,
+    hasServiceKey: !!serviceKey,
+  });
+}
+
+const supabase = createClient(supabaseUrl, serviceKey, {
+  auth: { persistSession: false },
+});
+
 export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "Method not allowed" });
+    const { password } = req.body || {};
+
+    const correctPassword = process.env.ADMIN_PANEL_PASSWORD;
+
+    if (!correctPassword) {
+      console.error('ADMIN_PANEL_PASSWORD env değişkeni set edilmemiş');
+      return res.status(500).json({
+        errorCode: 'ADMIN_PASSWORD_NOT_SET',
+        message: 'Admin şifresi ayarlı değil. Sunucu env ayarlarını kontrol et.',
+      });
     }
 
-    const { password } = req.body;
-
-    // ENV değişkenleri
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !ADMIN_PASSWORD) {
-      return res.status(500).json({ error: "Env variables missing" });
+    if (!password || password !== correctPassword) {
+      // Şifre hatalı → 401
+      return res.status(401).json({
+        errorCode: 'ADMIN_INVALID_PASSWORD',
+        message: 'Giriş başarısız. Şifre hatalı.',
+      });
     }
 
-    // Admin şifresi eşleşmezse
-    if (password !== ADMIN_PASSWORD) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    // Supabase client
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
-    // Tüm kullanıcıları çek
+    // Şifre doğru → kullanıcıları getir
     const { data, error } = await supabase
-      .from("inspire_users")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .from('inspire_users')
+      .select('id, created_at, email, plan, lang, credits, ad_count, last_ad_date')
+      .order('id', { ascending: true });
 
     if (error) {
-      console.error(error);
-      return res.status(500).json({ error: "Database error" });
+      console.error('Supabase kullanıcı listesi hatası:', error);
+      return res.status(500).json({
+        errorCode: 'ADMIN_USERS_DB_ERROR',
+        message: 'Kullanıcı listesi alınamadı.',
+      });
     }
 
-    return res.status(200).json({ users: data });
-
-  } catch (error) {
-    console.error("ADMIN_USERS_ERROR:", error);
-    return res.status(500).json({ error: "Server error" });
+    return res.status(200).json({ users: data || [] });
+  } catch (err) {
+    console.error('ADMIN_USERS_ERROR:', err);
+    return res.status(500).json({
+      errorCode: 'ADMIN_USERS_ERROR',
+      message: 'Beklenmeyen bir hata oluştu.',
+    });
   }
 }
