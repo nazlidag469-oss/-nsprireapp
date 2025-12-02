@@ -619,3 +619,10 @@ textarea {
     flex-direction: column;
   }
   }
+/* Mesaj metnini okunaklı göster */
+.bubble-text {
+  white-space: pre-wrap;   /* Satır sonlarını ve boş satırları koru */
+  line-height: 1.6;
+  font-size: 14px;
+  word-break: break-word;
+}
