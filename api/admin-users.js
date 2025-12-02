@@ -5,7 +5,7 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
 
 if (!supabaseUrl || !serviceKey) {
-  console.error('Supabase ortam değişkenleri eksik:', {
+  console.error('Supabase env eksik:', {
     hasUrl: !!supabaseUrl,
     hasServiceKey: !!serviceKey,
   });
@@ -21,27 +21,39 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { password } = req.body || {};
+    const body = req.body || {};
+    const rawPassword = body.password || '';
 
-    const correctPassword = process.env.ADMIN_PANEL_PASSWORD;
+    // Burada TR klavye / kopyala-yapıştır boşluk sorunlarını temizliyoruz
+    const inputPassword = String(rawPassword).trim();
+    const envPassword = String(process.env.ADMIN_PANEL_PASSWORD || '').trim();
 
-    if (!correctPassword) {
+    console.log('ADMIN_LOGIN_ATTEMPT', {
+      hasEnvPassword: !!envPassword,
+      envLength: envPassword.length,
+      inputLength: inputPassword.length,
+    });
+
+    if (!envPassword) {
       console.error('ADMIN_PANEL_PASSWORD env değişkeni set edilmemiş');
       return res.status(500).json({
         errorCode: 'ADMIN_PASSWORD_NOT_SET',
-        message: 'Admin şifresi ayarlı değil. Sunucu env ayarlarını kontrol et.',
+        message: 'Admin şifresi ayarlı değil. Env ayarlarını kontrol et.',
       });
     }
 
-    if (!password || password !== correctPassword) {
-      // Şifre hatalı → 401
+    if (!inputPassword || inputPassword !== envPassword) {
+      console.warn('ADMIN_INVALID_PASSWORD', {
+        envLength: envPassword.length,
+        inputLength: inputPassword.length,
+      });
       return res.status(401).json({
         errorCode: 'ADMIN_INVALID_PASSWORD',
         message: 'Giriş başarısız. Şifre hatalı.',
       });
     }
 
-    // Şifre doğru → kullanıcıları getir
+    // ŞİFRE DOĞRU → kullanıcıları çek
     const { data, error } = await supabase
       .from('inspire_users')
       .select('id, created_at, email, plan, lang, credits, ad_count, last_ad_date')
@@ -57,7 +69,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ users: data || [] });
   } catch (err) {
-    console.error('ADMIN_USERS_ERROR:', err);
+    console.error('ADMIN_USERS_ERROR', err);
     return res.status(500).json({
       errorCode: 'ADMIN_USERS_ERROR',
       message: 'Beklenmeyen bir hata oluştu.',
