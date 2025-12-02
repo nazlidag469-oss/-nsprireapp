@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+const envPasswordRaw = process.env.ADMIN_PANEL_PASSWORD || '';
 
 if (!supabaseUrl || !serviceKey) {
   console.error('Supabase env eksik:', {
@@ -15,52 +16,81 @@ const supabase = createClient(supabaseUrl, serviceKey, {
   auth: { persistSession: false },
 });
 
+function extractPassword(req) {
+  const candidates = [];
+
+  // Query string (GET / POST fark etmez)
+  if (req.query) {
+    candidates.push(
+      req.query.password,
+      req.query.pass,
+      req.query.adminPassword,
+      req.query.p
+    );
+  }
+
+  // Body
+  let body = req.body;
+
+  if (typeof body === 'string') {
+    if (body.trim().startsWith('{')) {
+      try {
+        const json = JSON.parse(body);
+        candidates.push(
+          json.password,
+          json.pass,
+          json.adminPassword,
+          json.p
+        );
+      } catch (e) {
+        // string’in kendisi de şifre olabilir
+        candidates.push(body);
+      }
+    } else {
+      // düz string ise direkt ekle
+      candidates.push(body);
+    }
+  } else if (body && typeof body === 'object') {
+    candidates.push(
+      body.password,
+      body.pass,
+      body.adminPassword,
+      body.p
+    );
+  }
+
+  const found = candidates.find(
+    (v) => typeof v === 'string' && v.trim().length > 0
+  );
+
+  return (found || '').trim();
+}
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // 🔴 ÖNEMLİ KISIM: body string ise JSON.parse ile çözüyoruz
-    let body = {};
-    if (typeof req.body === 'string') {
-      try {
-        body = JSON.parse(req.body || '{}');
-      } catch (e) {
-        console.error('Body parse hatası:', e, 'raw body:', req.body);
-        return res.status(400).json({
-          errorCode: 'INVALID_JSON',
-          message: 'Geçersiz istek gövdesi.',
-        });
-      }
-    } else {
-      body = req.body || {};
-    }
-
-    const rawPassword = body.password || '';
-
-    const inputPassword = String(rawPassword).trim();
-    const envPassword = String(process.env.ADMIN_PANEL_PASSWORD || '').trim();
-
-    console.log('ADMIN_LOGIN_ATTEMPT', {
-      hasEnvPassword: !!envPassword,
-      envLength: envPassword.length,
-      inputLength: inputPassword.length,
-    });
+    const envPassword = envPasswordRaw.trim();
 
     if (!envPassword) {
       console.error('ADMIN_PANEL_PASSWORD env değişkeni set edilmemiş');
       return res.status(500).json({
         errorCode: 'ADMIN_PASSWORD_NOT_SET',
-        message: 'Admin şifresi ayarlı değil. Env ayarlarını kontrol et.',
+        message: 'Admin şifresi ayarlı değil (env).',
       });
     }
 
+    const inputPassword = extractPassword(req);
+
+    console.log('ADMIN_LOGIN_ATTEMPT', {
+      envLength: envPassword.length,
+      inputLength: inputPassword.length,
+      same: inputPassword === envPassword,
+    });
+
     if (!inputPassword || inputPassword !== envPassword) {
-      console.warn('ADMIN_INVALID_PASSWORD', {
-        envLength: envPassword.length,
-        inputLength: inputPassword.length,
-      });
       return res.status(401).json({
         errorCode: 'ADMIN_INVALID_PASSWORD',
         message: 'Giriş başarısız. Şifre hatalı.',
