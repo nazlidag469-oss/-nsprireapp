@@ -6,16 +6,27 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Sadece POST kullanılabilir." });
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+  // --- 1) Admin Şifre Kontrolü ---
+  const { password } = req.body || {};
+  const adminPass = process.env.ADMIN_PANEL_PASSWORD;
 
-  if (!supabaseUrl || !serviceKey) {
-    console.error("Environment değişkenleri eksik.");
-    return res.status(500).json({ message: "Sunucu yapılandırma hatası." });
+  if (!password || password !== adminPass) {
+    return res.status(401).json({ message: "Yetkisiz erişim. Şifre yanlış." });
   }
 
-  const supabase = createClient(supabaseUrl, serviceKey);
+  // --- 2) Supabase Bağlantısı (ANON KEY KULLANILACAK) ---
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const anonKey = process.env.SUPABASE_ANON_KEY;
 
+  if (!supabaseUrl || !anonKey) {
+    return res.status(500).json({
+      message: "Supabase ortam değişkenleri eksik.",
+    });
+  }
+
+  const supabase = createClient(supabaseUrl, anonKey);
+
+  // --- 3) Tabloyu oku ---
   try {
     const { data, error } = await supabase
       .from("users")
@@ -32,8 +43,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ users: data || [] });
 
-  } catch (e) {
-    console.error("API hata:", e);
-    return res.status(500).json({ message: "Sunucu hatası oluştu." });
+  } catch (err) {
+    console.error("API hata:", err);
+    return res.status(500).json({ message: "Sunucu hatası." });
   }
 }
