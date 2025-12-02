@@ -2,298 +2,375 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>InspireApp – Global Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Mevcut tasarıma uyum için -->
-  <link rel="stylesheet" href="/style.css" />
+  <title>InspireApp Admin Paneli</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Grafik için Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Genel stilin devam etsin diye -->
+  <link rel="stylesheet" href="style.css" />
 
   <style>
+    :root {
+      --admin-bg: #f5f3ff;
+      --admin-card: #ffffff;
+      --admin-accent: #7c3aed;
+      --admin-accent-soft: #ede9fe;
+      --admin-text-main: #111827;
+      --admin-text-muted: #6b7280;
+      --admin-border: #e5e7eb;
+      --admin-danger: #dc2626;
+    }
+
     body {
-      background: #0f172a;
+      background: radial-gradient(circle at top, #e0f2fe, #f5f3ff);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
         "Segoe UI", sans-serif;
+      color: var(--admin-text-main);
+      margin: 0;
     }
+
     .admin-shell {
-      max-width: 1100px;
-      margin: 40px auto;
-      background: #020617;
-      border-radius: 24px;
-      padding: 24px;
-      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.8);
-      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
     }
+
     .admin-header {
+      padding: 16px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      backdrop-filter: blur(12px);
+      background: linear-gradient(
+        to right,
+        rgba(248, 250, 252, 0.8),
+        rgba(238, 242, 255, 0.9)
+      );
     }
-    .admin-title {
-      font-size: 20px;
+
+    .admin-header-title {
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      font-size: 18px;
+    }
+
+    .admin-header-pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.08);
+      color: #1d4ed8;
+      border: 1px solid rgba(59, 130, 246, 0.12);
+    }
+
+    .admin-main {
+      padding: 20px;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto 40px auto;
+    }
+
+    .admin-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+      border: 1px solid rgba(209, 213, 219, 0.6);
+    }
+
+    .admin-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .admin-card-title {
+      font-size: 18px;
       font-weight: 700;
-      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .badge {
-      font-size: 12px;
+
+    .admin-card-title span.icon {
+      font-size: 20px;
+    }
+
+    .admin-pill-muted {
+      font-size: 11px;
       padding: 4px 8px;
       border-radius: 999px;
-      background: rgba(56, 189, 248, 0.15);
-      color: #7dd3fc;
+      background: rgba(148, 163, 184, 0.08);
+      color: #6b7280;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      white-space: nowrap;
     }
-    .hidden {
-      display: none !important;
+
+    .admin-login-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
     }
-    .muted {
-      color: #9ca3af;
-      font-size: 13px;
-    }
-    .row {
-      margin: 10px 0;
-    }
-    .pill-input {
-      width: 100%;
-      padding: 10px 14px;
+
+    .admin-input {
+      flex: 1 1 180px;
+      min-width: 0;
       border-radius: 999px;
-      border: 1px solid #1f2937;
-      background: #020617;
-      color: #e5e7eb;
-      outline: none;
-    }
-    .pill-input:focus {
-      border-color: #7c3aed;
-      box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.7);
-    }
-    .pill-button {
-      border: none;
-      border-radius: 999px;
-      padding: 10px 18px;
+      border: 1px solid var(--admin-border);
+      padding: 8px 14px;
       font-size: 14px;
-      cursor: pointer;
-      background: linear-gradient(135deg, #7c3aed, #4f46e5);
-      color: white;
+      outline: none;
+      background: #f9fafb;
+    }
+
+    .admin-input:focus {
+      border-color: var(--admin-accent);
+      box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.3);
+      background: #ffffff;
+    }
+
+    .admin-button {
+      border-radius: 999px;
+      border: none;
+      padding: 9px 18px;
+      font-size: 14px;
       font-weight: 600;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      transition: transform 0.06s ease, box-shadow 0.06s ease,
+        background 0.1s ease;
+      white-space: nowrap;
     }
-    .pill-button.secondary {
-      background: #111827;
-      color: #e5e7eb;
+
+    .admin-button-primary {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: #ffffff;
+      box-shadow: 0 8px 18px rgba(79, 70, 229, 0.45);
     }
-    .pill-button:disabled {
-      opacity: 0.6;
-      cursor: default;
+
+    .admin-button-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(79, 70, 229, 0.55);
     }
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
+
+    .admin-button-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 5px 12px rgba(79, 70, 229, 0.4);
     }
-    .stat-card {
-      border-radius: 18px;
-      padding: 14px;
-      background: radial-gradient(circle at top left, #1f2937, #020617);
-      border: 1px solid rgba(148, 163, 184, 0.1);
+
+    .admin-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--admin-accent-soft);
+      color: var(--admin-accent);
+      border: 1px solid rgba(129, 140, 248, 0.5);
     }
-    .stat-label {
-      font-size: 12px;
-      color: #9ca3af;
-      margin-bottom: 6px;
+
+    .admin-message {
+      font-size: 13px;
+      margin-top: 6px;
+      min-height: 18px;
+      color: var(--admin-text-muted);
     }
-    .stat-value {
-      font-size: 20px;
-      font-weight: 700;
-      color: #e5e7eb;
+
+    .admin-message.error {
+      color: var(--admin-danger);
     }
-    .stat-sub {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 4px;
+
+    .admin-message.success {
+      color: #059669;
     }
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 14px 0 6px;
-    }
-    .table-wrap {
-      max-height: 360px;
-      overflow: auto;
+
+    .admin-table-wrapper {
+      margin-top: 14px;
       border-radius: 16px;
-      border: 1px solid rgba(107, 114, 128, 0.4);
-      background: #020617;
+      border: 1px solid rgba(209, 213, 219, 0.9);
+      overflow: hidden;
+      background: #f9fafb;
     }
+
+    .admin-table-header {
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(
+        to right,
+        rgba(129, 140, 248, 0.09),
+        rgba(236, 72, 153, 0.04)
+      );
+      border-bottom: 1px solid rgba(209, 213, 219, 0.9);
+    }
+
+    .admin-table-title {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .admin-table-title span.icon {
+      font-size: 16px;
+    }
+
+    .admin-table-search {
+      border-radius: 999px;
+      border: 1px solid rgba(209, 213, 219, 0.9);
+      padding: 4px 10px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      min-width: 0;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 12px;
+      background: #ffffff;
     }
+
     thead {
-      position: sticky;
-      top: 0;
-      background: #030712;
-      z-index: 1;
+      background: #f3f4f6;
     }
-    th, td {
-      padding: 8px 10px;
-      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+
+    th,
+    td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #e5e7eb;
       text-align: left;
       white-space: nowrap;
     }
+
     th {
+      font-weight: 600;
       font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #9ca3af;
+      color: #6b7280;
     }
-    tr:nth-child(even) td {
-      background: rgba(15, 23, 42, 0.6);
+
+    tbody tr:nth-child(even) {
+      background-color: #f9fafb;
     }
-    .tag {
+
+    .badge-free {
+      background: #ecfeff;
+      color: #0891b2;
       padding: 2px 8px;
       border-radius: 999px;
       font-size: 11px;
+      border: 1px solid rgba(8, 145, 178, 0.25);
     }
-    .tag.pro {
-      background: rgba(34, 197, 94, 0.12);
-      color: #4ade80;
-    }
-    .tag.free {
-      background: rgba(148, 163, 184, 0.12);
-      color: #e5e7eb;
-    }
-    .tag.banned {
-      background: rgba(239, 68, 68, 0.12);
-      color: #fca5a5;
-    }
-    .actions-btn {
-      font-size: 11px;
-      padding: 4px 8px;
+
+    .badge-pro {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 2px 8px;
       border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      background: #111827;
-      color: #e5e7eb;
-    }
-    .actions-btn.danger {
-      background: rgba(239, 68, 68, 0.15);
-      color: #fecaca;
-    }
-    .small {
       font-size: 11px;
+      border: 1px solid rgba(217, 119, 6, 0.4);
+    }
+
+    .muted {
+      color: #9ca3af;
+      font-size: 11px;
+    }
+
+    @media (max-width: 720px) {
+      .admin-main {
+        padding: 10px;
+      }
+      .admin-card {
+        padding: 14px;
+        border-radius: 18px;
+      }
+      table {
+        display: block;
+        overflow-x: auto;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="admin-shell">
-    <div class="admin-header">
-      <div>
-        <div class="admin-title">INSPIREAPP • GLOBAL ADMIN</div>
-        <div class="muted small">
-          Yalnızca kurucu için – Supabase <code>users</code> tablosu üzerinden gerçek zamanlı izleme.
-        </div>
-      </div>
-      <span class="badge">BETA DASHBOARD</span>
-    </div>
+    <!-- ÜST BAR -->
+    <header class="admin-header">
+      <div class="admin-header-title">INSPIREAPP ADMIN</div>
+      <div class="admin-header-pill">Sadece geliştirici kullanımı</div>
+    </header>
 
-    <!-- Giriş Bölümü -->
-    <div id="loginSection">
-      <p class="muted">
-        Admin paneline erişmek için şifreyi gir.
-      </p>
-      <div class="row">
-        <input
-          id="adminPasswordInput"
-          class="pill-input"
-          type="password"
-          placeholder="Admin şifren"
-        />
-      </div>
-      <div class="row">
-        <button id="adminLoginBtn" class="pill-button">
-          <span>Giriş yap</span>
-        </button>
-      </div>
-      <p id="adminMessage" class="muted"></p>
-    </div>
-
-    <!-- Admin Paneli -->
-    <div id="adminPanel" class="hidden">
-      <div class="row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <div class="muted" id="adminInfo">
-          Yükleniyor...
+    <!-- ANA İÇERİK -->
+    <main class="admin-main">
+      <section class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">
+            <span class="icon">🛠️</span>
+            <span>Kullanıcı Yönetimi</span>
+          </div>
+          <span class="admin-pill-muted">Canlı Supabase verisi · Read-only</span>
         </div>
-        <div style="display:flex;gap:8px;">
-          <button id="reloadBtn" class="pill-button secondary small">
-            Yenile
+
+        <!-- Login satırı -->
+        <div class="admin-login-row">
+          <input
+            id="adminPassword"
+            type="password"
+            class="admin-input"
+            placeholder="Admin şifresi (şimdilik zorunlu değil, boş bırakabilirsin)"
+          />
+          <button id="adminLoginBtn" class="admin-button admin-button-primary">
+            <span>Giriş yap</span>
+            <span>→</span>
           </button>
+          <span class="admin-badge">İlk versiyon · test modu</span>
         </div>
-      </div>
 
-      <!-- İstatistik Kartları -->
-      <div class="cards-grid">
-        <div class="stat-card">
-          <div class="stat-label">Toplam Kullanıcı</div>
-          <div id="statTotal" class="stat-value">0</div>
-          <div class="stat-sub">Supabase <code>users</code> tablosu</div>
+        <div id="adminMessage" class="admin-message">
+          Giriş yaptıktan sonra Supabase'deki kullanıcılar listelenir.
         </div>
-        <div class="stat-card">
-          <div class="stat-label">PRO Kullanıcı</div>
-          <div id="statPro" class="stat-value">0</div>
-          <div class="stat-sub">plan = "pro"</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Ücretsiz Kullanıcı</div>
-          <div id="statFree" class="stat-value">0</div>
-          <div class="stat-sub">plan = "free"</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Bugün Eklenen</div>
-          <div id="statToday" class="stat-value">0</div>
-          <div class="stat-sub">created_at = bugün</div>
-        </div>
-      </div>
 
-      <!-- Grafik -->
-      <div class="row">
-        <div class="section-title">Plan dağılımı</div>
-        <p class="muted small">Free vs PRO dağılımı (bar chart)</p>
-        <canvas id="usersChart" height="120"></canvas>
-      </div>
+        <!-- Tablo + arama -->
+        <div class="admin-table-wrapper">
+          <div class="admin-table-header">
+            <div class="admin-table-title">
+              <span class="icon">👥</span>
+              <span>Kullanıcı listesi</span>
+              <span id="userCount" class="muted"></span>
+            </div>
+            <input
+              id="userSearch"
+              class="admin-table-search"
+              placeholder="Ara: e-posta / id..."
+            />
+          </div>
 
-      <!-- Kullanıcı Tablosu -->
-      <div class="row">
-        <div class="section-title">Kullanıcı Listesi</div>
-        <p class="muted small">
-          Bu liste doğrudan Supabase <code>users</code> tablosundan gelir.
-          Şimdilik sadece görüntüleme var; silme / düzenleme fonksiyonlarını
-          daha sonra ekleyebiliriz.
-        </p>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Oluşturulma</th>
-              <th>E-posta</th>
-              <th>Plan</th>
-              <th>Dil</th>
-              <th>Kredi</th>
-              <th>Reklam</th>
-              <th>Son Reklam</th>
-            </tr>
-          </thead>
-          <tbody id="adminUsersBody"></tbody>
-        </table>
-      </div>
-    </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>E-posta</th>
+                <th>Plan</th>
+                <th>Kredi</th>
+                <th>Oluşturma</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <!-- JS ile doldurulacak -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <script src="/admin.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>
