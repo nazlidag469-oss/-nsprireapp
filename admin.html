@@ -1,103 +1,299 @@
 <!DOCTYPE html>
 <html lang="tr">
-  <head>
-    <meta charset="UTF-8" />
-    <title>InspireApp Admin</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
-    <style>
-      .admin-container {
-        margin: 80px auto;
-        max-width: 900px;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
-      }
-      .admin-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-      }
-      .admin-header h1 {
-        margin: 0;
-        font-size: 22px;
-      }
-      .admin-login {
-        margin-bottom: 16px;
-      }
-      .admin-login input {
-        padding: 8px 10px;
-        border-radius: 10px;
-        border: 1px solid #cbd5f5;
-        margin-right: 8px;
-      }
-      .admin-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-      }
-      .admin-table th,
-      .admin-table td {
-        border-bottom: 1px solid #e5e7eb;
-        padding: 6px 8px;
-        text-align: left;
-      }
-      .admin-table th {
-        background: #f3f4f6;
-      }
-      .hidden {
-        display: none !important;
-      }
-      #adminMessage {
-        font-size: 14px;
-        margin-top: 8px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="admin-container">
-      <div class="admin-header">
-        <h1>InspireApp Admin Paneli</h1>
-        <span class="muted" style="font-size: 12px;">Sadece geliştirici için</span>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <title>InspireApp – Global Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Mevcut tasarıma uyum için -->
+  <link rel="stylesheet" href="/style.css" />
 
-      <!-- GİRİŞ BÖLÜMÜ -->
-      <section id="loginSection" class="admin-login">
-        <p>Admin şifresini gir ve "Giriş" butonuna bas (şimdilik şifre kontrolü yok, sadece tıkla):</p>
+  <!-- Grafik için Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background: #0f172a;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+    }
+    .admin-shell {
+      max-width: 1100px;
+      margin: 40px auto;
+      background: #020617;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.8);
+      color: #e5e7eb;
+    }
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .admin-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .badge {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #7dd3fc;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .muted {
+      color: #9ca3af;
+      font-size: 13px;
+    }
+    .row {
+      margin: 10px 0;
+    }
+    .pill-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      outline: none;
+    }
+    .pill-input:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.7);
+    }
+    .pill-button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pill-button.secondary {
+      background: #111827;
+      color: #e5e7eb;
+    }
+    .pill-button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      border-radius: 18px;
+      padding: 14px;
+      background: radial-gradient(circle at top left, #1f2937, #020617);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e5e7eb;
+    }
+    .stat-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 14px 0 6px;
+    }
+    .table-wrap {
+      max-height: 360px;
+      overflow: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(107, 114, 128, 0.4);
+      background: #020617;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead {
+      position: sticky;
+      top: 0;
+      background: #030712;
+      z-index: 1;
+    }
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+    }
+    tr:nth-child(even) td {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .tag {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+    .tag.pro {
+      background: rgba(34, 197, 94, 0.12);
+      color: #4ade80;
+    }
+    .tag.free {
+      background: rgba(148, 163, 184, 0.12);
+      color: #e5e7eb;
+    }
+    .tag.banned {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fca5a5;
+    }
+    .actions-btn {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #111827;
+      color: #e5e7eb;
+    }
+    .actions-btn.danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fecaca;
+    }
+    .small {
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-shell">
+    <div class="admin-header">
+      <div>
+        <div class="admin-title">INSPIREAPP • GLOBAL ADMIN</div>
+        <div class="muted small">
+          Yalnızca kurucu için – Supabase <code>users</code> tablosu üzerinden gerçek zamanlı izleme.
+        </div>
+      </div>
+      <span class="badge">BETA DASHBOARD</span>
+    </div>
+
+    <!-- Giriş Bölümü -->
+    <div id="loginSection">
+      <p class="muted">
+        Admin paneline erişmek için şifreyi gir.
+      </p>
+      <div class="row">
         <input
           id="adminPasswordInput"
+          class="pill-input"
           type="password"
-          placeholder="Şifre (şimdilik zorunlu değil)"
+          placeholder="Admin şifren"
         />
-        <button id="adminLoginBtn" class="pill-button primary">
-          Giriş
+      </div>
+      <div class="row">
+        <button id="adminLoginBtn" class="pill-button">
+          <span>Giriş yap</span>
         </button>
-        <p id="adminMessage" class="muted"></p>
-      </section>
+      </div>
+      <p id="adminMessage" class="muted"></p>
+    </div>
 
-      <!-- KULLANICI TABLOSU -->
-      <section id="adminPanel" class="hidden">
-        <h2>Kullanıcılar</h2>
-        <table class="admin-table">
+    <!-- Admin Paneli -->
+    <div id="adminPanel" class="hidden">
+      <div class="row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div class="muted" id="adminInfo">
+          Yükleniyor...
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button id="reloadBtn" class="pill-button secondary small">
+            Yenile
+          </button>
+        </div>
+      </div>
+
+      <!-- İstatistik Kartları -->
+      <div class="cards-grid">
+        <div class="stat-card">
+          <div class="stat-label">Toplam Kullanıcı</div>
+          <div id="statTotal" class="stat-value">0</div>
+          <div class="stat-sub">Supabase <code>users</code> tablosu</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">PRO Kullanıcı</div>
+          <div id="statPro" class="stat-value">0</div>
+          <div class="stat-sub">plan = "pro"</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ücretsiz Kullanıcı</div>
+          <div id="statFree" class="stat-value">0</div>
+          <div class="stat-sub">plan = "free"</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Bugün Eklenen</div>
+          <div id="statToday" class="stat-value">0</div>
+          <div class="stat-sub">created_at = bugün</div>
+        </div>
+      </div>
+
+      <!-- Grafik -->
+      <div class="row">
+        <div class="section-title">Plan dağılımı</div>
+        <p class="muted small">Free vs PRO dağılımı (bar chart)</p>
+        <canvas id="usersChart" height="120"></canvas>
+      </div>
+
+      <!-- Kullanıcı Tablosu -->
+      <div class="row">
+        <div class="section-title">Kullanıcı Listesi</div>
+        <p class="muted small">
+          Bu liste doğrudan Supabase <code>users</code> tablosundan gelir.
+          Şimdilik sadece görüntüleme var; silme / düzenleme fonksiyonlarını
+          daha sonra ekleyebiliriz.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Oluşturma</th>
+              <th>Oluşturulma</th>
               <th>E-posta</th>
               <th>Plan</th>
               <th>Dil</th>
               <th>Kredi</th>
-              <th>Reklam Sayısı</th>
-              <th>Son Reklam Tarihi</th>
+              <th>Reklam</th>
+              <th>Son Reklam</th>
             </tr>
           </thead>
           <tbody id="adminUsersBody"></tbody>
         </table>
-      </section>
+      </div>
     </div>
+  </div>
 
-    <script src="admin.js"></script>
-  </body>
+  <script src="/admin.js"></script>
+</body>
 </html>
