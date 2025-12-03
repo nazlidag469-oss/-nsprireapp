@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_KEY; // Vercel'deki SERVICE KEY
+  const serviceKey = process.env.SUPABASE_SERVICE_KEY; // SERVICE ROLE key
 
   if (!supabaseUrl || !serviceKey) {
     console.error("Supabase environment değişkenleri eksik.");
@@ -20,8 +20,8 @@ export default async function handler(req, res) {
 
   try {
     const { data, error } = await supabase
-      .from("inspire_users") // TABLO ADI BURADA
-      .select("id, created_at, email, plan, credits, lang")
+      .from("inspire_users")        // tablo adın
+      .select("*")                  // TÜM kolonları al, isimle uğraşma
       .order("created_at", { ascending: false });
 
     if (error) {
