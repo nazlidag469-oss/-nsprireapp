@@ -1,6 +1,4 @@
 // /api/admin-users.js
-// Amaç: Supabase AUTH tarafındaki tüm kullanıcıları listelemek (admin paneli için)
-
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
@@ -9,46 +7,34 @@ export default async function handler(req, res) {
   }
 
   const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_KEY; // Vercel'deki SERVICE KEY
 
   if (!supabaseUrl || !serviceKey) {
-    console.error("Environment değişkenleri eksik.");
-    return res.status(500).json({ message: "Sunucu yapılandırma hatası." });
+    console.error("Supabase environment değişkenleri eksik.");
+    return res
+      .status(500)
+      .json({ message: "Supabase environment eksik (URL veya SERVICE_KEY)." });
   }
 
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
-    // Supabase AUTH kullanıcılarını getir (tabloya bağlı değil)
-    const { data, error } = await supabase.auth.admin.listUsers({
-      page: 1,
-      perPage: 200, // İstersen artırabilirsin
-    });
+    const { data, error } = await supabase
+      .from("inspire_users") // TABLO ADI BURADA
+      .select("id, created_at, email, plan, credits, lang")
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Supabase auth.admin.listUsers hatası:", error);
+      console.error("Supabase sorgu hatası:", error);
       return res.status(500).json({
-        message: "Supabase kullanıcı listesi alınamadı.",
-        detail: error.message || null,
+        message: "Supabase sorgu hatası.",
+        detail: error.message,
       });
     }
 
-    // Admin paneline sade bir liste dönelim
-    const users =
-      data?.users?.map((u) => ({
-        id: u.id,
-        email: u.email,
-        created_at: u.created_at,
-        last_sign_in_at: u.last_sign_in_at,
-        phone: u.phone,
-      })) || [];
-
-    return res.status(200).json({ users });
+    return res.status(200).json({ users: data || [] });
   } catch (e) {
-    console.error("API genel hata:", e);
-    return res.status(500).json({
-      message: "Sunucu hatası oluştu.",
-      detail: e.message || null,
-    });
+    console.error("admin-users API hata:", e);
+    return res.status(500).json({ message: "Sunucu hatası oluştu." });
   }
 }
