@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   const { email, plan, credits, lang } = req.body;
 
   const { data, error } = await supabase
-    .from("inspire_users")
+    .from("users")
     .insert({
       email,
       plan,
