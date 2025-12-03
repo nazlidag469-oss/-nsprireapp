@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY
+    process.env.MY_SERVICE_KEY
   );
 
   const { email, plan, credits, lang } = req.body;
