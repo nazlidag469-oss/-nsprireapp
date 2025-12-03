@@ -617,13 +617,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // 🔴 DÜZENLENEN KISIM: E-posta kaydederken Supabase'e de gönder
   if (onboardEmailSaveBtn && onboardEmailInput) {
-    onboardEmailSaveBtn.addEventListener("click", () => {
+    onboardEmailSaveBtn.addEventListener("click", async () => {
       const email = onboardEmailInput.value.trim();
       if (!email) return;
+
+      // 1) Uygulama içi state / localStorage
       state.email = email;
       saveEmail();
       updateAccountEmailUI();
+
+      // 2) Supabase'e kullanıcı kaydı (admin paneli buradan okuyor)
+      try {
+        await fetch("/api/register-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            plan: state.plan,
+            credits: state.credits,
+            lang: state.lang,
+          }),
+        });
+      } catch (e) {
+        console.error("register-user hatası:", e);
+      }
+
       onboardingOverlay.classList.add("hidden");
     });
   }
