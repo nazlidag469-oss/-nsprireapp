@@ -5,7 +5,7 @@ const EMAIL_KEY = "inspireapp_email_v1";
 const LANG_KEY = "inspireapp_lang_v1";
 
 const MAX_FREE_CREDITS = 4;
-const DAILY_AD_LIMIT = 200;
+const DAILY_AD_LIMIT = 400;
 const AD_COUNT_KEY = "inspireapp_daily_ad_count_v1";
 const AD_DATE_KEY = "inspireapp_daily_ad_date_v1";
 
@@ -180,11 +180,7 @@ function renderConversationList() {
     });
 }
 
-/**
- * MESAJLARI EKRANA BASAN YER
- * Burada <pre class="bubble-text"> kullanıyoruz ki
- * satır sonları, boşluklar, başlıklar düzgün gözüksün.
- */
+/* MESAJLARI EKRANA BASAN YER */
 function renderMessages() {
   const container = document.getElementById("chatMessages");
   if (!container) return;
@@ -562,7 +558,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Backdrop tıklandığında her iki modal da kapansın
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", () => {
       closeAdModal();
@@ -571,7 +566,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PRO modal kapatma
   if (proCloseBtn) {
     proCloseBtn.addEventListener("click", () => {
       closeProModal();
@@ -579,7 +573,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PRO butonuna basınca: fiyat + ödeme modalı
   if (subscribeBtn) {
     subscribeBtn.addEventListener("click", () => {
       if (state.plan === "pro") return;
@@ -587,7 +580,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PRO modal içindeki ÖDEME butonu
   if (proPayBtn) {
     proPayBtn.addEventListener("click", () => {
       const isTr = state.lang === "tr";
@@ -617,18 +609,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 🔴 DÜZENLENEN KISIM: E-posta kaydederken Supabase'e de gönder
   if (onboardEmailSaveBtn && onboardEmailInput) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
       const email = onboardEmailInput.value.trim();
       if (!email) return;
 
-      // 1) Uygulama içi state / localStorage
       state.email = email;
       saveEmail();
       updateAccountEmailUI();
 
-      // 2) Supabase'e kullanıcı kaydı (admin paneli buradan okuyor)
       try {
         await fetch("/api/register-user", {
           method: "POST",
@@ -680,7 +669,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 🎤 SES – Web Speech API
+  // 🎤 SES
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
     const SpeechRec =
@@ -718,7 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 📷 KAMERA – dosya seçtir
+  // 📷 KAMERA
   if (cameraBtn && cameraFileInput) {
     cameraBtn.addEventListener("click", () => {
       cameraFileInput.click();
