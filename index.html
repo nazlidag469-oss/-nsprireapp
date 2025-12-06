@@ -27,13 +27,14 @@
       <!-- SOL PANEL -->
       <aside id="sidebar" class="sidebar hidden">
         <div class="sidebar-header">
-          <h2>Hesap & Sohbetler</h2>
+          <h2>Hesap &amp; Sohbetler</h2>
         </div>
 
         <section class="sidebar-section">
           <h3>Kullanıcı</h3>
           <p class="muted small-label">E-posta</p>
           <div id="accountEmail" class="sidebar-email">Kayıtlı değil</div>
+
           <button id="changeEmailBtn" class="pill-button small">
             E-postayı değiştir
           </button>
@@ -70,7 +71,7 @@
 
       <!-- SAĞ YARDIM PANELİ -->
       <aside id="helpPanel" class="help-panel hidden">
-        <h2>Bilgi & Destek</h2>
+        <h2>Bilgi &amp; Destek</h2>
 
         <h3>Uygulama</h3>
         <p>
@@ -91,6 +92,14 @@
           Fiyat bilgisi ve ödeme, <b>PRO'ya geç</b> butonuna bastığınızda açılan
           ekranda gösterilir (Google Play üzerinden satın alma).
         </p>
+        <ul>
+          <li>✔ Sınırsız puan</li>
+          <li>✔ Öncelikli istek işleme</li>
+          <li>✔ Akım analizi ve trend verileri</li>
+          <li>✔ Uzun &amp; detaylı video önerileri</li>
+          <li>✔ Hook &amp; senaryo üretimi</li>
+          <li>✔ Premium görsel/video işleme</li>
+        </ul>
 
         <h3>Destek</h3>
         <p><b>E-posta:</b> insprireappdestek@gmail.com</p>
@@ -103,6 +112,7 @@
         <!-- TRENDLER -->
         <section id="panel-trends" class="panel hidden">
           <h2 class="panel-title">🔥 Trendler (Bu Hafta)</h2>
+          <p>Platformdaki en popüler 5 kısa video akımı:</p>
           <button id="refreshTrendsBtn" class="pill-button primary small">
             Trendleri Yenile
           </button>
@@ -122,7 +132,11 @@
           </div>
 
           <div class="controls">
-            <input id="topicInput" type="text" placeholder="Konu (örn: moda)" />
+            <input
+              id="topicInput"
+              type="text"
+              placeholder="Konu (örn: moda, yemek)"
+            />
             <select id="platformSelect">
               <option value="youtube">YouTube Shorts</option>
               <option value="tiktok">TikTok</option>
@@ -132,29 +146,131 @@
           </div>
 
           <form id="chatForm" class="chat-input-row">
-            <button type="button" id="voiceBtn" class="circle-button">🎤</button>
-            <button type="button" id="cameraBtn" class="circle-button">📷</button>
-            <textarea id="messageInput" rows="1" placeholder="Mesaj yaz..."></textarea>
-            <button type="submit" id="sendBtn" class="pill-button primary">Gönder</button>
+            <button type="button" id="voiceBtn" class="circle-button">
+              🎤
+            </button>
+            <button type="button" id="cameraBtn" class="circle-button">
+              📷
+            </button>
+            <textarea
+              id="messageInput"
+              rows="1"
+              placeholder="Mesaj yaz veya konu gir..."
+            ></textarea>
+            <button type="submit" id="sendBtn" class="pill-button primary">
+              Gönder
+            </button>
           </form>
 
           <div id="loading" class="loading hidden">Yükleniyor...</div>
         </section>
+
+        <!-- 30 GÜNLÜK SERİ -->
+        <section id="panel-series" class="panel hidden">
+          <h2>📅 30 Günlük İçerik Planı</h2>
+          <input id="seriesTopic" placeholder="Konu gir..." />
+          <button id="seriesGenerate" class="pill-button primary small">
+            Plan Üret
+          </button>
+          <pre id="seriesResult"></pre>
+        </section>
+
+        <!-- HOOK LAB -->
+        <section id="panel-hook" class="panel hidden">
+          <h2>⚡ Hook Laboratuvarı</h2>
+          <input id="hookTopic" placeholder="Hook için konu..." />
+          <button id="hookGenerate" class="pill-button primary small">
+            Hook Üret
+          </button>
+          <pre id="hookResult"></pre>
+        </section>
+
+        <!-- TREND KOPYA MAKİNESİ -->
+        <section id="panel-copy" class="panel hidden">
+          <h2>🎬 Trend Kopya Makinesi</h2>
+          <input id="copyTopic" placeholder="Link veya konu gir..." />
+          <button id="copyGenerate" class="pill-button primary small">
+            Kopya Üret
+          </button>
+          <pre id="copyResult"></pre>
+        </section>
+
+        <!-- 📷 Kamera için gizli input -->
+        <input
+          id="cameraFileInput"
+          type="file"
+          accept="image/*,video/*"
+          capture="environment"
+          style="display: none"
+        />
       </main>
 
-      <!-- ONBOARDING — DİL + E-POSTA -->
+      <!-- REKLAM MODAL -->
+      <div id="modalBackdrop" class="backdrop hidden"></div>
+
+      <div id="adModal" class="modal hidden">
+        <div class="modal-content">
+          <button id="adCloseIcon" class="modal-close">×</button>
+
+          <div id="adStepMain">
+            <h2>Reklam izleyerek puan kazan</h2>
+            <p>Gerçek uygulamada burada video reklam oynayacak.</p>
+            <button id="adWatchedBtn" class="pill-button primary">
+              Reklamı izledim (+1 puan)
+            </button>
+            <button id="adCancelBtn" class="pill-button">Vazgeç</button>
+          </div>
+
+          <div id="adStepConfirm" class="hidden">
+            <h3>Puanı kaçırmak üzeresin</h3>
+            <p>İzlemeyi yarıda bırakırsan puan kazanamayacaksın.</p>
+            <button id="adContinueBtn" class="pill-button primary">
+              İzlemeye devam et
+            </button>
+            <button id="adConfirmCloseBtn" class="pill-button">
+              Kapat
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRO MODAL -->
+      <div id="proModal" class="modal hidden">
+        <div class="modal-content">
+          <button id="proCloseBtn" class="modal-close">×</button>
+          <h2>InspireApp PRO</h2>
+          <p id="proPriceText" class="muted"></p>
+          <button id="proPayBtn" class="pill-button primary">
+            Ödemeye devam et
+          </button>
+        </div>
+      </div>
+
+      <!-- ONBOARDING -->
       <div id="onboardingOverlay" class="onboarding-overlay hidden">
         <div class="onboarding-card">
           <h1 class="onboarding-title">INSPIREAPP</h1>
+
           <div id="onboardStepLang">
             <h2>Dil seçin</h2>
+            <p>Uygulamanın arayüz ve üretim dilini seçin.</p>
             <select id="onboardLangSelect"></select>
-            <button id="onboardLangSaveBtn" class="pill-button primary">Devam</button>
+            <button id="onboardLangSaveBtn" class="pill-button primary">
+              Devam et
+            </button>
           </div>
+
           <div id="onboardStepEmail" class="hidden">
-            <h2>E-posta adresiniz</h2>
-            <input id="onboardEmailInput" type="email" placeholder="ornek@mail.com" />
-            <button id="onboardEmailSaveBtn" class="pill-button primary">Sohbete başla</button>
+            <h2>E-posta adresinizi girin</h2>
+            <p>Sohbetler cihazınızda e-posta ile eşleştirilerek kaydedilir.</p>
+            <input
+              id="onboardEmailInput"
+              type="email"
+              placeholder="ornek@mail.com"
+            />
+            <button id="onboardEmailSaveBtn" class="pill-button primary">
+              Sohbete başla
+            </button>
           </div>
         </div>
       </div>
@@ -165,11 +281,11 @@
 
     <!-- PWA: Service Worker Kaydı -->
     <script>
-      if ('serviceWorker' in navigator) {
+      if ("serviceWorker" in navigator) {
         navigator.serviceWorker
-          .register('/service-worker.js')
+          .register("/service-worker.js")
           .then(() => console.log("Service Worker yüklendi ✔"))
-          .catch(err => console.error("SW hatası:", err));
+          .catch((err) => console.error("SW hatası:", err));
       }
     </script>
   </body>
