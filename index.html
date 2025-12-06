@@ -109,7 +109,60 @@
           <ul id="trendsList" class="trends-list"></ul>
         </section>
 
-        <!-- SOHBET -->
+        <!-- 30 GÜNLÜK SERİ -->
+        <section id="panel-series" class="panel hidden">
+          <h2 class="panel-title">📅 30 Günlük Seri Planı</h2>
+          <p class="muted">
+            Bir konu gir, InspireApp sana 30 günlük kısa video planı çıkarsın.
+          </p>
+          <textarea
+            id="seriesTopic"
+            rows="3"
+            placeholder="Örn: Sağlıklı yemek, motivasyon videoları..."
+          ></textarea>
+          <button id="seriesGenerate" class="pill-button primary">
+            30 günlük planı oluştur
+          </button>
+          <pre id="seriesResult" class="panel-result"></pre>
+        </section>
+
+        <!-- HOOK LABORATUVARI -->
+        <section id="panel-hook" class="panel hidden">
+          <h2 class="panel-title">⚡ Hook Laboratuvarı</h2>
+          <p class="muted">
+            Konunu yaz; ilk 3 saniyede izleyiciyi çeken güçlü giriş cümleleri
+            (hook) üretelim.
+          </p>
+          <textarea
+            id="hookTopic"
+            rows="3"
+            placeholder="Örn: Öğrenciler için verimli ders çalışma"
+          ></textarea>
+          <button id="hookGenerate" class="pill-button primary">
+            Hook önerilerini üret
+          </button>
+          <pre id="hookResult" class="panel-result"></pre>
+        </section>
+
+        <!-- TREND KOPYA MAKİNESİ -->
+        <section id="panel-copy" class="panel hidden">
+          <h2 class="panel-title">🎬 Trend Kopya Makinesi</h2>
+          <p class="muted">
+            Beğendiğin bir trend / video fikrini yaz; InspireApp bunu senin
+            nişine göre yeniden yazar.
+          </p>
+          <textarea
+            id="copyTopic"
+            rows="3"
+            placeholder="Örn: Şu videoyu kendi marka tonuma uyarlamak istiyorum..."
+          ></textarea>
+          <button id="copyGenerate" class="pill-button primary">
+            Trend kopyasını oluştur
+          </button>
+          <pre id="copyResult" class="panel-result"></pre>
+        </section>
+
+        <!-- SOHBET (ANA PANEL) -->
         <section id="panel-chat" class="panel">
           <div id="chatMessages" class="chat-messages"></div>
 
@@ -134,8 +187,14 @@
           <form id="chatForm" class="chat-input-row">
             <button type="button" id="voiceBtn" class="circle-button">🎤</button>
             <button type="button" id="cameraBtn" class="circle-button">📷</button>
-            <textarea id="messageInput" rows="1" placeholder="Mesaj yaz..."></textarea>
-            <button type="submit" id="sendBtn" class="pill-button primary">Gönder</button>
+            <textarea
+              id="messageInput"
+              rows="1"
+              placeholder="Mesaj yaz..."
+            ></textarea>
+            <button type="submit" id="sendBtn" class="pill-button primary">
+              Gönder
+            </button>
           </form>
 
           <div id="loading" class="loading hidden">Yükleniyor...</div>
@@ -149,13 +208,90 @@
           <div id="onboardStepLang">
             <h2>Dil seçin</h2>
             <select id="onboardLangSelect"></select>
-            <button id="onboardLangSaveBtn" class="pill-button primary">Devam</button>
+            <button id="onboardLangSaveBtn" class="pill-button primary">
+              Devam
+            </button>
           </div>
           <div id="onboardStepEmail" class="hidden">
             <h2>E-posta adresiniz</h2>
-            <input id="onboardEmailInput" type="email" placeholder="ornek@mail.com" />
-            <button id="onboardEmailSaveBtn" class="pill-button primary">Sohbete başla</button>
+            <input
+              id="onboardEmailInput"
+              type="email"
+              placeholder="ornek@mail.com"
+            />
+            <button id="onboardEmailSaveBtn" class="pill-button primary">
+              Sohbete başla
+            </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kamera için gizli input -->
+    <input
+      id="cameraFileInput"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      style="display:none"
+    />
+
+    <!-- GENEL MODAL ARKA PLANI -->
+    <div id="modalBackdrop" class="modal-backdrop hidden"></div>
+
+    <!-- REKLAM MODALI -->
+    <div id="adModal" class="modal hidden">
+      <div class="modal-card">
+        <!-- ANA ADIM -->
+        <div id="adStepMain">
+          <div class="modal-header">
+            <h2>Reklam İzleyerek +1 Puan</h2>
+            <button id="adCloseIcon" class="icon-button">✕</button>
+          </div>
+          <p>
+            Bir video reklam izle; izledikten sonra alttaki
+            <b>"Reklamı izledim"</b> butonuna bas, hesabına +1 kredi eklensin.
+          </p>
+          <div class="modal-actions">
+            <button id="adCancelBtn" class="pill-button">Vazgeç</button>
+            <button id="adWatchedBtn" class="pill-button primary">
+              Reklamı izledim, +1 ver
+            </button>
+          </div>
+        </div>
+
+        <!-- KAPATMA ONAY ADIMI -->
+        <div id="adStepConfirm" class="hidden">
+          <h3>Emin misin?</h3>
+          <p>Reklamı izlemekten vazgeçmek üzeresin.</p>
+          <div class="modal-actions">
+            <button id="adContinueBtn" class="pill-button">
+              Reklamı izlemeye devam et
+            </button>
+            <button id="adConfirmCloseBtn" class="pill-button primary">
+              Evet, kapat
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRO PLANI MODALI -->
+    <div id="proModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>InspireApp PRO</h2>
+          <button id="proCloseBtn" class="icon-button">✕</button>
+        </div>
+        <p id="proPriceText"></p>
+        <p>
+          PRO plan; sınırsız kredi, reklamsız kullanım ve gelecekteki premium
+          özelliklere erişim sağlar.
+        </p>
+        <div class="modal-actions">
+          <button id="proPayBtn" class="pill-button primary">
+            PRO’ya geç
+          </button>
         </div>
       </div>
     </div>
@@ -165,11 +301,11 @@
 
     <!-- PWA: Service Worker Kaydı -->
     <script>
-      if ('serviceWorker' in navigator) {
+      if ("serviceWorker" in navigator) {
         navigator.serviceWorker
-          .register('/service-worker.js')
+          .register("/service-worker.js")
           .then(() => console.log("Service Worker yüklendi ✔"))
-          .catch(err => console.error("SW hatası:", err));
+          .catch((err) => console.error("SW hatası:", err));
       }
     </script>
   </body>
