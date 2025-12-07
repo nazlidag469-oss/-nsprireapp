@@ -180,6 +180,36 @@ function renderConversationList() {
     });
 }
 
+/* 🔹 Reklamdan gelen krediyi TEK YERDEN yöneten fonksiyon */
+function grantAdCredit() {
+  if (state.plan !== "free") return;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const storedDate = localStorage.getItem(AD_DATE_KEY);
+  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
+
+  if (storedDate !== today) {
+    storedCount = 0;
+  }
+  if (storedCount >= DAILY_AD_LIMIT) {
+    alert(`Günlük reklam limiti doldu. (Limit: ${DAILY_AD_LIMIT})`);
+    return;
+  }
+
+  storedCount += 1;
+  localStorage.setItem(AD_DATE_KEY, today);
+  localStorage.setItem(AD_COUNT_KEY, String(storedCount));
+
+  state.credits += 1;
+  saveCredits();
+  updatePlanAndCreditsUI();
+}
+
+/* 🔹 ANDROID tarafındaki rewarded reklam bittiğinde çağrılacak */
+window.__onRewardedAdCompletedFromAndroid = function () {
+  grantAdCredit();
+};
+
 /* MESAJLARI EKRANA BASAN YER */
 function renderMessages() {
   const container = document.getElementById("chatMessages");
@@ -503,9 +533,17 @@ document.addEventListener("DOMContentLoaded", () => {
   if (watchAdBtn) {
     watchAdBtn.addEventListener("click", () => {
       if (state.plan !== "free") return;
-      openAdModal();
+
+      // ANDROID içinde ise → gerçek rewarded reklam
+      if (window.AndroidAds && typeof window.AndroidAds.showRewardedAd === "function") {
+        window.AndroidAds.showRewardedAd();
+      } else {
+        // Tarayıcı demosu ise → sahte modal
+        openAdModal();
+      }
     });
   }
+
   if (adCancelBtn) {
     adCancelBtn.addEventListener("click", () => {
       closeAdModal();
@@ -513,27 +551,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Tarayıcı DEMO modunda "Reklamı izledim" → kredi ver
   if (adWatchedBtn) {
     adWatchedBtn.addEventListener("click", () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const storedDate = localStorage.getItem(AD_DATE_KEY);
-      let storedCount = parseInt(
-        localStorage.getItem(AD_COUNT_KEY) || "0",
-        10
-      );
-      if (storedDate !== today) storedCount = 0;
-      if (storedCount >= DAILY_AD_LIMIT) {
-        alert(`Günlük reklam limiti doldu. (Limit: ${DAILY_AD_LIMIT})`);
-        closeAdModal();
-        modalBackdrop.classList.add("hidden");
-        return;
-      }
-      storedCount += 1;
-      localStorage.setItem(AD_DATE_KEY, today);
-      localStorage.setItem(AD_COUNT_KEY, String(storedCount));
-      state.credits += 1;
-      saveCredits();
-      updatePlanAndCreditsUI();
+      grantAdCredit();
       closeAdModal();
       modalBackdrop.classList.add("hidden");
     });
