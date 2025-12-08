@@ -1,59 +1,36 @@
 // pages/api/register-user.js
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_KEY;
-
-// Güvenlik kontrolü
-if (!supabaseUrl || !serviceKey) {
-  console.error("❌ Supabase environment değişkenleri eksik!");
-}
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
+  if (req.method !== "POST")
     return res.status(405).json({ message: "Sadece POST kullanılır" });
-  }
 
-  const supabase = createClient(supabaseUrl, serviceKey);
+  const { email, password, plan = "free", credits = 4, lang = "tr" } = req.body;
 
-  const { email, plan, credits, lang } = req.body || {};
+  if (!email || !password)
+    return res.status(400).json({ message: "EMAIL_OR_PASSWORD_REQUIRED" });
 
-  if (!email) {
-    return res.status(400).json({ message: "EMAIL_REQUIRED" });
-  }
+  // Supabase Auth ile kayıt ol
+  const { data: authData, error: authError } =
+    await supabase.auth.signUp({ email, password });
 
-  try {
-    const { data, error } = await supabase
-      .from("users")
-      .upsert(
-        {
-          email,
-          plan: plan || "free",
-          credits: Number.isInteger(credits) ? credits : 0,
-          lang: lang || "tr",
-        },
-        { onConflict: "email" }
-      )
-      .select()
-      .single();
+  if (authError)
+    return res.status(500).json({ message: "AUTH_ERROR", error: authError.message });
 
-    if (error) {
-      console.error("Supabase UPSERT hatası:", error.message);
-      return res.status(500).json({
-        message: "INSERT_ERROR",
-        error: error.message,
-      });
-    }
+  // Users tablosuna profil kaydı oluştur
+  const { data, error } = await supabase
+    .from("users")
+    .upsert([{ email, plan, credits, lang }], { onConflict: "email" })
+    .select()
+    .single();
 
-    return res.status(200).json({
-      message: "OK",
-      user: data,
-    });
-  } catch (err) {
-    console.error("Beklenmeyen API hatası:", err);
-    return res.status(500).json({
-      message: "UNEXPECTED_ERROR",
-      error: String(err),
-    });
-  }
+  if (error)
+    return res.status(500).json({ message: "DB_ERROR", error: error.message });
+
+  return res.status(200).json({ message: "OK", user: data });
 }
