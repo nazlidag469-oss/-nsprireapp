@@ -77,6 +77,10 @@
           <button class="side-btn" data-panel="copy" id="btnPanelCopy">
             🎬 <span id="btnPanelCopyText">Trend Kopya Makinesi</span>
           </button>
+          <!-- YENİ: PRO PANEL BUTONU -->
+          <button class="side-btn" data-panel="pro" id="btnPanelPro">
+            ⭐ <span id="btnPanelProText">PRO Araçları</span>
+          </button>
         </section>
 
         <button id="helpToggle2" class="help-btn">
@@ -184,6 +188,73 @@
             <span id="copyGenerateText">Trend kopyasını oluştur</span>
           </button>
           <pre id="copyResult" class="panel-result"></pre>
+        </section>
+
+        <!-- ⭐⭐ PRO PANELİ (1, 3, 5) ⭐⭐ -->
+        <section id="panel-pro" class="panel hidden">
+          <h2 id="proPanelTitle" class="panel-title">⭐ PRO Araçları</h2>
+          <p class="muted" id="proPanelDesc">
+            Bu bölümdeki araçlar PRO kullanıcılar için tasarlandı. Ücretsiz
+            planda çalışır ama kısıtlı içerik döner; PRO’da tam güç açılır.
+          </p>
+
+          <!-- 1) Rakip Video Analizi -->
+          <div class="card">
+            <h3 id="proTool1Title">1) Rakip Video Analizi</h3>
+            <p id="proTool1Desc" class="muted">
+              TikTok / Reels / Shorts linki veya açıklamasını gir. InspireApp;
+              neden tuttuğunu, daha güçlü hook’ları ve sana özel bir versiyon
+              üretir.
+            </p>
+            <textarea
+              id="proCompetitorInput"
+              rows="3"
+              placeholder="Örn: TikTok linki veya rakip videonun açıklaması..."
+            ></textarea>
+            <button id="proCompetitorBtn" class="pill-button primary">
+              <span id="proCompetitorBtnText">
+                Rakip videoyu analiz et (PRO)
+              </span>
+            </button>
+            <pre id="proCompetitorResult" class="panel-result"></pre>
+          </div>
+
+          <!-- 3) Kitle İçgörü Analizi -->
+          <div class="card">
+            <h3 id="proTool3Title">3) Kitle İçgörü Analizi</h3>
+            <p id="proTool3Desc" class="muted">
+              Hedef kitleni tek cümle ile anlat. InspireApp senin için
+              psikoloji, format, hook ve CTA kalıplarını çıkarır.
+            </p>
+            <textarea
+              id="proAudienceInput"
+              rows="3"
+              placeholder="Örn: 17–24 yaş, fitness nişinde hedef kitlem var."
+            ></textarea>
+            <button id="proAudienceBtn" class="pill-button primary">
+              <span id="proAudienceBtnText">Kitle içgörüsü üret (PRO)</span>
+            </button>
+            <pre id="proAudienceResult" class="panel-result"></pre>
+          </div>
+
+          <!-- 5) Sessiz Video İçerik Üreticisi -->
+          <div class="card">
+            <h3 id="proTool5Title">5) Sessiz Video İçerik Üreticisi</h3>
+            <p id="proTool5Desc" class="muted">
+              Yüzünü göstermeden, ses kullanmadan içerik üretmek istiyorsan
+              konunu yaz. Sessiz video akışları, sahne önerileri ve metinler
+              üretelim.
+            </p>
+            <textarea
+              id="proSilentInput"
+              rows="3"
+              placeholder="Örn: Sessiz motivasyon videoları ile büyümek istiyorum."
+            ></textarea>
+            <button id="proSilentBtn" class="pill-button primary">
+              <span id="proSilentBtnText">Sessiz içerik fikirleri üret (PRO)</span>
+            </button>
+            <pre id="proSilentResult" class="panel-result"></pre>
+          </div>
         </section>
 
         <!-- SOHBET (ANA PANEL) -->
