@@ -1,76 +1,96 @@
-// pages/api/register-user.js
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
-// Güvenlik kontrolü
-if (!supabaseUrl || !serviceKey) {
-  console.error("Supabase environment değişkenleri eksik!");
-}
-
-/**
- * Kullanıcı e-postasını + şifresini + plan / kredi / dil bilgisini
- * Supabase'deki "users" tablosuna KAYDEDER (email UNIQUE).
- *
- * NOT: Supabase'de "users" tablosunda şu kolonların olduğundan emin ol:
- *  - email (text, UNIQUE)
- *  - password (text)
- *  - plan (text)
- *  - credits (integer)
- *  - lang (text)
- */
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "Sadece POST kullanılır" });
+    return res
+      .status(405)
+      .json({ status: "error", message: "METHOD_NOT_ALLOWED" });
   }
 
-  const supabase = createClient(supabaseUrl, serviceKey);
+  const { email, password, plan = "free", credits = 4, lang = "tr" } =
+    req.body || {};
 
-  const { email, password, plan, credits, lang } = req.body || {};
-
-  if (!email) {
-    return res.status(400).json({ message: "EMAIL_REQUIRED" });
-  }
-  if (!password) {
-    return res.status(400).json({ message: "PASSWORD_REQUIRED" });
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "EMAIL_OR_PASSWORD_REQUIRED" });
   }
 
   try {
-    const { data, error } = await supabase
-      .from("users")
-      .upsert(
-        [
-          {
-            email,
-            password, // Şimdilik düz text; ileride hash'e çevirebiliriz.
-            plan: plan || "free",
-            credits: Number.isInteger(credits) ? credits : 0,
-            lang: lang || "tr",
-          },
-        ],
-        { onConflict: "email" }
-      )
-      .select()
-      .single();
+    // 1) Önce LOGIN dene (Instagram tarzı)
+    const { data: signInData, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      console.error("Supabase UPSERT hatası:", error.message);
-      return res.status(500).json({
-        message: "INSERT_ERROR",
-        error: error.message,
+    if (!signInError && signInData?.user) {
+      // Profil satırını da güncelle / oluştur
+      await supabase
+        .from("users")
+        .upsert([{ email, plan, credits, lang }], { onConflict: "email" });
+
+      return res.status(200).json({
+        status: "login",
+        message: "LOGIN_OK",
+        user: signInData.user,
       });
     }
 
-    return res.status(200).json({
-      message: "OK",
-      user: data,
-    });
-  } catch (err) {
-    console.error("Beklenmeyen API hatası:", err);
+    // 2) Şifre yanlış vs. ise: yeni hesap açmayı dene
+    const isInvalidLogin =
+      signInError?.message &&
+      signInError.message.toLowerCase().includes("invalid");
+
+    if (isInvalidLogin) {
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+      if (signUpError) {
+        return res.status(500).json({
+          status: "error",
+          message: "SIGNUP_ERROR",
+          error: signUpError.message,
+        });
+      }
+
+      await supabase
+        .from("users")
+        .upsert([{ email, plan, credits, lang }], { onConflict: "email" });
+
+      return res.status(200).json({
+        status: "registered",
+        message: "REGISTER_OK",
+        user: signUpData.user,
+      });
+    }
+
+    // Buraya düştüyse beklenmedik auth hatası var
     return res.status(500).json({
-      message: "UNEXPECTED_ERROR",
-      error: String(err),
+      status: "error",
+      message: "AUTH_ERROR",
+      error: signInError?.message || "UNKNOWN_AUTH_ERROR",
+    });
+  } catch (e) {
+    console.error("register-user genel hata:", e);
+    return res.status(500).json({
+      status: "error",
+      message: "SERVER_ERROR",
+      error: e.message,
     });
   }
 }
