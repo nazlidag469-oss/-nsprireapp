@@ -1,69 +1,234 @@
-// =====================
-// SABİTLER & ANA STATE
-// =====================
-
+// === LOCAL STORAGE KEYLERİ ===
 const STORAGE_KEY = "inspireapp_conversations_v1";
 const CREDITS_KEY = "inspireapp_credits_v1";
 const PLAN_KEY = "inspireapp_plan_v1";
 const EMAIL_KEY = "inspireapp_email_v1";
 const LANG_KEY = "inspireapp_lang_v1";
-// Not: Gerçek projede şifreyi localStorage'da saklamak güvenli değil.
-// Burada sadece demo/deneme amaçlı alan bırakıyoruz.
-const PASSWORD_KEY = "inspireapp_password_v1";
 
-const MAX_FREE_CREDITS = 4;
-const DAILY_AD_LIMIT = 400;
 const AD_COUNT_KEY = "inspireapp_daily_ad_count_v1";
 const AD_DATE_KEY = "inspireapp_daily_ad_date_v1";
 
+const MAX_FREE_CREDITS = 4;
+const DAILY_AD_LIMIT = 400;
+
+// === DİL TABLOLARI ===
 const LANG_NAMES = {
   tr: "Turkish",
   en: "English",
-  es: "Spanish",
-  de: "German",
-  fr: "French",
-  it: "Italian",
-  pt: "Portuguese",
-  ru: "Russian",
-  ar: "Arabic",
-  fa: "Persian",
-  hi: "Hindi",
-  id: "Indonesian",
-  ms: "Malay",
-  th: "Thai",
-  ja: "Japanese",
-  ko: "Korean",
-  nl: "Dutch",
-  sv: "Swedish",
-  no: "Norwegian",
-  da: "Danish",
-  pl: "Polish",
 };
 
 const LANG_REGION = {
   tr: "TR",
   en: "US",
-  es: "ES",
-  de: "DE",
-  fr: "FR",
-  it: "IT",
-  pt: "BR",
-  ru: "RU",
-  ar: "SA",
-  fa: "IR",
-  hi: "IN",
-  id: "ID",
-  ms: "MY",
-  th: "TH",
-  ja: "JP",
-  ko: "KR",
-  nl: "NL",
-  sv: "SE",
-  no: "NO",
-  da: "DK",
-  pl: "PL",
 };
 
+// Statik UI metinleri
+const I18N = {
+  tr: {
+    topTitle: "INSPIREAPP",
+
+    sidebarTitle: "Hesap & Sohbetler",
+    sidebarUserTitle: "Kullanıcı",
+    sidebarEmailLabel: "E-posta",
+    sidebarStatusLabel: "Durum",
+    sidebarChatsTitle: "Sohbetler",
+    sidebarPanelsTitle: "Paneller",
+    changeEmailBtnText: "E-postayı değiştir",
+    newChatBtnText: "+ Yeni sohbet",
+    btnPanelChatText: "Sohbet",
+    btnPanelTrendsText: "Trend Akımı",
+    btnPanelSeriesText: "30 Günlük Seri",
+    btnPanelHookText: "Hook Laboratuvarı",
+    btnPanelCopyText: "Trend Kopya Makinesi",
+    helpToggle2Text: "❓ Yardım",
+
+    helpTitle: "Bilgi & Destek",
+    helpAppTitle: "Uygulama",
+    helpAppText1:
+      "InspireApp, kısa video üreticileri için yapay zekâ destekli profesyonel fikir oluşturma + akım analiz + içerik planlama aracıdır.",
+    helpAppText2:
+      "YouTube Shorts, TikTok, Instagram Reels için özel fikir, hook, başlık, trend kopyalama ve içerik akışı üretir.",
+    helpFreeTitle: "Ücretsiz Plan",
+    helpFreeText: "Günlük 4 puan. Reklam izleyerek artırılabilir.",
+    helpProTitle: "PRO Plan",
+    helpProText:
+      "Fiyat bilgisi ve ödeme, PRO'ya geç butonuna bastığınızda açılan ekranda gösterilir (Google Play üzerinden satın alma).",
+    helpSupportTitle: "Destek",
+    helpSupportText: "E-posta: insprireappdestek@gmail.com",
+    closeHelpBtnText: "Kapat",
+
+    trendsTitle: "🔥 Trendler (Bu Hafta)",
+    refreshTrendsBtnText: "Trendleri Yenile",
+
+    seriesTitle: "📅 30 Günlük Seri Planı",
+    seriesDesc:
+      "Bir konu gir, InspireApp sana 30 günlük kısa video planı çıkarsın.",
+    seriesPlaceholder: "Örn: Sağlıklı yemek, motivasyon videoları...",
+    seriesGenerateText: "30 günlük planı oluştur",
+
+    hookTitle: "⚡ Hook Laboratuvarı",
+    hookDesc:
+      "Konunu yaz; ilk 3 saniyede izleyiciyi çeken güçlü giriş cümleleri (hook) üretelim.",
+    hookPlaceholder: "Örn: Öğrenciler için verimli ders çalışma",
+    hookGenerateText: "Hook önerilerini üret",
+
+    copyTitle: "🎬 Trend Kopya Makinesi",
+    copyDesc:
+      "Beğendiğin bir trend / video fikrini yaz; InspireApp bunu senin nişine göre yeniden yazar.",
+    copyPlaceholder:
+      "Örn: Şu videoyu kendi marka tonuma uyarlamak istiyorum...",
+    copyGenerateText: "Trend kopyasını oluştur",
+
+    chatTitle: "💬 Sohbet",
+    topicPlaceholder: "Konu (örn: moda)",
+    messagePlaceholder: "Mesaj yaz...",
+    sendBtnText: "Gönder",
+    watchAdBtnText: "Reklam izle +1 puan",
+    loadingText: "Yükleniyor...",
+
+    planFreeLabel: "Plan: Ücretsiz",
+    planProLabel: "Plan: Pro (sınırsız puan)",
+    creditsLabelFree: (credits) =>
+      `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelPro: "Kalan puan: Sınırsız",
+
+    onboardTitle: "INSPIREAPP",
+    onboardLangTitle: "Dil seçin",
+    onboardLangSaveBtnText: "Devam",
+    onboardEmailTitle: "E-posta adresiniz",
+    onboardEmailPlaceholder: "ornek@mail.com",
+    onboardEmailSaveBtnText: "Sohbete başla",
+
+    adTitle: "Reklam İzleyerek +1 Puan",
+    adText:
+      'Bir video reklam izle; izledikten sonra alttaki "Reklamı izledim" butonuna bas, hesabına +1 kredi eklensin.',
+    adCancelBtnText: "Vazgeç",
+    adWatchedBtnText: "Reklamı izledim, +1 ver",
+    adConfirmTitle: "Emin misin?",
+    adConfirmText: "Reklamı izlemekten vazgeçmek üzeresin.",
+    adContinueBtnText: "Reklamı izlemeye devam et",
+    adConfirmCloseBtnText: "Evet, kapat",
+    adDailyLimit: (limit) =>
+      `Günlük reklam limiti doldu. (Limit: ${limit})`,
+    adPreparing: "Reklam hazırlanıyor...",
+
+    proTitle: "InspireApp PRO",
+    proDesc:
+      "PRO plan; sınırsız kredi, reklamsız kullanım ve gelecekteki premium özelliklere erişim sağlar.",
+    proPayBtnText: "PRO’ya geç",
+    proPriceTextTr:
+      "InspireApp PRO – aylık 299 TL (Google Play üzerinden ücretlendirilir).",
+    proPriceTextEn:
+      "InspireApp PRO – monthly subscription via Google Play.",
+
+    emailNotSavedAlert: "Lütfen geçerli bir e-posta gir.",
+    freeNoCreditsAlert:
+      "Ücretsiz planda kredi bitti. Reklam izleyerek +1 alabilirsin.",
+  },
+
+  en: {
+    topTitle: "INSPIREAPP",
+
+    sidebarTitle: "Account & Chats",
+    sidebarUserTitle: "User",
+    sidebarEmailLabel: "Email",
+    sidebarStatusLabel: "Status",
+    sidebarChatsTitle: "Chats",
+    sidebarPanelsTitle: "Panels",
+    changeEmailBtnText: "Change email",
+    newChatBtnText: "+ New chat",
+    btnPanelChatText: "Chat",
+    btnPanelTrendsText: "Trend Stream",
+    btnPanelSeriesText: "30-Day Series",
+    btnPanelHookText: "Hook Lab",
+    btnPanelCopyText: "Trend Copy Machine",
+    helpToggle2Text: "❓ Help",
+
+    helpTitle: "Info & Support",
+    helpAppTitle: "App",
+    helpAppText1:
+      "InspireApp is an AI-powered idea + trend + content planning assistant for short-form creators.",
+    helpAppText2:
+      "It generates ideas, hooks, titles, and trend-based flows for YouTube Shorts, TikTok and Instagram Reels.",
+    helpFreeTitle: "Free Plan",
+    helpFreeText: "4 credits per day. You can increase by watching ads.",
+    helpProTitle: "PRO Plan",
+    helpProText:
+      "Price and billing details are shown when you tap the 'Go PRO' button (billing via Google Play).",
+    helpSupportTitle: "Support",
+    helpSupportText: "Email: insprireappdestek@gmail.com",
+    closeHelpBtnText: "Close",
+
+    trendsTitle: "🔥 Trends (This Week)",
+    refreshTrendsBtnText: "Refresh trends",
+
+    seriesTitle: "📅 30-Day Series Plan",
+    seriesDesc:
+      "Enter a topic and InspireApp will create a 30-day short video plan.",
+    seriesPlaceholder: "Ex: Healthy meals, motivation videos...",
+    seriesGenerateText: "Generate 30-day plan",
+
+    hookTitle: "⚡ Hook Lab",
+    hookDesc:
+      "Write your topic; we generate strong hook sentences for the first 3 seconds.",
+    hookPlaceholder: "Ex: Efficient studying for students",
+    hookGenerateText: "Generate hook ideas",
+
+    copyTitle: "🎬 Trend Copy Machine",
+    copyDesc:
+      "Paste a trend / video idea; InspireApp rewrites it for your niche.",
+    copyPlaceholder:
+      "Ex: I want to adapt this video idea to my brand tone...",
+    copyGenerateText: "Generate trend copy",
+
+    chatTitle: "💬 Chat",
+    topicPlaceholder: "Topic (e.g. fashion)",
+    messagePlaceholder: "Type a message...",
+    sendBtnText: "Send",
+    watchAdBtnText: "Watch ad +1 credit",
+    loadingText: "Loading...",
+
+    planFreeLabel: "Plan: Free",
+    planProLabel: "Plan: Pro (unlimited credits)",
+    creditsLabelFree: (credits) =>
+      `Credits: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelPro: "Credits: Unlimited",
+
+    onboardTitle: "INSPIREAPP",
+    onboardLangTitle: "Choose language",
+    onboardLangSaveBtnText: "Continue",
+    onboardEmailTitle: "Your email address",
+    onboardEmailPlaceholder: "you@example.com",
+    onboardEmailSaveBtnText: "Start chatting",
+
+    adTitle: "Watch Ad for +1 Credit",
+    adText:
+      'Watch a video ad; then tap "I watched the ad" to add +1 credit to your account.',
+    adCancelBtnText: "Cancel",
+    adWatchedBtnText: "I watched the ad, give +1",
+    adConfirmTitle: "Are you sure?",
+    adConfirmText: "You are about to cancel watching the ad.",
+    adContinueBtnText: "Keep watching",
+    adConfirmCloseBtnText: "Yes, close",
+    adDailyLimit: (limit) => `Daily ad limit reached. (Limit: ${limit})`,
+    adPreparing: "Ad is loading...",
+
+    proTitle: "InspireApp PRO",
+    proDesc:
+      "PRO gives unlimited credits, no ads, and access to all future premium features.",
+    proPayBtnText: "Go PRO",
+    proPriceTextTr:
+      "InspireApp PRO – monthly subscription via Google Play.",
+    proPriceTextEn:
+      "InspireApp PRO – monthly subscription via Google Play.",
+
+    emailNotSavedAlert: "Please enter a valid email.",
+    freeNoCreditsAlert:
+      "You ran out of credits on the free plan. Watch an ad to get +1.",
+  },
+};
+
+// Sadece “Gönder / Reklam” gibi küçük yerler için eski tablo
 const UI_TEXT = {
   tr: {
     send: "Gönder",
@@ -77,19 +242,17 @@ const UI_TEXT = {
   },
 };
 
+// === GLOBAL STATE ===
 const state = {
   conversations: [],
   currentId: null,
-  plan: "free", // "free" | "pro"
+  plan: "free",
   credits: MAX_FREE_CREDITS,
   lang: "tr",
   email: "",
 };
 
-// =====================
-// LOCAL STATE YÜKLEME
-// =====================
-
+// === STATE YÜKLEME / KAYDETME ===
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -136,10 +299,6 @@ function saveEmail() {
   else localStorage.removeItem(EMAIL_KEY);
 }
 
-// =====================
-// YARDIMCI FONKSİYONLAR
-// =====================
-
 function currentConv() {
   return state.conversations.find((c) => c.id === state.currentId);
 }
@@ -153,75 +312,7 @@ function buildTitleFromText(text) {
   return line || "Sohbet";
 }
 
-// Sunucudan e-posta hesabına göre plan/kredi çekmek için.
-// Backend’te /api/auth-sync route’unu sen yazacaksın.
-async function syncUserFromServer(email, password) {
-  if (!email) return;
-  try {
-    const res = await fetch("/api/auth-sync", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: password || null }),
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok || !data) return;
-
-    if (data.plan === "pro" || data.plan === "free") {
-      state.plan = data.plan;
-      savePlan();
-    }
-    if (typeof data.credits === "number") {
-      state.credits = data.credits;
-      saveCredits();
-    }
-    if (data.lang && LANG_NAMES[data.lang]) {
-      state.lang = data.lang;
-      localStorage.setItem(LANG_KEY, state.lang);
-    }
-  } catch (e) {
-    console.error("auth-sync hatası:", e);
-  }
-}
-
-// ===============
-// KREDİ / REKLAM
-// ===============
-
-// Reklamdan gelen krediyi tek yerden yöneten fonksiyon
-function grantAdCredit() {
-  if (state.plan !== "free") return;
-
-  const today = new Date().toISOString().slice(0, 10);
-  const storedDate = localStorage.getItem(AD_DATE_KEY);
-  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
-
-  if (storedDate !== today) {
-    storedCount = 0;
-  }
-  if (storedCount >= DAILY_AD_LIMIT) {
-    alert(`Günlük reklam limiti doldu. (Limit: ${DAILY_AD_LIMIT})`);
-    return;
-  }
-
-  storedCount += 1;
-  localStorage.setItem(AD_DATE_KEY, today);
-  localStorage.setItem(AD_COUNT_KEY, String(storedCount));
-
-  state.credits += 1;
-  saveCredits();
-  updatePlanAndCreditsUI();
-}
-
-// ANDROID tarafındaki Rewarded reklam tamamlandığında çağrılacak.
-// (MainActivity.kt’de: window.__onRealAdReward && window.__onRealAdReward();)
-window.__onRealAdReward = function () {
-  grantAdCredit();
-};
-
-// ===============
-// CONVERSATION UI
-// ===============
-
+// === CONVERSATION RENDER ===
 function renderConversationList() {
   const listEl = document.getElementById("conversationList");
   if (!listEl) return;
@@ -232,7 +323,8 @@ function renderConversationList() {
     .forEach((conv) => {
       const item = document.createElement("div");
       item.className =
-        "conversation-item" + (conv.id === state.currentId ? " active" : "");
+        "conversation-item" +
+        (conv.id === state.currentId ? " active" : "");
       item.textContent = conv.title || "Sohbet";
 
       item.addEventListener("click", () => {
@@ -244,7 +336,9 @@ function renderConversationList() {
       item.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         if (!confirm("Bu sohbeti silmek istiyor musun?")) return;
-        state.conversations = state.conversations.filter((c) => c.id !== conv.id);
+        state.conversations = state.conversations.filter(
+          (c) => c.id !== conv.id
+        );
         if (!state.conversations.length) {
           const first = {
             id: Date.now().toString(),
@@ -264,7 +358,6 @@ function renderConversationList() {
     });
 }
 
-// Mesajları ekrana basan yer
 function renderMessages() {
   const container = document.getElementById("chatMessages");
   if (!container) return;
@@ -302,11 +395,9 @@ function addMessage(role, text) {
   renderMessages();
 }
 
-// ===============
-// PLAN & KREDİ UI
-// ===============
-
+// === PLAN & KREDİ UI ===
 function updatePlanAndCreditsUI() {
+  const t = I18N[state.lang] || I18N.tr;
   const planLabel = document.getElementById("planLabel");
   const creditsLabel = document.getElementById("creditsLabel");
   const watchAdBtn = document.getElementById("watchAdBtn");
@@ -315,20 +406,21 @@ function updatePlanAndCreditsUI() {
 
   if (planLabel) {
     planLabel.textContent =
-      state.plan === "pro" ? "Plan: Pro (sınırsız puan)" : "Plan: Ücretsiz";
+      state.plan === "pro" ? t.planProLabel : t.planFreeLabel;
   }
   if (creditsLabel) {
     creditsLabel.textContent =
-      state.plan === "free"
-        ? `Kalan puan: ${state.credits}/${MAX_FREE_CREDITS}`
-        : "Kalan puan: Sınırsız";
+      state.plan === "pro"
+        ? t.creditsLabelPro
+        : (t.creditsLabelFree && t.creditsLabelFree(state.credits)) ||
+          "";
   }
   if (watchAdBtn) {
     watchAdBtn.classList.toggle("hidden", state.plan !== "free");
   }
   if (planStatus) {
     planStatus.textContent =
-      state.plan === "pro" ? "Plan: Pro (aktif)" : "Plan: Ücretsiz";
+      state.plan === "pro" ? t.planProLabel : t.planFreeLabel;
   }
   if (subscribeBlock) {
     subscribeBlock.classList.toggle("hidden", state.plan === "pro");
@@ -340,14 +432,112 @@ function updateAccountEmailUI() {
   if (el) el.textContent = state.email || "Kayıtlı değil";
 }
 
+// === DİL UYGULAMA ===
 function applyUITextForLang(code) {
+  const t = I18N[code] || I18N.tr;
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value !== undefined) el.textContent = value;
+  };
+  const setHTML = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value !== undefined) el.innerHTML = value;
+  };
+  const setPlaceholder = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value !== undefined) el.placeholder = value;
+  };
+
+  setText("topTitle", t.topTitle);
+
+  setText("sidebarTitle", t.sidebarTitle);
+  setText("sidebarUserTitle", t.sidebarUserTitle);
+  setText("sidebarEmailLabel", t.sidebarEmailLabel);
+  setText("sidebarStatusLabel", t.sidebarStatusLabel);
+  setText("sidebarChatsTitle", t.sidebarChatsTitle);
+  setText("sidebarPanelsTitle", t.sidebarPanelsTitle);
+  setText("changeEmailBtnText", t.changeEmailBtnText);
+  setText("newChatBtnText", t.newChatBtnText);
+  setText("btnPanelChatText", t.btnPanelChatText);
+  setText("btnPanelTrendsText", t.btnPanelTrendsText);
+  setText("btnPanelSeriesText", t.btnPanelSeriesText);
+  setText("btnPanelHookText", t.btnPanelHookText);
+  setText("btnPanelCopyText", t.btnPanelCopyText);
+  setText("helpToggle2Text", t.helpToggle2Text);
+
+  setText("helpTitle", t.helpTitle);
+  setText("helpAppTitle", t.helpAppTitle);
+  setText("helpFreeTitle", t.helpFreeTitle);
+  setText("helpProTitle", t.helpProTitle);
+  setText("helpSupportTitle", t.helpSupportTitle);
+  setText("closeHelpBtnText", t.closeHelpBtnText);
+  setHTML("helpAppText1", t.helpAppText1);
+  setHTML("helpAppText2", t.helpAppText2);
+  setText("helpFreeText", t.helpFreeText);
+  setHTML("helpProText", t.helpProText);
+  setText("helpSupportText", t.helpSupportText);
+
+  setText("trendsTitle", t.trendsTitle);
+  setText("refreshTrendsBtnText", t.refreshTrendsBtnText);
+
+  setText("seriesTitle", t.seriesTitle);
+  setText("seriesDesc", t.seriesDesc);
+  setPlaceholder("seriesTopic", t.seriesPlaceholder);
+  setText("seriesGenerateText", t.seriesGenerateText);
+
+  setText("hookTitle", t.hookTitle);
+  setText("hookDesc", t.hookDesc);
+  setPlaceholder("hookTopic", t.hookPlaceholder);
+  setText("hookGenerateText", t.hookGenerateText);
+
+  setText("copyTitle", t.copyTitle);
+  setText("copyDesc", t.copyDesc);
+  setPlaceholder("copyTopic", t.copyPlaceholder);
+  setText("copyGenerateText", t.copyGenerateText);
+
+  setText("chatTitle", t.chatTitle);
+  setPlaceholder("topicInput", t.topicPlaceholder);
+  setPlaceholder("messageInput", t.messagePlaceholder);
+  setText("sendBtnText", t.sendBtnText);
+  setText("watchAdBtnText", t.watchAdBtnText);
+  const loadingEl = document.getElementById("loading");
+  if (loadingEl) loadingEl.textContent = t.loadingText;
+
+  setText("onboardTitle", t.onboardTitle);
+  setText("onboardLangTitle", t.onboardLangTitle);
+  setText("onboardLangSaveBtnText", t.onboardLangSaveBtnText);
+  setText("onboardEmailTitle", t.onboardEmailTitle);
+  setPlaceholder("onboardEmailInput", t.onboardEmailPlaceholder);
+  setText("onboardEmailSaveBtnText", t.onboardEmailSaveBtnText);
+
+  setText("adTitle", t.adTitle);
+  setHTML("adText", t.adText);
+  setText("adCancelBtnText", t.adCancelBtnText);
+  setText("adWatchedBtnText", t.adWatchedBtnText);
+  setText("adConfirmTitle", t.adConfirmTitle);
+  setText("adConfirmText", t.adConfirmText);
+  setText("adContinueBtnText", t.adContinueBtnText);
+  setText("adConfirmCloseBtnText", t.adConfirmCloseBtnText);
+
+  setText("proTitle", t.proTitle);
+  setText("proDesc", t.proDesc);
+  setText("proPayBtnText", t.proPayBtnText);
+
+  // Plan & krediler (dinamik) tekrar çiz
+  updatePlanAndCreditsUI();
+}
+
+// Eski küçük UI_TEXT desteği (çok değiştirmeden)
+function applySmallUIText(code) {
   const t = UI_TEXT[code] || UI_TEXT.en;
-  const sendBtn = document.getElementById("sendBtn");
-  const watchAdBtn = document.getElementById("watchAdBtn");
+  const sendBtn = document.getElementById("sendBtnText");
+  const watchAdBtn = document.getElementById("watchAdBtnText");
   const messageInput = document.getElementById("messageInput");
   if (sendBtn) sendBtn.textContent = t.send;
   if (watchAdBtn) watchAdBtn.textContent = t.ad;
-  if (messageInput) messageInput.placeholder = t.placeholder;
+  if (messageInput && !messageInput.value)
+    messageInput.placeholder = t.placeholder;
 }
 
 function fillLangSelect(selectEl) {
@@ -356,17 +546,13 @@ function fillLangSelect(selectEl) {
   Object.keys(LANG_NAMES).forEach((code) => {
     const opt = document.createElement("option");
     opt.value = code;
-    opt.textContent =
-      code === "tr" ? "Türkçe" : code === "en" ? "English" : LANG_NAMES[code];
+    opt.textContent = code === "tr" ? "Türkçe" : "English";
     selectEl.appendChild(opt);
   });
   selectEl.value = state.lang;
 }
 
-// ========================
-// BACKEND API YARDIMCILARI
-// ========================
-
+// === API FONKSİYONLARI ===
 async function callIdeasAPI(prompt, platform, langCode) {
   const langName = LANG_NAMES[langCode] || "Turkish";
   try {
@@ -437,19 +623,50 @@ async function loadTrends() {
   }
 }
 
-// Android PRO aktivasyonu (Google Play’den)
-// MainActivity içinde: window.__setProPlanFromAndroid && window.__setProPlanFromAndroid();
+// === REKLAM KREDİ FONKSİYONU ===
+function grantAdCredit() {
+  if (state.plan !== "free") return;
+
+  const t = I18N[state.lang] || I18N.tr;
+  const today = new Date().toISOString().slice(0, 10);
+  const storedDate = localStorage.getItem(AD_DATE_KEY);
+  let storedCount = parseInt(
+    localStorage.getItem(AD_COUNT_KEY) || "0",
+    10
+  );
+
+  if (storedDate !== today) storedCount = 0;
+  if (storedCount >= DAILY_AD_LIMIT) {
+    alert(t.adDailyLimit ? t.adDailyLimit(DAILY_AD_LIMIT) : "");
+    return;
+  }
+
+  storedCount += 1;
+  localStorage.setItem(AD_DATE_KEY, today);
+  localStorage.setItem(AD_COUNT_KEY, String(storedCount));
+
+  state.credits += 1;
+  saveCredits();
+  updatePlanAndCreditsUI();
+}
+
+// Android tarafı için 2 isim de aynı şeye bağlansın
+window.__onRewardedAdCompletedFromAndroid = function () {
+  grantAdCredit();
+};
+window.__onRealAdReward = function () {
+  grantAdCredit();
+};
+
+// PRO için Android tarafından çağrılacak
 window.__setProPlanFromAndroid = function () {
   state.plan = "pro";
   savePlan();
   updatePlanAndCreditsUI();
-  alert("🎉 PRO üyelik Google Play üzerinden başarıyla aktif edildi!");
+  alert("🎉 PRO üyelik Google Play üzerinden aktif edildi!");
 };
 
-// =====================
-// DOM YÜKLENDİĞİNDE
-// =====================
-
+// === DOM READY ===
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
 
@@ -505,26 +722,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const onboardStepLang = document.getElementById("onboardStepLang");
   const onboardStepEmail = document.getElementById("onboardStepEmail");
   const onboardLangSelect = document.getElementById("onboardLangSelect");
-  const onboardLangSaveBtn = document.getElementById("onboardLangSaveBtn");
+  const onboardLangSaveBtn = document.getElementById(
+    "onboardLangSaveBtn"
+  );
   const onboardEmailInput = document.getElementById("onboardEmailInput");
-  const onboardPasswordInput = document.getElementById("onboardPasswordInput");
-  const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
+  const onboardEmailSaveBtn = document.getElementById(
+    "onboardEmailSaveBtn"
+  );
 
+  // Dil seçicileri doldur
   fillLangSelect(langSelect);
   fillLangSelect(onboardLangSelect);
 
+  // State'e göre başlangıç
   renderConversationList();
   renderMessages();
-  updatePlanAndCreditsUI();
-  updateAccountEmailUI();
   applyUITextForLang(state.lang);
+  applySmallUIText(state.lang);
+  updateAccountEmailUI();
   loadTrends();
-
-  // Uygulama açıldığında sunucudan hesabı tekrar çek (telefon değişince PRO korunsun)
-  if (state.email) {
-    const savedPass = localStorage.getItem(PASSWORD_KEY) || null;
-    syncUserFromServer(state.email, savedPass);
-  }
 
   function showOnboardingIfNeeded() {
     if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
@@ -545,7 +761,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   showOnboardingIfNeeded();
 
-  // Menü & yardım
   if (menuToggle && sidebar) {
     menuToggle.addEventListener("click", () => {
       sidebar.classList.toggle("hidden");
@@ -577,7 +792,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === Reklam Modal Aç/Kapa ===
+  // === AD MODAL AÇ / KAPA ===
   function openAdModal() {
     if (!modalBackdrop || !adModal) return;
     adStepMain?.classList.remove("hidden");
@@ -590,14 +805,16 @@ document.addEventListener("DOMContentLoaded", () => {
     adModal.classList.add("hidden");
   }
 
-  // === PRO Modal Aç/Kapa ===
+  // === PRO MODAL AÇ / KAPA ===
   function openProModal() {
     if (!modalBackdrop || !proModal) return;
+    const t = I18N[state.lang] || I18N.tr;
     const isTr = state.lang === "tr";
-    const priceText = isTr
-      ? "InspireApp PRO – aylık 299 TL (Google Play üzerinden ücretlendirilir)."
-      : "InspireApp PRO – aylık 399 TL (veya yerel para birimi, Google Play üzerinden).";
-    if (proPriceText) proPriceText.textContent = priceText;
+    if (proPriceText) {
+      proPriceText.textContent = isTr
+        ? t.proPriceTextTr
+        : t.proPriceTextEn;
+    }
     modalBackdrop.classList.remove("hidden");
     proModal.classList.remove("hidden");
   }
@@ -606,16 +823,17 @@ document.addEventListener("DOMContentLoaded", () => {
     proModal.classList.add("hidden");
   }
 
-  // Reklam izleme butonu
   if (watchAdBtn) {
     watchAdBtn.addEventListener("click", () => {
       if (state.plan !== "free") return;
-
-      // ANDROID WebView içindeysek → gerçek rewarded reklam
-      if (window.AndroidAds && typeof window.AndroidAds.showRewardedAd === "function") {
+      // Android içi gerçek reklam
+      if (
+        window.AndroidAds &&
+        typeof window.AndroidAds.showRewardedAd === "function"
+      ) {
         window.AndroidAds.showRewardedAd();
       } else {
-        // Tarayıcı demo → sahte modal
+        // Web demo
         openAdModal();
       }
     });
@@ -628,7 +846,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Tarayıcı DEMO modunda "Reklamı izledim" → kredi ver
   if (adWatchedBtn) {
     adWatchedBtn.addEventListener("click", () => {
       grantAdCredit();
@@ -656,7 +873,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Backdrop tıklayınca modalları kapat
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", () => {
       closeAdModal();
@@ -665,7 +881,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PRO modal kapama
   if (proCloseBtn) {
     proCloseBtn.addEventListener("click", () => {
       closeProModal();
@@ -673,7 +888,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PRO butonu
   if (subscribeBtn) {
     subscribeBtn.addEventListener("click", () => {
       if (state.plan === "pro") return;
@@ -681,24 +895,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PRO ödeme
   if (proPayBtn) {
     proPayBtn.addEventListener("click", () => {
+      const t = I18N[state.lang] || I18N.tr;
       const isTr = state.lang === "tr";
-      const priceShort = isTr ? "aylık 299 TL" : "aylık 399 TL civarı";
+      const priceShort = isTr ? "aylık 299 TL" : "monthly";
 
       if (window.AndroidBilling?.startPurchase) {
         const sku = isTr ? "pro_monthly_tr" : "pro_monthly_intl";
         window.AndroidBilling.startPurchase(sku);
       } else {
         alert(
-          `PRO üyelik ${priceShort} olarak Google Play üzerinden ücretlendirilecektir.\nBu web demo sürümünde gerçek ödeme aktif değil.`
+          `PRO üyelik ${priceShort} olarak Google Play üzerinden ücretlendirilecektir.\nBu web sürümünde gerçek ödeme aktif değil.`
         );
       }
     });
   }
 
-  // Onboarding dil adımı
   if (onboardLangSaveBtn && onboardLangSelect) {
     onboardLangSaveBtn.addEventListener("click", () => {
       const code = onboardLangSelect.value || "tr";
@@ -706,22 +919,19 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem(LANG_KEY, code);
       if (langSelect) langSelect.value = code;
       applyUITextForLang(code);
+      applySmallUIText(code);
       loadTrends();
       onboardStepLang.classList.add("hidden");
       onboardStepEmail.classList.remove("hidden");
     });
   }
 
-  // Onboarding e-posta + şifre adımı
   if (onboardEmailSaveBtn && onboardEmailInput) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
+      const t = I18N[state.lang] || I18N.tr;
       const email = onboardEmailInput.value.trim();
-      const password = onboardPasswordInput
-        ? onboardPasswordInput.value.trim()
-        : "";
-
       if (!email) {
-        alert("Lütfen e-posta adresi gir.");
+        alert(t.emailNotSavedAlert);
         return;
       }
 
@@ -729,15 +939,6 @@ document.addEventListener("DOMContentLoaded", () => {
       saveEmail();
       updateAccountEmailUI();
 
-      if (password) {
-        // Dediğim gibi: gerçek projede böyle saklama, burada sadece deneme
-        localStorage.setItem(PASSWORD_KEY, password);
-      }
-
-      // Backend'e login / kayıt isteği at (telefon değiştirme durumunda aynı hesap gelsin)
-      await syncUserFromServer(email, password);
-
-      // İsteğe bağlı: kullanıcıyı admin paneline kaydetmek için ayrı endpoint
       try {
         await fetch("/api/register-user", {
           method: "POST",
@@ -753,7 +954,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("register-user hatası:", e);
       }
 
-      updatePlanAndCreditsUI();
       onboardingOverlay.classList.add("hidden");
     });
   }
@@ -774,11 +974,12 @@ document.addEventListener("DOMContentLoaded", () => {
       state.lang = code;
       localStorage.setItem(LANG_KEY, code);
       applyUITextForLang(code);
+      applySmallUIText(code);
       loadTrends();
     });
   }
 
-  // Paneller arası geçiş
+  // Panel değişimi
   document.querySelectorAll(".side-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.panel;
@@ -791,7 +992,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 🎤 SES
+  // SES (Web Speech API)
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
     const SpeechRec =
@@ -803,8 +1004,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (voiceBtn) {
     voiceBtn.addEventListener("click", () => {
+      const t = I18N[state.lang] || I18N.tr;
       if (!recognition) {
-        alert("Bu tarayıcıda ses tanıma desteklenmiyor. (Chrome önerilir)");
+        alert(
+          state.lang === "tr"
+            ? "Bu tarayıcıda ses tanıma desteklenmiyor. (Chrome önerilir)"
+            : "Speech recognition is not supported in this browser. (Chrome recommended)"
+        );
         return;
       }
       try {
@@ -820,7 +1026,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
       recognition.onerror = () => {
-        alert("Ses tanıma sırasında bir hata oldu.");
+        alert(
+          state.lang === "tr"
+            ? "Ses tanıma sırasında bir hata oldu."
+            : "Error during speech recognition."
+        );
       };
       recognition.onend = () => {
         voiceBtn.disabled = false;
@@ -829,7 +1039,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 📷 KAMERA
+  // KAMERA
   if (cameraBtn && cameraFileInput) {
     cameraBtn.addEventListener("click", () => {
       cameraFileInput.click();
@@ -855,7 +1065,8 @@ document.addEventListener("DOMContentLoaded", () => {
     seriesGenerate.addEventListener("click", async () => {
       const topic = seriesTopic.value.trim();
       if (!topic) return;
-      seriesResult.textContent = "Yükleniyor...";
+      seriesResult.textContent =
+        I18N[state.lang]?.loadingText || "Yükleniyor...";
       const text = await callSimpleAPI("series", {
         topic,
         lang: LANG_NAMES[state.lang] || "Turkish",
@@ -868,7 +1079,8 @@ document.addEventListener("DOMContentLoaded", () => {
     hookGenerate.addEventListener("click", async () => {
       const topic = hookTopic.value.trim();
       if (!topic) return;
-      hookResult.textContent = "Yükleniyor...";
+      hookResult.textContent =
+        I18N[state.lang]?.loadingText || "Yükleniyor...";
       const text = await callSimpleAPI("hook", {
         topic,
         lang: LANG_NAMES[state.lang] || "Turkish",
@@ -881,7 +1093,8 @@ document.addEventListener("DOMContentLoaded", () => {
     copyGenerate.addEventListener("click", async () => {
       const topic = copyTopic.value.trim();
       if (!topic) return;
-      copyResult.textContent = "Yükleniyor...";
+      copyResult.textContent =
+        I18N[state.lang]?.loadingText || "Yükleniyor...";
       const text = await callSimpleAPI("copy", {
         topic,
         lang: LANG_NAMES[state.lang] || "Turkish",
@@ -893,6 +1106,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+      const t = I18N[state.lang] || I18N.tr;
       const topic = (topicInput.value || "").trim();
       const extra = (messageInput.value || "").trim();
       const platform = platformSelect.value || "tiktok";
@@ -900,7 +1114,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!prompt) return;
 
       if (state.plan === "free" && state.credits <= 0) {
-        alert("Ücretsiz planda kredi bitti. Reklam izleyerek +1 alabilirsin.");
+        alert(t.freeNoCreditsAlert);
         return;
       }
 
