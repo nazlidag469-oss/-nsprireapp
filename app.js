@@ -151,7 +151,7 @@ const I18N = {
     helpFreeText: "4 credits per day. You can increase by watching ads.",
     helpProTitle: "PRO Plan",
     helpProText:
-      "Price and billing details are shown when you tap the 'Go PRO' button (billing via Google Play).",
+      "Price and billing details are shown when you tap the 'Go GO' button (billing via Google Play).",
     helpSupportTitle: "Support",
     helpSupportText: "Email: insprireappdestek@gmail.com",
     closeHelpBtnText: "Close",
@@ -182,7 +182,7 @@ const I18N = {
     topicPlaceholder: "Topic (e.g. fashion)",
     messagePlaceholder: "Type a message...",
     sendBtnText: "Send",
-    watchAdBtnText: "Watch ad +1 credit",
+    watchAdBtnText: "Watch Ad +1 credit",
     loadingText: "Loading...",
 
     planFreeLabel: "Plan: Free",
@@ -858,7 +858,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", (e) => {
-      // Close only if user clicks on the backdrop, not the modal itself
       if (e.target === modalBackdrop) {
         closeAdModal();
         closeProModal();
@@ -883,7 +882,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (proPayBtn) {
     proPayBtn.addEventListener("click", () => {
-      const t = I18N[state.lang] || I18N.tr;
       const isTr = state.lang === "tr";
       const priceShort = isTr ? "aylık 299 TL" : "monthly";
       if (window.AndroidBilling && window.AndroidBilling.startPurchase) {
@@ -911,85 +909,112 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
-  onboardEmailSaveBtn.addEventListener("click", async () => {
-    const t = I18N[state.lang] || I18N.tr;
+  // === INSTAGRAM TARZI GİRİŞ / KAYIT ===
+  if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
+    onboardEmailSaveBtn.addEventListener("click", async () => {
+      const t = I18N[state.lang] || I18N.tr;
 
-    const email = onboardEmailInput.value.trim();
-    const password = onboardPasswordInput.value.trim();
+      const email = onboardEmailInput.value.trim();
+      const password = onboardPasswordInput.value.trim();
 
-    if (!email || !password) {
-      alert(
-        state.lang === "tr"
-          ? "Lütfen e-posta ve şifre girin."
-          : "Please enter email and password."
-      );
-      return;
-    }
-
-    // Ekranda hemen email gözüksün
-    state.email = email;
-    saveEmail();
-    updateAccountEmailUI();
-
-    let data = null;
-    try {
-      const res = await fetch("/api/register-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          plan: state.plan,
-          credits: state.credits,
-          lang: state.lang,
-        }),
-      });
-
-      data = await res.json().catch(() => null);
-
-      if (!res.ok || !data) {
-        throw new Error(data?.error || data?.message || "Sunucu hatası");
+      if (!email || !password) {
+        alert(
+          state.lang === "tr"
+            ? "Lütfen e-posta ve şifre girin."
+            : "Please enter email and password."
+        );
+        return;
       }
-    } catch (e) {
-      console.error("register-user hatası:", e);
-      alert(
-        state.lang === "tr"
-          ? "Giriş/kayıt sırasında hata oluştu: " + (e.message || "")
-          : "Error during login/register: " + (e.message || "")
-      );
-      return; // Onboarding'i kapatma, kullanıcı tekrar denesin
-    }
 
-    // Backend cevaplarına göre kullanıcıya net mesaj verelim
-    if (data.status === "login") {
-      if (state.lang === "tr") {
-        alert("Giriş başarılı. 👌");
+      // Ekranda hemen email gözüksün
+      state.email = email;
+      saveEmail();
+      updateAccountEmailUI();
+
+      let data = null;
+      try {
+        const res = await fetch("/api/register-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            plan: state.plan,
+            credits: state.credits,
+            lang: state.lang,
+          }),
+        });
+
+        data = await res.json().catch(() => null);
+
+        if (!res.ok || !data) {
+          throw new Error(data?.error || data?.message || "Sunucu hatası");
+        }
+      } catch (e) {
+        console.error("register-user hatası:", e);
+        alert(
+          state.lang === "tr"
+            ? "Giriş/kayıt sırasında hata oluştu: " + (e.message || "")
+            : "Error during login/register: " + (e.message || "")
+        );
+        return; // Onboarding'i kapatma, kullanıcı tekrar denesin
+      }
+
+      // Backend'ten plan/credits geldiyse state'i güncelle
+      if (data.userData) {
+        if (typeof data.userData.plan === "string") {
+          state.plan = data.userData.plan;
+          savePlan();
+        }
+        if (typeof data.userData.credits === "number") {
+          state.credits = data.userData.credits;
+          saveCredits();
+        }
+        updatePlanAndCreditsUI();
+      }
+
+      if (data.status === "login") {
+        alert(state.lang === "tr" ? "Giriş başarılı. 👌" : "Login successful. 👌");
+      } else if (data.status === "registered") {
+        alert(
+          state.lang === "tr"
+            ? "Hesap oluşturuldu ve giriş yapıldı. 🎉"
+            : "Account created and logged in. 🎉"
+        );
       } else {
-        alert("Login successful. 👌");
+        alert(
+          state.lang === "tr"
+            ? "Beklenmedik bir cevap alındı."
+            : "Unexpected response from server."
+        );
       }
-    } else if (data.status === "registered") {
-      if (state.lang === "tr") {
-        alert("Hesap oluşturuldu ve giriş yapıldı. 🎉");
-      } else {
-        alert("Account created and logged in. 🎉");
-      }
-    } else {
-      // Beklenmedik durum
-      alert(
-        state.lang === "tr"
-          ? "Beklenmedik bir cevap alındı."
-          : "Unexpected response from server."
-      );
-    }
 
-    if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
-  });
-}
+      if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
+    });
+  }
 
+  // === ÇIKIŞ / HESAP DEĞİŞTİR ===
   if (changeEmailBtn) {
     changeEmailBtn.addEventListener("click", () => {
       if (!onboardingOverlay) return;
+
+      const sure =
+        state.lang === "tr"
+          ? "Bu cihazdan çıkış yapıp yeni hesapla giriş yapmak istiyor musun?"
+          : "Do you want to log out on this device and login with another account?";
+      if (!confirm(sure)) return;
+
+      // Local bilgileri sıfırla
+      state.email = "";
+      state.plan = "free";
+      state.credits = MAX_FREE_CREDITS;
+      saveEmail();
+      savePlan();
+      saveCredits();
+      updateAccountEmailUI();
+      updatePlanAndCreditsUI();
+
+      // Sadece e-posta adımını göster
       if (onboardStepLang) onboardStepLang.classList.add("hidden");
       if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
       onboardingOverlay.classList.remove("hidden");
@@ -1042,9 +1067,7 @@ if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
       }
       try {
         recognition.start();
-      } catch (e) {
-        // ignore "already started" errors
-      }
+      } catch (e) {}
       voiceBtn.disabled = true;
       voiceBtn.textContent = "🎤…";
 
