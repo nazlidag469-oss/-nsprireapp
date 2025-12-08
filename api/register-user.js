@@ -1,46 +1,73 @@
+// pages/api/register-user.js
+
 import { createClient } from "@supabase/supabase-js";
 
-// Supabase client'ı dosyanın üstünde 1 kere oluştur
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY  // BURASI ÖNEMLİ: MY_SERVICE_KEY DEĞİL
-);
+const supabaseUrl = process.env.SUPABASE_URL;
+const serviceKey = process.env.MY_SERVICE_KEY;
 
+// Güvenlik için: ortam değişkenleri yoksa hemen hata dön
+if (!supabaseUrl || !serviceKey) {
+  console.error("Supabase env değişkenleri eksik!");
+}
+
+/**
+ * Kullanıcı e-postasını, planını, kredilerini ve dili
+ * Supabase'deki "users" tablosuna KAYDEDER.
+ * 
+ * email sütunu UNIQUE olduğu için:
+ *  - İlk kayıt → insert
+ *  - Sonraki kayıtlar → upsert (güncelle) olacak.
+ */
 export default async function handler(req, res) {
+  // Sadece POST izni
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Sadece POST kullanılır" });
   }
 
-  const { email, plan, credits, lang } = req.body;
+  const supabase = createClient(supabaseUrl, serviceKey);
 
-  // Güvenlik: email yoksa kayıt yapma
+  const { email, plan, credits, lang } = req.body || {};
+
+  // Basit kontrol
   if (!email) {
     return res.status(400).json({ message: "EMAIL_REQUIRED" });
   }
 
-  // Aynı e-mail varsa hata fırlatmasın diye upsert da kullanabilirsin,
-  // ama şimdilik insert kalsın, Unique constraint zaten Supabase tarafında.
-  const { data, error } = await supabase
-    .from("users")
-    .insert({
-      email,
-      plan,
-      credits,
-      lang,
-      last_ad_date: null,
-      ad_count: 0,
-    })
-    .select();
+  try {
+    // email UNIQUE olduğu için upsert kullanıyoruz
+    const { data, error } = await supabase
+      .from("users")
+      .upsert(
+        [
+          {
+            email,
+            plan: plan || "free",
+            credits: typeof credits === "number" ? credits : 0,
+            lang: lang || "tr",
+          },
+        ],
+        { onConflict: "email" } // email zaten varsa, o satırı günceller
+      )
+      .select()
+      .single();
 
-  if (error) {
+    if (error) {
+      console.error("Supabase INSERT/UPSERT hatası:", error.message);
+      return res.status(500).json({
+        message: "INSERT_ERROR",
+        error: error.message,
+      });
+    }
+
+    return res.status(200).json({
+      message: "OK",
+      user: data,
+    });
+  } catch (err) {
+    console.error("Beklenmeyen API hatası:", err);
     return res.status(500).json({
-      message: "INSERT_ERROR",
-      error: error.message,
+      message: "UNEXPECTED_ERROR",
+      error: String(err),
     });
   }
-
-  return res.status(200).json({
-    message: "OK",
-    user: data[0],
-  });
 }
