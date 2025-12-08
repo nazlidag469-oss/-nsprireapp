@@ -19,7 +19,7 @@
   --shadow-strong: 0 14px 40px rgba(15, 23, 42, 0.28);
 }
 
-/* Global box-sizing fix */
+/* Global box-sizing (senin hatalı olan kısmı düzelttim) */
 *,
 *::before,
 *::after {
@@ -541,7 +541,7 @@ textarea {
   margin-bottom: 10px;
 }
 
-/* Email + şifre yan yana değil, üst üste ama araları ferah olsun */
+/* Email + şifre arasını biraz açtım */
 .onboarding-card input + input {
   margin-top: 8px;
 }
