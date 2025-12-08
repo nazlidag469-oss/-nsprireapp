@@ -182,7 +182,7 @@ const I18N = {
     topicPlaceholder: "Topic (e.g. fashion)",
     messagePlaceholder: "Type a message...",
     sendBtnText: "Send",
-    watchAdBtnText: "Watch ad +1 credit",
+    watchAdBtnText: "Watch Ad +1 credit",
     loadingText: "Loading...",
 
     planFreeLabel: "Plan: Free",
@@ -311,6 +311,33 @@ function renderConversationList() {
   const listEl = document.getElementById("conversationList");
   if (!listEl) return;
   listEl.innerHTML = "";
+
+  function handleDelete(convId) {
+    const confirmText =
+      state.lang === "tr"
+        ? "Bu sohbeti silmek istiyor musun?"
+        : "Do you want to delete this chat?";
+    const ok = confirm(confirmText);
+    if (!ok) return;
+
+    state.conversations = state.conversations.filter((c) => c.id !== convId);
+
+    if (!state.conversations.length) {
+      const first = {
+        id: Date.now().toString(),
+        title: state.lang === "tr" ? "Yeni sohbet" : "New chat",
+        messages: [],
+        createdAt: Date.now(),
+      };
+      state.conversations.push(first);
+    }
+
+    state.currentId = state.conversations[0].id;
+    saveConversations();
+    renderConversationList();
+    renderMessages();
+  }
+
   state.conversations
     .slice()
     .sort((a, b) => b.createdAt - a.createdAt)
@@ -319,29 +346,32 @@ function renderConversationList() {
       item.className =
         "conversation-item" + (conv.id === state.currentId ? " active" : "");
       item.textContent = conv.title || "Sohbet";
+
+      // Tıkla → sohbete geç
       item.addEventListener("click", () => {
         state.currentId = conv.id;
         renderConversationList();
         renderMessages();
       });
 
+      // Masaüstü: sağ tık → sil
       item.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        if (!confirm("Bu sohbeti silmek istiyor musun?")) return;
-        state.conversations = state.conversations.filter((c) => c.id !== conv.id);
-        if (!state.conversations.length) {
-          const first = {
-            id: Date.now().toString(),
-            title: "Yeni sohbet",
-            messages: [],
-            createdAt: Date.now(),
-          };
-          state.conversations.push(first);
-        }
-        state.currentId = state.conversations[0].id;
-        saveConversations();
-        renderConversationList();
-        renderMessages();
+        handleDelete(conv.id);
+      });
+
+      // Mobil: uzun bas → sil
+      let pressTimer = null;
+      item.addEventListener("touchstart", () => {
+        pressTimer = setTimeout(() => handleDelete(conv.id), 600);
+      });
+      ["touchend", "touchmove", "touchcancel"].forEach((ev) => {
+        item.addEventListener(ev, () => {
+          if (pressTimer) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+          }
+        });
       });
 
       listEl.appendChild(item);
@@ -751,6 +781,33 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar.classList.toggle("hidden");
     });
   }
+
+  // === Sidebar'ı yana kaydırarak kapatma (mobil swipe) ===
+  let swipeStartX = null;
+
+  document.addEventListener("touchstart", (e) => {
+    if (!sidebar || sidebar.classList.contains("hidden")) return;
+    if (!e.touches || !e.touches.length) return;
+    swipeStartX = e.touches[0].clientX;
+  });
+
+  document.addEventListener("touchend", (e) => {
+    if (swipeStartX === null) return;
+    if (!sidebar || sidebar.classList.contains("hidden")) {
+      swipeStartX = null;
+      return;
+    }
+    if (!e.changedTouches || !e.changedTouches.length) return;
+
+    const endX = e.changedTouches[0].clientX;
+    const diffX = endX - swipeStartX;
+
+    if (Math.abs(diffX) > 60) {
+      sidebar.classList.add("hidden");
+    }
+    swipeStartX = null;
+  });
+
   function openHelp() {
     if (helpPanel) helpPanel.classList.remove("hidden");
   }
@@ -911,7 +968,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 🔑 BURASI DÜZELTİLDİ: Hata olsa bile overlay sonunda kapanıyor
+  // === GİRİŞ / KAYIT – ŞİFRE YANLIŞ MESAJI DAHİL ===
   if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
       const email = onboardEmailInput.value.trim();
@@ -931,6 +988,7 @@ document.addEventListener("DOMContentLoaded", () => {
       saveEmail();
       updateAccountEmailUI();
 
+      let data = null;
       try {
         const res = await fetch("/api/register-user", {
           method: "POST",
@@ -944,30 +1002,20 @@ document.addEventListener("DOMContentLoaded", () => {
           }),
         });
 
-        const data = await res.json().catch(() => null);
+        data = await res.json().catch(() => null);
+
+        // Yanlış şifre
+        if (res.status === 401 && data?.code === "INVALID_PASSWORD") {
+          alert(
+            state.lang === "tr"
+              ? "Şifre yanlış. Lütfen tekrar deneyin."
+              : "Wrong password. Please try again."
+          );
+          return; // Onboarding açık kalsın
+        }
 
         if (!res.ok || !data) {
           throw new Error(data?.error || data?.message || "Sunucu hatası");
-        }
-
-        if (data.status === "login") {
-          alert(
-            state.lang === "tr"
-              ? "Giriş başarılı. 👌"
-              : "Login successful. 👌"
-          );
-        } else if (data.status === "registered") {
-          alert(
-            state.lang === "tr"
-              ? "Hesap oluşturuldu ve giriş yapıldı. 🎉"
-              : "Account created and logged in. 🎉"
-          );
-        } else {
-          alert(
-            state.lang === "tr"
-              ? "Beklenmedik bir cevap alındı."
-              : "Unexpected response from server."
-          );
         }
       } catch (e) {
         console.error("register-user hatası:", e);
@@ -976,10 +1024,31 @@ document.addEventListener("DOMContentLoaded", () => {
             ? "Giriş/kayıt sırasında hata oluştu: " + (e.message || "")
             : "Error during login/register: " + (e.message || "")
         );
-        // 🔁 Backend bozulsa bile kullanıcı uygulamaya girebilsin
+        return; // Onboarding'i kapatma, kullanıcı tekrar denesin
       }
 
-      // Her durumda (başarılı / hatalı) overlay'i kapat
+      // Backend cevaplarına göre kullanıcıya net mesaj
+      if (data.status === "login") {
+        if (state.lang === "tr") {
+          alert("Giriş başarılı. 👌");
+        } else {
+          alert("Login successful. 👌");
+        }
+      } else if (data.status === "registered") {
+        if (state.lang === "tr") {
+          alert("Hesap oluşturuldu ve giriş yapıldı. 🎉");
+        } else {
+          alert("Account created and logged in. 🎉");
+        }
+      } else {
+        // Beklenmedik durum
+        alert(
+          state.lang === "tr"
+            ? "Beklenmedik bir cevap alındı."
+            : "Unexpected response from server."
+        );
+      }
+
       if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
     });
   }
@@ -1040,7 +1109,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         recognition.start();
       } catch (e) {
-        // ignore
+        // ignore "already started" errors
       }
       voiceBtn.disabled = true;
       voiceBtn.textContent = "🎤…";
@@ -1128,6 +1197,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // === CHAT SUBMIT (PRO kullanıcılara özel prompt) ===
   if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -1135,8 +1205,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const topic = (topicInput.value || "").trim();
       const extra = (messageInput.value || "").trim();
       const platform = platformSelect.value || "tiktok";
-      const prompt = extra ? `${topic}\n\n${extra}` : topic;
-      if (!prompt) return;
+
+      const basePrompt = extra ? `${topic}\n\n${extra}` : topic;
+      if (!basePrompt) return;
+
+      const prompt =
+        state.plan === "pro"
+          ? "[PRO_USER] Kullanıcı PRO planda. Daha detaylı, özgün, ileri seviye kısa video fikirleri üret.\n\n" +
+            basePrompt
+          : basePrompt;
 
       if (state.plan === "free" && state.credits <= 0) {
         alert(t.freeNoCreditsAlert);
