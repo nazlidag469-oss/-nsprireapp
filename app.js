@@ -59,7 +59,7 @@ const I18N = {
     trendsTitle: "🔥 Trendler (Bu Hafta)",
     refreshTrendsBtnText: "Trendleri Yenile",
 
-    seriesTitle: "📅 30 Günlük Seri Planı",
+    seriesTitle: "🗓️ 30 Günlük Seri Planı",
     seriesDesc:
       "Bir konu gir, InspireApp sana 30 günlük kısa video planı çıkarsın.",
     seriesPlaceholder: "Örn: Sağlıklı yemek, motivasyon videoları...",
