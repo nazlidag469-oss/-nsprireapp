@@ -1,3 +1,5 @@
+// api/register-user.js  (Vercel Serverless Function)
+
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -18,8 +20,7 @@ export default async function handler(req, res) {
       .json({ status: "error", message: "METHOD_NOT_ALLOWED" });
   }
 
-  const { email, password, plan = "free", credits = 4, lang = "tr" } =
-    req.body || {};
+  const { email, password, lang = "tr" } = req.body || {};
 
   if (!email || !password) {
     return res
@@ -35,20 +36,10 @@ export default async function handler(req, res) {
         password,
       });
 
-    if (!signInError && signInData?.user) {
-      // Profil satırını da güncelle / oluştur
-      await supabase
-        .from("users")
-        .upsert([{ email, plan, credits, lang }], { onConflict: "email" });
+    let authStatus = "login";
+    let authUser = signInData?.user || null;
 
-      return res.status(200).json({
-        status: "login",
-        message: "LOGIN_OK",
-        user: signInData.user,
-      });
-    }
-
-    // 2) Şifre yanlış vs. ise: yeni hesap açmayı dene
+    // Eğer şifre/geçersiz kullanıcı hatasıysa → yeni hesap oluştur
     const isInvalidLogin =
       signInError?.message &&
       signInError.message.toLowerCase().includes("invalid");
@@ -68,22 +59,79 @@ export default async function handler(req, res) {
         });
       }
 
-      await supabase
-        .from("users")
-        .upsert([{ email, plan, credits, lang }], { onConflict: "email" });
-
-      return res.status(200).json({
-        status: "registered",
-        message: "REGISTER_OK",
-        user: signUpData.user,
+      authStatus = "registered";
+      authUser = signUpData.user;
+    } else if (signInError && !isInvalidLogin) {
+      // Giriş denemesi başka bir sebepten patladıysa
+      return res.status(500).json({
+        status: "error",
+        message: "AUTH_ERROR",
+        error: signInError.message,
       });
     }
 
-    // Buraya düştüyse beklenmedik auth hatası var
-    return res.status(500).json({
-      status: "error",
-      message: "AUTH_ERROR",
-      error: signInError?.message || "UNKNOWN_AUTH_ERROR",
+    if (!authUser) {
+      return res.status(500).json({
+        status: "error",
+        message: "NO_USER",
+      });
+    }
+
+    // 2) Kullanıcının profil satırını oku / oluştur
+    let userRow = null;
+
+    const { data: existing, error: existingError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingError) {
+      console.error("users select error:", existingError);
+    }
+
+    if (existing) {
+      userRow = existing;
+      // sadece dili güncellemek istersen:
+      if (lang && existing.lang !== lang) {
+        const { data: updated, error: updateError } = await supabase
+          .from("users")
+          .update({ lang })
+          .eq("email", email)
+          .select()
+          .single();
+        if (!updateError && updated) userRow = updated;
+      }
+    } else {
+      // İlk kez giriş yapan kullanıcı → free plan ile profil oluştur
+      const { data: inserted, error: insertError } = await supabase
+        .from("users")
+        .insert([
+          {
+            email,
+            plan: "free",
+            credits: 4,
+            lang,
+          },
+        ])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("users insert error:", insertError);
+      } else {
+        userRow = inserted;
+      }
+    }
+
+    return res.status(200).json({
+      status: authStatus, // "login" veya "registered"
+      message: authStatus === "login" ? "LOGIN_OK" : "REGISTER_OK",
+      user: {
+        id: authUser.id,
+        email: authUser.email,
+      },
+      userData: userRow, // plan, credits, lang vs. burada
     });
   } catch (e) {
     console.error("register-user genel hata:", e);
