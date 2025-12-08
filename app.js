@@ -15,11 +15,35 @@ const DAILY_AD_LIMIT = 400;
 const LANG_NAMES = {
   tr: "Turkish",
   en: "English",
+  ar: "Arabic",
+  de: "German",
+  es: "Spanish",
 };
 
 const LANG_REGION = {
   tr: "TR",
   en: "US",
+  ar: "SA",
+  de: "DE",
+  es: "ES",
+};
+
+// Dil etiketleri (select içi görünen isimler)
+const LANG_LABELS = {
+  tr: "Türkçe",
+  en: "English",
+  ar: "العربية",
+  de: "Deutsch",
+  es: "Español",
+};
+
+// Ses tanıma için dil kodları
+const LANG_SPEECH = {
+  tr: "tr-TR",
+  en: "en-US",
+  ar: "ar-SA",
+  de: "de-DE",
+  es: "es-ES",
 };
 
 // Static UI texts
@@ -39,6 +63,7 @@ const I18N = {
     btnPanelSeriesText: "30 Günlük Seri",
     btnPanelHookText: "Hook Laboratuvarı",
     btnPanelCopyText: "Trend Kopya Makinesi",
+    btnPanelProText: "PRO Araçları",
     helpToggle2Text: "❓ Yardım",
 
     helpTitle: "Bilgi & Destek",
@@ -84,6 +109,23 @@ const I18N = {
     sendBtnText: "Gönder",
     watchAdBtnText: "Reklam izle +1 puan",
     loadingText: "Yükleniyor...",
+
+    // PRO PANEL UI
+    proPanelTitle: "⭐ PRO Araçları",
+    proPanelDesc:
+      "Bu bölümdeki araçlar PRO kullanıcılar için tasarlandı. Ücretsiz planda kısıtlı, PRO'da tam güç açılır.",
+    proTool1Title: "1) Rakip Video Analizi",
+    proTool1Desc:
+      "TikTok / Reels / Shorts linki veya açıklamasını gir. InspireApp; neden tuttuğunu, daha güçlü hook'ları ve sana özel bir versiyon üretir.",
+    proTool3Title: "3) Kitle İçgörü Analizi",
+    proTool3Desc:
+      "Hedef kitleni tek cümle ile anlat. InspireApp psikoloji, format, hook ve CTA kalıplarını çıkarır.",
+    proTool5Title: "5) Sessiz Video İçerik Üreticisi",
+    proTool5Desc:
+      "Yüzünü göstermeden, ses kullanmadan içerik üretmek istiyorsan konunu yaz. Sessiz video akışları ve sahne önerileri üretelim.",
+    proCompetitorBtnText: "Rakip videoyu analiz et (PRO)",
+    proAudienceBtnText: "Kitle içgörüsü üret (PRO)",
+    proSilentBtnText: "Sessiz içerik fikirleri üret (PRO)",
 
     planFreeLabel: "Plan: Ücretsiz",
     planProLabel: "Plan: Pro (sınırsız puan)",
@@ -139,6 +181,7 @@ const I18N = {
     btnPanelSeriesText: "30-Day Series",
     btnPanelHookText: "Hook Lab",
     btnPanelCopyText: "Trend Copy Machine",
+    btnPanelProText: "PRO Tools",
     helpToggle2Text: "❓ Help",
 
     helpTitle: "Info & Support",
@@ -185,6 +228,23 @@ const I18N = {
     watchAdBtnText: "Watch Ad +1 credit",
     loadingText: "Loading...",
 
+    // PRO PANEL UI
+    proPanelTitle: "⭐ PRO Tools",
+    proPanelDesc:
+      "These tools are designed for PRO users. On free plan they are limited; PRO unlocks full power.",
+    proTool1Title: "1) Competitor Video Analysis",
+    proTool1Desc:
+      "Paste a TikTok / Reels / Shorts link or description. InspireApp explains why it worked and creates stronger hooks and a version for your niche.",
+    proTool3Title: "3) Audience Insight Analysis",
+    proTool3Desc:
+      "Describe your target audience in one sentence. InspireApp generates psychology, formats, hooks and CTA patterns.",
+    proTool5Title: "5) Silent Content Generator",
+    proTool5Desc:
+      "If you want faceless / silent content, write your topic. We generate silent flows and scene ideas.",
+    proCompetitorBtnText: "Analyze competitor video (PRO)",
+    proAudienceBtnText: "Generate audience insights (PRO)",
+    proSilentBtnText: "Generate silent content ideas (PRO)",
+
     planFreeLabel: "Plan: Free",
     planProLabel: "Plan: Pro (unlimited credits)",
     creditsLabelFree: (credits) => `Credits: ${credits}/${MAX_FREE_CREDITS}`,
@@ -220,6 +280,359 @@ const I18N = {
     freeNoCreditsAlert:
       "You ran out of credits on the free plan. Watch an ad to get +1.",
   },
+
+  // === ARABIC ===
+  ar: {
+    topTitle: "INSPIREAPP",
+    sidebarTitle: "الحساب والدردشات",
+    sidebarUserTitle: "المستخدم",
+    sidebarEmailLabel: "البريد الإلكتروني",
+    sidebarStatusLabel: "الحالة",
+    sidebarChatsTitle: "الدردشات",
+    sidebarPanelsTitle: "اللوحات",
+    changeEmailBtnText: "تغيير البريد",
+    newChatBtnText: "+ محادثة جديدة",
+    btnPanelChatText: "دردشة",
+    btnPanelTrendsText: "الترندات",
+    btnPanelSeriesText: "سلسلة 30 يومًا",
+    btnPanelHookText: "معمل الهوك",
+    btnPanelCopyText: "آلة نسخ الترند",
+    btnPanelProText: "أدوات PRO",
+    helpToggle2Text: "❓ مساعدة",
+
+    helpTitle: "معلومات ودعم",
+    helpAppTitle: "التطبيق",
+    helpAppText1:
+      "InspireApp هو مساعد مدعوم بالذكاء الاصطناعي لصناع المحتوى القصير.",
+    helpAppText2:
+      "ينتج أفكارًا، وعناوين، وهوكات، وتدفّقات محتوى لـ YouTube Shorts وTikTok وReels.",
+    helpFreeTitle: "الخطة المجانية",
+    helpFreeText: "٤ نقاط يوميًا. يمكنك زيادتها بمشاهدة الإعلانات.",
+    helpProTitle: "خطة PRO",
+    helpProText:
+      "سعر الاشتراك يُعرض عند الضغط على زر الانتقال إلى PRO (يتم الدفع عبر Google Play).",
+    helpSupportTitle: "الدعم",
+    helpSupportText: "البريد: insprireappdestek@gmail.com",
+    closeHelpBtnText: "إغلاق",
+
+    trendsTitle: "🔥 الترندات (هذا الأسبوع)",
+    refreshTrendsBtnText: "تحديث الترندات",
+
+    seriesTitle: "📅 خطة سلسلة 30 يومًا",
+    seriesDesc:
+      "اكتب موضوعًا، وسيُنشئ InspireApp خطة فيديوهات قصيرة لمدة 30 يومًا.",
+    seriesPlaceholder: "مثال: أكل صحي، فيديوهات تحفيز...",
+    seriesGenerateText: "إنشاء خطة 30 يومًا",
+
+    hookTitle: "⚡ معمل الهوك",
+    hookDesc:
+      "اكتب موضوعك؛ نُنشئ جمل افتتاحية قوية لأول 3 ثوانٍ من الفيديو.",
+    hookPlaceholder: "مثال: المذاكرة الفعّالة للطلاب",
+    hookGenerateText: "توليد هوكات",
+
+    copyTitle: "🎬 آلة نسخ الترند",
+    copyDesc:
+      "اكتب فكرة ترند أو فيديو؛ يحوّلها InspireApp لتناسب تخصّصك.",
+    copyPlaceholder:
+      "مثال: أريد تعديل هذه الفكرة لتناسب أسلوب علامتي التجارية...",
+    copyGenerateText: "إنشاء نسخة الترند",
+
+    chatTitle: "💬 دردشة",
+    topicPlaceholder: "الموضوع (مثال: الموضة)",
+    messagePlaceholder: "اكتب رسالة...",
+    sendBtnText: "إرسال",
+    watchAdBtnText: "مشاهدة إعلان +1 نقطة",
+    loadingText: "جاري التحميل...",
+
+    proPanelTitle: "⭐ أدوات PRO",
+    proPanelDesc:
+      "هذه الأدوات مصممة لمستخدمي PRO. في الخطة المجانية تعمل بشكل محدود.",
+    proTool1Title: "1) تحليل فيديو منافس",
+    proTool1Desc:
+      "الصق رابط TikTok / Reels / Shorts أو وصف الفيديو. نحلل لماذا نجح وننشئ هوكات أقوى وإصدارًا خاصًا لك.",
+    proTool3Title: "3) تحليل جمهورك",
+    proTool3Desc:
+      "صف جمهورك في جملة واحدة؛ نُخرج لك دوافعهم، وصيغ الفيديو المفضلة، وهوكات وعبارات دعوة للإجراء.",
+    proTool5Title: "5) مولّد محتوى صامت",
+    proTool5Desc:
+      "لمن يريد محتوى بدون وجه وبدون صوت. اكتب الموضوع وسنقترح تدفّقات وفيديوهات صامتة.",
+    proCompetitorBtnText: "تحليل فيديو منافس (PRO)",
+    proAudienceBtnText: "توليد رؤى الجمهور (PRO)",
+    proSilentBtnText: "توليد أفكار محتوى صامت (PRO)",
+
+    planFreeLabel: "الخطة: مجانية",
+    planProLabel: "الخطة: PRO (نقاط غير محدودة)",
+    creditsLabelFree: (credits) => `النقاط: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelPro: "النقاط: غير محدودة",
+
+    onboardTitle: "INSPIREAPP",
+    onboardLangTitle: "اختر اللغة",
+    onboardLangSaveBtnText: "متابعة",
+    onboardEmailTitle: "بريدك الإلكتروني",
+    onboardEmailPlaceholder: "you@example.com",
+    onboardEmailSaveBtnText: "ابدأ الدردشة",
+
+    adTitle: "مشاهدة إعلان مقابل +1 نقطة",
+    adText:
+      'شاهد إعلان فيديو ثم اضغط "شاهدت الإعلان" لإضافة +1 نقطة لحسابك.',
+    adCancelBtnText: "إلغاء",
+    adWatchedBtnText: "شاهدت الإعلان، أضف +1",
+    adConfirmTitle: "هل أنت متأكد؟",
+    adConfirmText: "أنت على وشك إلغاء مشاهدة الإعلان.",
+    adContinueBtnText: "الاستمرار في المشاهدة",
+    adConfirmCloseBtnText: "نعم، إغلاق",
+    adDailyLimit: (limit) => `تم بلوغ حد الإعلانات اليومي. (الحد: ${limit})`,
+    adPreparing: "جاري تجهيز الإعلان...",
+
+    proTitle: "InspireApp PRO",
+    proDesc:
+      "خطة PRO تعطيك نقاطًا غير محدودة، بدون إعلانات، ووصولًا للميزات المميزة.",
+    proPayBtnText: "الانتقال إلى PRO",
+    proPriceTextTr:
+      "InspireApp PRO – اشتراك شهري عبر Google Play.",
+    proPriceTextEn:
+      "InspireApp PRO – monthly subscription via Google Play.",
+
+    emailNotSavedAlert: "يرجى إدخال بريد إلكتروني صحيح.",
+    freeNoCreditsAlert:
+      "انتهت نقاط الخطة المجانية. شاهد إعلانًا لتحصل على +1.",
+  },
+
+  // === GERMAN ===
+  de: {
+    topTitle: "INSPIREAPP",
+    sidebarTitle: "Konto & Chats",
+    sidebarUserTitle: "Benutzer",
+    sidebarEmailLabel: "E-Mail",
+    sidebarStatusLabel: "Status",
+    sidebarChatsTitle: "Chats",
+    sidebarPanelsTitle: "Panels",
+    changeEmailBtnText: "E-Mail ändern",
+    newChatBtnText: "+ Neuer Chat",
+    btnPanelChatText: "Chat",
+    btnPanelTrendsText: "Trends",
+    btnPanelSeriesText: "30-Tage-Serie",
+    btnPanelHookText: "Hook-Labor",
+    btnPanelCopyText: "Trend-Kopierer",
+    btnPanelProText: "PRO-Tools",
+    helpToggle2Text: "❓ Hilfe",
+
+    helpTitle: "Info & Support",
+    helpAppTitle: "App",
+    helpAppText1:
+      "InspireApp ist ein KI-gestützter Assistent für Kurzvideo-Creator.",
+    helpAppText2:
+      "Er erstellt Ideen, Hooks, Titel und Trend-Flows für Shorts, TikTok und Reels.",
+    helpFreeTitle: "Gratis-Plan",
+    helpFreeText: "4 Credits pro Tag. Mehr durch Werbung.",
+    helpProTitle: "PRO-Plan",
+    helpProText:
+      "Preis und Abrechnung werden beim Tippen auf „Zu PRO wechseln“ angezeigt (Google Play).",
+    helpSupportTitle: "Support",
+    helpSupportText: "E-Mail: insprireappdestek@gmail.com",
+    closeHelpBtnText: "Schließen",
+
+    trendsTitle: "🔥 Trends (diese Woche)",
+    refreshTrendsBtnText: "Trends aktualisieren",
+
+    seriesTitle: "📅 30-Tage-Serienplan",
+    seriesDesc:
+      "Gib ein Thema ein, InspireApp erstellt einen 30-Tage-Plan.",
+    seriesPlaceholder: "z.B.: Gesunde Ernährung, Motivation...",
+    seriesGenerateText: "30-Tage-Plan erstellen",
+
+    hookTitle: "⚡ Hook-Labor",
+    hookDesc:
+      "Schreibe dein Thema; wir erzeugen starke Hooks für die ersten 3 Sekunden.",
+    hookPlaceholder: "z.B.: Effizientes Lernen für Studenten",
+    hookGenerateText: "Hooks erzeugen",
+
+    copyTitle: "🎬 Trend-Kopiermaschine",
+    copyDesc:
+      "Schreib eine Trend-/Videoidee; InspireApp schreibt sie für deine Nische um.",
+    copyPlaceholder:
+      "z.B.: Diese Videoidee an meinen Brand-Ton anpassen...",
+    copyGenerateText: "Trendkopie erzeugen",
+
+    chatTitle: "💬 Chat",
+    topicPlaceholder: "Thema (z.B. Mode)",
+    messagePlaceholder: "Nachricht schreiben...",
+    sendBtnText: "Senden",
+    watchAdBtnText: "Werbung ansehen +1 Credit",
+    loadingText: "Lädt...",
+
+    proPanelTitle: "⭐ PRO-Tools",
+    proPanelDesc:
+      "Diese Tools sind für PRO-Nutzer. Im Gratis-Plan eingeschränkt.",
+    proTool1Title: "1) Konkurrenz-Videoanalyse",
+    proTool1Desc:
+      "Füge einen TikTok-/Reels-/Shorts-Link oder eine Beschreibung ein. Wir erklären, warum es funktioniert, und generieren bessere Hooks.",
+    proTool3Title: "3) Zielgruppen-Insights",
+    proTool3Desc:
+      "Beschreibe deine Zielgruppe in einem Satz. InspireApp erzeugt Psychologie, Formate, Hooks und CTAs.",
+    proTool5Title: "5) Stiller Content-Generator",
+    proTool5Desc:
+      "Für Content ohne Gesicht und Stimme. Wir erzeugen stille Video-Flows und Szenenideen.",
+    proCompetitorBtnText: "Konkurrenzvideo analysieren (PRO)",
+    proAudienceBtnText: "Zielgruppen-Insights erzeugen (PRO)",
+    proSilentBtnText: "Ideen für stillen Content (PRO)",
+
+    planFreeLabel: "Plan: Gratis",
+    planProLabel: "Plan: PRO (unbegrenzte Credits)",
+    creditsLabelFree: (credits) => `Credits: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelPro: "Credits: Unbegrenzt",
+
+    onboardTitle: "INSPIREAPP",
+    onboardLangTitle: "Sprache wählen",
+    onboardLangSaveBtnText: "Weiter",
+    onboardEmailTitle: "Deine E-Mail-Adresse",
+    onboardEmailPlaceholder: "du@example.com",
+    onboardEmailSaveBtnText: "Chat starten",
+
+    adTitle: "Werbung ansehen für +1 Credit",
+    adText:
+      'Sieh dir ein Video an und tippe dann auf „Ich habe die Werbung gesehen“, um +1 Credit zu erhalten.',
+    adCancelBtnText: "Abbrechen",
+    adWatchedBtnText: "Werbung gesehen, +1 geben",
+    adConfirmTitle: "Bist du sicher?",
+    adConfirmText: "Du bist dabei, die Werbung abzubrechen.",
+    adContinueBtnText: "Weiter ansehen",
+    adConfirmCloseBtnText: "Ja, schließen",
+    adDailyLimit: (limit) =>
+      `Tägliches Werbelimit erreicht. (Limit: ${limit})`,
+    adPreparing: "Werbung wird geladen...",
+
+    proTitle: "InspireApp PRO",
+    proDesc:
+      "PRO bietet unbegrenzte Credits, keine Werbung und Zugriff auf Premium-Features.",
+    proPayBtnText: "Zu PRO wechseln",
+    proPriceTextTr:
+      "InspireApp PRO – Monatsabo über Google Play.",
+    proPriceTextEn:
+      "InspireApp PRO – monthly subscription via Google Play.",
+
+    emailNotSavedAlert: "Bitte eine gültige E-Mail eingeben.",
+    freeNoCreditsAlert:
+      "Deine Gratis-Credits sind aufgebraucht. Sieh dir eine Werbung an, um +1 zu erhalten.",
+  },
+
+  // === SPANISH ===
+  es: {
+    topTitle: "INSPIREAPP",
+    sidebarTitle: "Cuenta y chats",
+    sidebarUserTitle: "Usuario",
+    sidebarEmailLabel: "Correo",
+    sidebarStatusLabel: "Estado",
+    sidebarChatsTitle: "Chats",
+    sidebarPanelsTitle: "Paneles",
+    changeEmailBtnText: "Cambiar correo",
+    newChatBtnText: "+ Nuevo chat",
+    btnPanelChatText: "Chat",
+    btnPanelTrendsText: "Tendencias",
+    btnPanelSeriesText: "Serie de 30 días",
+    btnPanelHookText: "Laboratorio de hooks",
+    btnPanelCopyText: "Copiadora de tendencias",
+    btnPanelProText: "Herramientas PRO",
+    helpToggle2Text: "❓ Ayuda",
+
+    helpTitle: "Info y soporte",
+    helpAppTitle: "App",
+    helpAppText1:
+      "InspireApp es un asistente con IA para creadores de video corto.",
+    helpAppText2:
+      "Genera ideas, hooks, títulos y flujos basados en tendencias para Shorts, TikTok y Reels.",
+    helpFreeTitle: "Plan gratuito",
+    helpFreeText: "4 créditos al día. Más viendo anuncios.",
+    helpProTitle: "Plan PRO",
+    helpProText:
+      "El precio se muestra al pulsar el botón de ir a PRO (facturación vía Google Play).",
+    helpSupportTitle: "Soporte",
+    helpSupportText: "Correo: insprireappdestek@gmail.com",
+    closeHelpBtnText: "Cerrar",
+
+    trendsTitle: "🔥 Tendencias (esta semana)",
+    refreshTrendsBtnText: "Actualizar tendencias",
+
+    seriesTitle: "📅 Plan de serie de 30 días",
+    seriesDesc:
+      "Escribe un tema y InspireApp creará un plan de 30 días.",
+    seriesPlaceholder: "Ej.: Comida saludable, videos de motivación...",
+    seriesGenerateText: "Crear plan de 30 días",
+
+    hookTitle: "⚡ Laboratorio de hooks",
+    hookDesc:
+      "Escribe tu tema; generamos frases de apertura fuertes para los primeros 3 segundos.",
+    hookPlaceholder: "Ej.: Estudio eficiente para estudiantes",
+    hookGenerateText: "Generar hooks",
+
+    copyTitle: "🎬 Copiadora de tendencias",
+    copyDesc:
+      "Escribe una idea de tendencia o video; InspireApp la reescribe para tu nicho.",
+    copyPlaceholder:
+      "Ej.: Quiero adaptar esta idea al tono de mi marca...",
+    copyGenerateText: "Generar copia de tendencia",
+
+    chatTitle: "💬 Chat",
+    topicPlaceholder: "Tema (p. ej. moda)",
+    messagePlaceholder: "Escribe un mensaje...",
+    sendBtnText: "Enviar",
+    watchAdBtnText: "Ver anuncio +1 crédito",
+    loadingText: "Cargando...",
+
+    proPanelTitle: "⭐ Herramientas PRO",
+    proPanelDesc:
+      "Estas herramientas están diseñadas para usuarios PRO. En el plan gratuito son limitadas.",
+    proTool1Title: "1) Análisis de video competidor",
+    proTool1Desc:
+      "Pega un enlace o descripción de TikTok / Reels / Shorts. Analizamos por qué funciona y generamos mejores hooks.",
+    proTool3Title: "3) Análisis de audiencia",
+    proTool3Desc:
+      "Describe tu audiencia en una frase; generamos psicología, formatos, hooks y CTAs.",
+    proTool5Title: "5) Generador de contenido silencioso",
+    proTool5Desc:
+      "Para contenido sin rostro ni voz. Generamos flujos y escenas de video silencioso.",
+    proCompetitorBtnText: "Analizar video competidor (PRO)",
+    proAudienceBtnText: "Generar insights de audiencia (PRO)",
+    proSilentBtnText: "Generar ideas de contenido silencioso (PRO)",
+
+    planFreeLabel: "Plan: Gratis",
+    planProLabel: "Plan: PRO (créditos ilimitados)",
+    creditsLabelFree: (credits) => `Créditos: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelPro: "Créditos: Ilimitados",
+
+    onboardTitle: "INSPIREAPP",
+    onboardLangTitle: "Elige idioma",
+    onboardLangSaveBtnText: "Continuar",
+    onboardEmailTitle: "Tu correo electrónico",
+    onboardEmailPlaceholder: "tú@example.com",
+    onboardEmailSaveBtnText: "Empezar chat",
+
+    adTitle: "Ver anuncio por +1 crédito",
+    adText:
+      'Mira un anuncio y luego pulsa "He visto el anuncio" para sumar +1 crédito.',
+    adCancelBtnText: "Cancelar",
+    adWatchedBtnText: "He visto el anuncio, dame +1",
+    adConfirmTitle: "¿Seguro?",
+    adConfirmText: "Vas a cancelar la visualización del anuncio.",
+    adContinueBtnText: "Seguir viendo",
+    adConfirmCloseBtnText: "Sí, cerrar",
+    adDailyLimit: (limit) =>
+      `Límite diario de anuncios alcanzado. (Límite: ${limit})`,
+    adPreparing: "Cargando anuncio...",
+
+    proTitle: "InspireApp PRO",
+    proDesc:
+      "PRO ofrece créditos ilimitados, sin anuncios y acceso a funciones premium.",
+    proPayBtnText: "Ir a PRO",
+    proPriceTextTr:
+      "InspireApp PRO – suscripción mensual vía Google Play.",
+    proPriceTextEn:
+      "InspireApp PRO – monthly subscription via Google Play.",
+
+    emailNotSavedAlert: "Por favor, introduce un correo válido.",
+    freeNoCreditsAlert:
+      "Se han agotado tus créditos gratuitos. Mira un anuncio para obtener +1.",
+  },
 };
 
 // Small legacy UI_TEXT support
@@ -233,6 +646,21 @@ const UI_TEXT = {
     send: "Send",
     ad: "Watch Ad +1 credit",
     placeholder: "Type a message or topic...",
+  },
+  ar: {
+    send: "إرسال",
+    ad: "شاهد إعلانًا +1 نقطة",
+    placeholder: "اكتب رسالة أو فكرة...",
+  },
+  de: {
+    send: "Senden",
+    ad: "Werbung ansehen +1 Punkt",
+    placeholder: "Nachricht oder Thema eingeben...",
+  },
+  es: {
+    send: "Enviar",
+    ad: "Ver anuncio +1 crédito",
+    placeholder: "Escribe un mensaje o tema...",
   },
 };
 
@@ -316,6 +744,12 @@ function renderConversationList() {
     const confirmText =
       state.lang === "tr"
         ? "Bu sohbeti silmek istiyor musun?"
+        : state.lang === "ar"
+        ? "هل تريد حذف هذه الدردشة؟"
+        : state.lang === "de"
+        ? "Möchtest du diesen Chat löschen?"
+        : state.lang === "es"
+        ? "¿Quieres eliminar este chat?"
         : "Do you want to delete this chat?";
     const ok = confirm(confirmText);
     if (!ok) return;
@@ -406,7 +840,7 @@ function renderMessages() {
 function addMessage(role, text) {
   const conv = currentConv();
   conv.messages.push({ role, text });
-  if (!conv.title || conv.title === "Yeni sohbet") {
+  if (!conv.title || conv.title === "Yeni sohbet" || conv.title === "New chat") {
     const firstUserMsg = conv.messages.find((m) => m.role === "user");
     if (firstUserMsg?.text) conv.title = buildTitleFromText(firstUserMsg.text);
   }
@@ -448,7 +882,18 @@ function updatePlanAndCreditsUI() {
 
 function updateAccountEmailUI() {
   const el = document.getElementById("accountEmail");
-  if (el) el.textContent = state.email || "Kayıtlı değil";
+  if (!el) return;
+  let notSaved =
+    state.lang === "tr"
+      ? "Kayıtlı değil"
+      : state.lang === "ar"
+      ? "غير محفوظ"
+      : state.lang === "de"
+      ? "Nicht gespeichert"
+      : state.lang === "es"
+      ? "No guardado"
+      : "Not set";
+  el.textContent = state.email || notSaved;
 }
 
 // === APPLY LANGUAGE TO UI ===
@@ -483,6 +928,7 @@ function applyUITextForLang(code) {
   setText("btnPanelSeriesText", t.btnPanelSeriesText);
   setText("btnPanelHookText", t.btnPanelHookText);
   setText("btnPanelCopyText", t.btnPanelCopyText);
+  setText("btnPanelProText", t.btnPanelProText);
   setText("helpToggle2Text", t.helpToggle2Text);
 
   setText("helpTitle", t.helpTitle);
@@ -543,6 +989,19 @@ function applyUITextForLang(code) {
   setText("proDesc", t.proDesc);
   setText("proPayBtnText", t.proPayBtnText);
 
+  // PRO panel metinleri
+  setText("proPanelTitle", t.proPanelTitle);
+  setText("proPanelDesc", t.proPanelDesc);
+  setText("proTool1Title", t.proTool1Title);
+  setText("proTool1Desc", t.proTool1Desc);
+  setText("proTool3Title", t.proTool3Title);
+  setText("proTool3Desc", t.proTool3Desc);
+  setText("proTool5Title", t.proTool5Title);
+  setText("proTool5Desc", t.proTool5Desc);
+  setText("proCompetitorBtnText", t.proCompetitorBtnText);
+  setText("proAudienceBtnText", t.proAudienceBtnText);
+  setText("proSilentBtnText", t.proSilentBtnText);
+
   // Plan & credits (dynamic) refresh
   updatePlanAndCreditsUI();
 }
@@ -564,7 +1023,7 @@ function fillLangSelect(selectEl) {
   Object.keys(LANG_NAMES).forEach((code) => {
     const opt = document.createElement("option");
     opt.value = code;
-    opt.textContent = code === "tr" ? "Türkçe" : "English";
+    opt.textContent = LANG_LABELS[code] || code;
     selectEl.appendChild(opt);
   });
   selectEl.value = state.lang;
@@ -721,6 +1180,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const copyTopic = document.getElementById("copyTopic");
   const copyResult = document.getElementById("copyResult");
 
+  const proCompetitorInput = document.getElementById("proCompetitorInput");
+  const proCompetitorBtn = document.getElementById("proCompetitorBtn");
+  const proCompetitorResult = document.getElementById("proCompetitorResult");
+  const proAudienceInput = document.getElementById("proAudienceInput");
+  const proAudienceBtn = document.getElementById("proAudienceBtn");
+  const proAudienceResult = document.getElementById("proAudienceResult");
+  const proSilentInput = document.getElementById("proSilentInput");
+  const proSilentBtn = document.getElementById("proSilentBtn");
+  const proSilentResult = document.getElementById("proSilentResult");
+
   const modalBackdrop = document.getElementById("modalBackdrop");
   const adModal = document.getElementById("adModal");
   const adStepMain = document.getElementById("adStepMain");
@@ -822,7 +1291,7 @@ document.addEventListener("DOMContentLoaded", () => {
     newChatBtn.addEventListener("click", () => {
       const conv = {
         id: Date.now().toString(),
-        title: "Yeni sohbet",
+        title: state.lang === "tr" ? "Yeni sohbet" : "New chat",
         messages: [],
         createdAt: Date.now(),
       };
@@ -975,11 +1444,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const password = onboardPasswordInput.value.trim();
 
       if (!email || !password) {
-        alert(
+        const msg =
           state.lang === "tr"
             ? "Lütfen e-posta ve şifre girin."
-            : "Please enter email and password."
-        );
+            : state.lang === "ar"
+            ? "يرجى إدخال البريد وكلمة المرور."
+            : state.lang === "de"
+            ? "Bitte E-Mail und Passwort eingeben."
+            : state.lang === "es"
+            ? "Introduce correo y contraseña."
+            : "Please enter email and password.";
+        alert(msg);
         return;
       }
 
@@ -1006,11 +1481,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Yanlış şifre
         if (res.status === 401 && data?.code === "INVALID_PASSWORD") {
-          alert(
+          const msg =
             state.lang === "tr"
               ? "Şifre yanlış. Lütfen tekrar deneyin."
-              : "Wrong password. Please try again."
-          );
+              : state.lang === "ar"
+              ? "كلمة المرور غير صحيحة."
+              : state.lang === "de"
+              ? "Falsches Passwort."
+              : state.lang === "es"
+              ? "Contraseña incorrecta."
+              : "Wrong password. Please try again.";
+          alert(msg);
           return; // Onboarding açık kalsın
         }
 
@@ -1019,34 +1500,57 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } catch (e) {
         console.error("register-user hatası:", e);
-        alert(
+        const msg =
           state.lang === "tr"
-            ? "Giriş/kayıt sırasında hata oluştu: " + (e.message || "")
-            : "Error during login/register: " + (e.message || "")
-        );
+            ? "Giriş/kayıt sırasında hata oluştu: "
+            : state.lang === "ar"
+            ? "حدث خطأ أثناء تسجيل الدخول/التسجيل: "
+            : state.lang === "de"
+            ? "Fehler beim Login/Registrieren: "
+            : state.lang === "es"
+            ? "Error durante el login/registro: "
+            : "Error during login/register: ";
+        alert(msg + (e.message || ""));
         return; // Onboarding'i kapatma, kullanıcı tekrar denesin
       }
 
       // Backend cevaplarına göre kullanıcıya net mesaj
       if (data.status === "login") {
-        if (state.lang === "tr") {
-          alert("Giriş başarılı. 👌");
-        } else {
-          alert("Login successful. 👌");
-        }
+        const msg =
+          state.lang === "tr"
+            ? "Giriş başarılı. 👌"
+            : state.lang === "ar"
+            ? "تم تسجيل الدخول بنجاح. 👌"
+            : state.lang === "de"
+            ? "Login erfolgreich. 👌"
+            : state.lang === "es"
+            ? "Inicio de sesión correcto. 👌"
+            : "Login successful. 👌";
+        alert(msg);
       } else if (data.status === "registered") {
-        if (state.lang === "tr") {
-          alert("Hesap oluşturuldu ve giriş yapıldı. 🎉");
-        } else {
-          alert("Account created and logged in. 🎉");
-        }
+        const msg =
+          state.lang === "tr"
+            ? "Hesap oluşturuldu ve giriş yapıldı. 🎉"
+            : state.lang === "ar"
+            ? "تم إنشاء الحساب وتسجيل الدخول. 🎉"
+            : state.lang === "de"
+            ? "Konto erstellt und eingeloggt. 🎉"
+            : state.lang === "es"
+            ? "Cuenta creada e iniciada sesión. 🎉"
+            : "Account created and logged in. 🎉";
+        alert(msg);
       } else {
-        // Beklenmedik durum
-        alert(
+        const msg =
           state.lang === "tr"
             ? "Beklenmedik bir cevap alındı."
-            : "Unexpected response from server."
-        );
+            : state.lang === "ar"
+            ? "تم استلام استجابة غير متوقعة."
+            : state.lang === "de"
+            ? "Unerwartete Antwort vom Server."
+            : state.lang === "es"
+            ? "Respuesta inesperada del servidor."
+            : "Unexpected response from server.";
+        alert(msg);
       }
 
       if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
@@ -1092,21 +1596,28 @@ document.addEventListener("DOMContentLoaded", () => {
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRec();
-    recognition.lang = state.lang === "tr" ? "tr-TR" : "en-US";
+    recognition.lang = LANG_SPEECH[state.lang] || "en-US";
     recognition.interimResults = false;
   }
 
   if (voiceBtn) {
     voiceBtn.addEventListener("click", () => {
       if (!recognition) {
-        alert(
+        const msg =
           state.lang === "tr"
             ? "Bu tarayıcıda ses tanıma desteklenmiyor. (Chrome önerilir)"
-            : "Speech recognition is not supported in this browser. (Chrome recommended)"
-        );
+            : state.lang === "ar"
+            ? "التعرّف على الصوت غير مدعوم في هذا المتصفح. (يُفضّل Chrome)"
+            : state.lang === "de"
+            ? "Spracherkennung wird in diesem Browser nicht unterstützt. (Chrome empfohlen)"
+            : state.lang === "es"
+            ? "El reconocimiento de voz no está disponible en este navegador. (Chrome recomendado)"
+            : "Speech recognition is not supported in this browser. (Chrome recommended)";
+        alert(msg);
         return;
       }
       try {
+        recognition.lang = LANG_SPEECH[state.lang] || "en-US";
         recognition.start();
       } catch (e) {
         // ignore "already started" errors
@@ -1121,11 +1632,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
       recognition.onerror = () => {
-        alert(
+        const msg =
           state.lang === "tr"
             ? "Ses tanıma sırasında bir hata oldu."
-            : "Error during speech recognition."
-        );
+            : state.lang === "ar"
+            ? "حدث خطأ أثناء التعرّف على الصوت."
+            : state.lang === "de"
+            ? "Fehler bei der Spracherkennung."
+            : state.lang === "es"
+            ? "Error durante el reconocimiento de voz."
+            : "Error during speech recognition.";
+        alert(msg);
       };
       recognition.onend = () => {
         voiceBtn.disabled = false;
@@ -1194,6 +1711,52 @@ document.addEventListener("DOMContentLoaded", () => {
         lang: LANG_NAMES[state.lang] || "Turkish",
       });
       copyResult.textContent = text;
+    });
+  }
+
+  // (İSTERSEN SONRA KULLANIRSIN) PRO PANEL BUTTON'LARINA BASINCA API ÇAĞRISI
+  if (proCompetitorBtn && proCompetitorInput && proCompetitorResult) {
+    proCompetitorBtn.addEventListener("click", async () => {
+      const value = proCompetitorInput.value.trim();
+      if (!value) return;
+      proCompetitorResult.textContent =
+        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      const text = await callSimpleAPI("pro-competitor", {
+        input: value,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+        plan: state.plan,
+      });
+      proCompetitorResult.textContent = text;
+    });
+  }
+
+  if (proAudienceBtn && proAudienceInput && proAudienceResult) {
+    proAudienceBtn.addEventListener("click", async () => {
+      const value = proAudienceInput.value.trim();
+      if (!value) return;
+      proAudienceResult.textContent =
+        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      const text = await callSimpleAPI("pro-audience", {
+        input: value,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+        plan: state.plan,
+      });
+      proAudienceResult.textContent = text;
+    });
+  }
+
+  if (proSilentBtn && proSilentInput && proSilentResult) {
+    proSilentBtn.addEventListener("click", async () => {
+      const value = proSilentInput.value.trim();
+      if (!value) return;
+      proSilentResult.textContent =
+        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      const text = await callSimpleAPI("pro-silent", {
+        input: value,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+        plan: state.plan,
+      });
+      proSilentResult.textContent = text;
     });
   }
 
