@@ -1,11 +1,12 @@
 // api/register-user.js
+// Vercel Node fonksiyonu – CommonJS sürüm
 
-import { createClient } from "@supabase/supabase-js";
+const { createClient } = require("@supabase/supabase-js");
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
 
-// Env yanlışsa daha baştan yakalayalım
+// Env doğru mu? Başta kontrol.
 let supabase = null;
 if (supabaseUrl && serviceKey) {
   supabase = createClient(supabaseUrl, serviceKey, {
@@ -16,14 +17,14 @@ if (supabaseUrl && serviceKey) {
   });
 }
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== "POST") {
     return res
       .status(405)
       .json({ status: "error", code: "METHOD_NOT_ALLOWED" });
   }
 
-  // Env hiç yoksa => direkt açık hata döndür
+  // Env hiç yoksa: direkt hata
   if (!supabase) {
     return res.status(500).json({
       status: "error",
@@ -45,7 +46,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1) Instagram gibi: önce login dene
+    // 1) Instagram gibi: önce LOGIN dene
     const { data: signInData, error: signInError } =
       await supabase.auth.signInWithPassword({
         email,
@@ -72,7 +73,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2) Login hatalıysa → signup dene
+    // 2) Login hatalı → signup dene
     const msg = (signInError?.message || "").toLowerCase();
     const isInvalidLogin =
       msg.includes("invalid") ||
@@ -112,7 +113,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Buraya düşerse login hatası ama invalid değil → direkt ilet
+    // Buraya düşerse login ama invalid değil
     return res.status(500).json({
       status: "error",
       code: "AUTH_ERROR",
@@ -126,4 +127,4 @@ export default async function handler(req, res) {
       error: e.message || String(e),
     });
   }
-}
+};
