@@ -1,8 +1,15 @@
+// =====================
+// SABİTLER & ANA STATE
+// =====================
+
 const STORAGE_KEY = "inspireapp_conversations_v1";
 const CREDITS_KEY = "inspireapp_credits_v1";
 const PLAN_KEY = "inspireapp_plan_v1";
 const EMAIL_KEY = "inspireapp_email_v1";
 const LANG_KEY = "inspireapp_lang_v1";
+// Not: Gerçek projede şifreyi localStorage'da saklamak güvenli değil.
+// Burada sadece demo/deneme amaçlı alan bırakıyoruz.
+const PASSWORD_KEY = "inspireapp_password_v1";
 
 const MAX_FREE_CREDITS = 4;
 const DAILY_AD_LIMIT = 400;
@@ -73,11 +80,15 @@ const UI_TEXT = {
 const state = {
   conversations: [],
   currentId: null,
-  plan: "free",
+  plan: "free", // "free" | "pro"
   credits: MAX_FREE_CREDITS,
   lang: "tr",
   email: "",
 };
+
+// =====================
+// LOCAL STATE YÜKLEME
+// =====================
 
 function loadState() {
   try {
@@ -125,6 +136,10 @@ function saveEmail() {
   else localStorage.removeItem(EMAIL_KEY);
 }
 
+// =====================
+// YARDIMCI FONKSİYONLAR
+// =====================
+
 function currentConv() {
   return state.conversations.find((c) => c.id === state.currentId);
 }
@@ -137,6 +152,75 @@ function buildTitleFromText(text) {
   if (line.length > 40) line = line.slice(0, 40) + "…";
   return line || "Sohbet";
 }
+
+// Sunucudan e-posta hesabına göre plan/kredi çekmek için.
+// Backend’te /api/auth-sync route’unu sen yazacaksın.
+async function syncUserFromServer(email, password) {
+  if (!email) return;
+  try {
+    const res = await fetch("/api/auth-sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password: password || null }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data) return;
+
+    if (data.plan === "pro" || data.plan === "free") {
+      state.plan = data.plan;
+      savePlan();
+    }
+    if (typeof data.credits === "number") {
+      state.credits = data.credits;
+      saveCredits();
+    }
+    if (data.lang && LANG_NAMES[data.lang]) {
+      state.lang = data.lang;
+      localStorage.setItem(LANG_KEY, state.lang);
+    }
+  } catch (e) {
+    console.error("auth-sync hatası:", e);
+  }
+}
+
+// ===============
+// KREDİ / REKLAM
+// ===============
+
+// Reklamdan gelen krediyi tek yerden yöneten fonksiyon
+function grantAdCredit() {
+  if (state.plan !== "free") return;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const storedDate = localStorage.getItem(AD_DATE_KEY);
+  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
+
+  if (storedDate !== today) {
+    storedCount = 0;
+  }
+  if (storedCount >= DAILY_AD_LIMIT) {
+    alert(`Günlük reklam limiti doldu. (Limit: ${DAILY_AD_LIMIT})`);
+    return;
+  }
+
+  storedCount += 1;
+  localStorage.setItem(AD_DATE_KEY, today);
+  localStorage.setItem(AD_COUNT_KEY, String(storedCount));
+
+  state.credits += 1;
+  saveCredits();
+  updatePlanAndCreditsUI();
+}
+
+// ANDROID tarafındaki Rewarded reklam tamamlandığında çağrılacak.
+// (MainActivity.kt’de: window.__onRealAdReward && window.__onRealAdReward();)
+window.__onRealAdReward = function () {
+  grantAdCredit();
+};
+
+// ===============
+// CONVERSATION UI
+// ===============
 
 function renderConversationList() {
   const listEl = document.getElementById("conversationList");
@@ -180,37 +264,7 @@ function renderConversationList() {
     });
 }
 
-/* 🔹 Reklamdan gelen krediyi TEK YERDEN yöneten fonksiyon */
-function grantAdCredit() {
-  if (state.plan !== "free") return;
-
-  const today = new Date().toISOString().slice(0, 10);
-  const storedDate = localStorage.getItem(AD_DATE_KEY);
-  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
-
-  if (storedDate !== today) {
-    storedCount = 0;
-  }
-  if (storedCount >= DAILY_AD_LIMIT) {
-    alert(`Günlük reklam limiti doldu. (Limit: ${DAILY_AD_LIMIT})`);
-    return;
-  }
-
-  storedCount += 1;
-  localStorage.setItem(AD_DATE_KEY, today);
-  localStorage.setItem(AD_COUNT_KEY, String(storedCount));
-
-  state.credits += 1;
-  saveCredits();
-  updatePlanAndCreditsUI();
-}
-
-/* 🔹 ANDROID tarafındaki rewarded reklam bittiğinde çağrılacak */
-window.__onRewardedAdCompletedFromAndroid = function () {
-  grantAdCredit();
-};
-
-/* MESAJLARI EKRANA BASAN YER */
+// Mesajları ekrana basan yer
 function renderMessages() {
   const container = document.getElementById("chatMessages");
   if (!container) return;
@@ -247,6 +301,10 @@ function addMessage(role, text) {
   renderConversationList();
   renderMessages();
 }
+
+// ===============
+// PLAN & KREDİ UI
+// ===============
 
 function updatePlanAndCreditsUI() {
   const planLabel = document.getElementById("planLabel");
@@ -304,6 +362,10 @@ function fillLangSelect(selectEl) {
   });
   selectEl.value = state.lang;
 }
+
+// ========================
+// BACKEND API YARDIMCILARI
+// ========================
 
 async function callIdeasAPI(prompt, platform, langCode) {
   const langName = LANG_NAMES[langCode] || "Turkish";
@@ -375,12 +437,18 @@ async function loadTrends() {
   }
 }
 
+// Android PRO aktivasyonu (Google Play’den)
+// MainActivity içinde: window.__setProPlanFromAndroid && window.__setProPlanFromAndroid();
 window.__setProPlanFromAndroid = function () {
   state.plan = "pro";
   savePlan();
   updatePlanAndCreditsUI();
   alert("🎉 PRO üyelik Google Play üzerinden başarıyla aktif edildi!");
 };
+
+// =====================
+// DOM YÜKLENDİĞİNDE
+// =====================
 
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
@@ -439,6 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const onboardLangSelect = document.getElementById("onboardLangSelect");
   const onboardLangSaveBtn = document.getElementById("onboardLangSaveBtn");
   const onboardEmailInput = document.getElementById("onboardEmailInput");
+  const onboardPasswordInput = document.getElementById("onboardPasswordInput");
   const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
   fillLangSelect(langSelect);
@@ -450,6 +519,12 @@ document.addEventListener("DOMContentLoaded", () => {
   updateAccountEmailUI();
   applyUITextForLang(state.lang);
   loadTrends();
+
+  // Uygulama açıldığında sunucudan hesabı tekrar çek (telefon değişince PRO korunsun)
+  if (state.email) {
+    const savedPass = localStorage.getItem(PASSWORD_KEY) || null;
+    syncUserFromServer(state.email, savedPass);
+  }
 
   function showOnboardingIfNeeded() {
     if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
@@ -470,6 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   showOnboardingIfNeeded();
 
+  // Menü & yardım
   if (menuToggle && sidebar) {
     menuToggle.addEventListener("click", () => {
       sidebar.classList.toggle("hidden");
@@ -530,15 +606,16 @@ document.addEventListener("DOMContentLoaded", () => {
     proModal.classList.add("hidden");
   }
 
+  // Reklam izleme butonu
   if (watchAdBtn) {
     watchAdBtn.addEventListener("click", () => {
       if (state.plan !== "free") return;
 
-      // ANDROID içinde ise → gerçek rewarded reklam
+      // ANDROID WebView içindeysek → gerçek rewarded reklam
       if (window.AndroidAds && typeof window.AndroidAds.showRewardedAd === "function") {
         window.AndroidAds.showRewardedAd();
       } else {
-        // Tarayıcı demosu ise → sahte modal
+        // Tarayıcı demo → sahte modal
         openAdModal();
       }
     });
@@ -579,6 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Backdrop tıklayınca modalları kapat
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", () => {
       closeAdModal();
@@ -587,6 +665,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // PRO modal kapama
   if (proCloseBtn) {
     proCloseBtn.addEventListener("click", () => {
       closeProModal();
@@ -594,6 +673,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // PRO butonu
   if (subscribeBtn) {
     subscribeBtn.addEventListener("click", () => {
       if (state.plan === "pro") return;
@@ -601,6 +681,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // PRO ödeme
   if (proPayBtn) {
     proPayBtn.addEventListener("click", () => {
       const isTr = state.lang === "tr";
@@ -617,6 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Onboarding dil adımı
   if (onboardLangSaveBtn && onboardLangSelect) {
     onboardLangSaveBtn.addEventListener("click", () => {
       const code = onboardLangSelect.value || "tr";
@@ -630,15 +712,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Onboarding e-posta + şifre adımı
   if (onboardEmailSaveBtn && onboardEmailInput) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
       const email = onboardEmailInput.value.trim();
-      if (!email) return;
+      const password = onboardPasswordInput
+        ? onboardPasswordInput.value.trim()
+        : "";
+
+      if (!email) {
+        alert("Lütfen e-posta adresi gir.");
+        return;
+      }
 
       state.email = email;
       saveEmail();
       updateAccountEmailUI();
 
+      if (password) {
+        // Dediğim gibi: gerçek projede böyle saklama, burada sadece deneme
+        localStorage.setItem(PASSWORD_KEY, password);
+      }
+
+      // Backend'e login / kayıt isteği at (telefon değiştirme durumunda aynı hesap gelsin)
+      await syncUserFromServer(email, password);
+
+      // İsteğe bağlı: kullanıcıyı admin paneline kaydetmek için ayrı endpoint
       try {
         await fetch("/api/register-user", {
           method: "POST",
@@ -654,6 +753,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("register-user hatası:", e);
       }
 
+      updatePlanAndCreditsUI();
       onboardingOverlay.classList.add("hidden");
     });
   }
@@ -678,6 +778,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Paneller arası geçiş
   document.querySelectorAll(".side-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.panel;
