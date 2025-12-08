@@ -32,7 +32,7 @@ const I18N = {
     sidebarStatusLabel: "Durum",
     sidebarChatsTitle: "Sohbetler",
     sidebarPanelsTitle: "Paneller",
-    changeEmailBtnText: "E-postayı değiştir",
+    changeEmailBtnText: "Hesap değiştir / Çıkış yap",
     newChatBtnText: "+ Yeni sohbet",
     btnPanelChatText: "Sohbet",
     btnPanelTrendsText: "Trend Akımı",
@@ -59,7 +59,7 @@ const I18N = {
     trendsTitle: "🔥 Trendler (Bu Hafta)",
     refreshTrendsBtnText: "Trendleri Yenile",
 
-    seriesTitle: "🗓️ 30 Günlük Seri Planı",
+    seriesTitle: "📅 30 Günlük Seri Planı",
     seriesDesc:
       "Bir konu gir, InspireApp sana 30 günlük kısa video planı çıkarsın.",
     seriesPlaceholder: "Örn: Sağlıklı yemek, motivasyon videoları...",
@@ -87,7 +87,8 @@ const I18N = {
 
     planFreeLabel: "Plan: Ücretsiz",
     planProLabel: "Plan: Pro (sınırsız puan)",
-    creditsLabelFree: (credits) => `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelFree: (credits) =>
+      `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Kalan puan: Sınırsız",
 
     onboardTitle: "INSPIREAPP",
@@ -132,7 +133,7 @@ const I18N = {
     sidebarStatusLabel: "Status",
     sidebarChatsTitle: "Chats",
     sidebarPanelsTitle: "Panels",
-    changeEmailBtnText: "Change email",
+    changeEmailBtnText: "Change account / Log out",
     newChatBtnText: "+ New chat",
     btnPanelChatText: "Chat",
     btnPanelTrendsText: "Trend Stream",
@@ -151,7 +152,7 @@ const I18N = {
     helpFreeText: "4 credits per day. You can increase by watching ads.",
     helpProTitle: "PRO Plan",
     helpProText:
-      "Price and billing details are shown when you tap the 'Go GO' button (billing via Google Play).",
+      "Price and billing details are shown when you tap the 'Go PRO' button (billing via Google Play).",
     helpSupportTitle: "Support",
     helpSupportText: "Email: insprireappdestek@gmail.com",
     closeHelpBtnText: "Close",
@@ -187,7 +188,8 @@ const I18N = {
 
     planFreeLabel: "Plan: Free",
     planProLabel: "Plan: Pro (unlimited credits)",
-    creditsLabelFree: (credits) => `Credits: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelFree: (credits) =>
+      `Credits: ${credits}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Credits: Unlimited",
 
     onboardTitle: "INSPIREAPP",
@@ -328,7 +330,9 @@ function renderConversationList() {
       item.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         if (!confirm("Bu sohbeti silmek istiyor musun?")) return;
-        state.conversations = state.conversations.filter((c) => c.id !== conv.id);
+        state.conversations = state.conversations.filter(
+          (c) => c.id !== conv.id
+        );
         if (!state.conversations.length) {
           const first = {
             id: Date.now().toString(),
@@ -525,7 +529,8 @@ function applySmallUIText(code) {
   const messageInput = document.getElementById("messageInput");
   if (sendBtn) sendBtn.textContent = t.send;
   if (watchAdBtn) watchAdBtn.textContent = t.ad;
-  if (messageInput && !messageInput.value) messageInput.placeholder = t.placeholder;
+  if (messageInput && !messageInput.value)
+    messageInput.placeholder = t.placeholder;
 }
 
 function fillLangSelect(selectEl) {
@@ -618,10 +623,7 @@ function grantAdCredit() {
   const t = I18N[state.lang] || I18N.tr;
   const today = new Date().toISOString().slice(0, 10);
   const storedDate = localStorage.getItem(AD_DATE_KEY);
-  let storedCount = parseInt(
-    localStorage.getItem(AD_COUNT_KEY) || "0",
-    10
-  );
+  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
 
   if (storedDate !== today) storedCount = 0;
   if (storedCount >= DAILY_AD_LIMIT) {
@@ -715,7 +717,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const onboardPasswordInput = document.getElementById("onboardPasswordInput");
   const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
-  // Fill language selectors
+  // Dil seçicileri doldur
   fillLangSelect(langSelect);
   fillLangSelect(onboardLangSelect);
 
@@ -725,6 +727,7 @@ document.addEventListener("DOMContentLoaded", () => {
   applyUITextForLang(state.lang);
   applySmallUIText(state.lang);
   updateAccountEmailUI();
+  updatePlanAndCreditsUI();
   loadTrends();
 
   function showOnboardingIfNeeded() {
@@ -751,6 +754,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar.classList.toggle("hidden");
     });
   }
+
   function openHelp() {
     if (helpPanel) helpPanel.classList.remove("hidden");
   }
@@ -809,7 +813,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (watchAdBtn) {
     watchAdBtn.addEventListener("click", () => {
       if (state.plan !== "free") return;
-      // Android real ad
+      // Android içi gerçek reklam
       if (
         window.AndroidAds &&
         typeof window.AndroidAds.showRewardedAd === "function"
@@ -858,6 +862,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", (e) => {
+      // Sadece backdrop tıklanınca kapat
       if (e.target === modalBackdrop) {
         closeAdModal();
         closeProModal();
@@ -882,6 +887,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (proPayBtn) {
     proPayBtn.addEventListener("click", () => {
+      const t = I18N[state.lang] || I18N.tr;
       const isTr = state.lang === "tr";
       const priceShort = isTr ? "aylık 299 TL" : "monthly";
       if (window.AndroidBilling && window.AndroidBilling.startPurchase) {
@@ -895,6 +901,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // === ONBOARDING: DİL KAYDET ===
   if (onboardLangSaveBtn && onboardLangSelect) {
     onboardLangSaveBtn.addEventListener("click", () => {
       const code = onboardLangSelect.value || "tr";
@@ -909,11 +916,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === INSTAGRAM TARZI GİRİŞ / KAYIT ===
+  // === ONBOARDING: E-POSTA + ŞİFRE (Instagram tarzı login/register) ===
   if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
-      const t = I18N[state.lang] || I18N.tr;
-
       const email = onboardEmailInput.value.trim();
       const password = onboardPasswordInput.value.trim();
 
@@ -925,11 +930,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         return;
       }
-
-      // Ekranda hemen email gözüksün
-      state.email = email;
-      saveEmail();
-      updateAccountEmailUI();
 
       let data = null;
       try {
@@ -957,30 +957,22 @@ document.addEventListener("DOMContentLoaded", () => {
             ? "Giriş/kayıt sırasında hata oluştu: " + (e.message || "")
             : "Error during login/register: " + (e.message || "")
         );
-        return; // Onboarding'i kapatma, kullanıcı tekrar denesin
+        return; // Onboarding açık kalsın, tekrar denesin
       }
 
-      // Backend'ten plan/credits geldiyse state'i güncelle
-      if (data.userData) {
-        if (typeof data.userData.plan === "string") {
-          state.plan = data.userData.plan;
-          savePlan();
-        }
-        if (typeof data.userData.credits === "number") {
-          state.credits = data.userData.credits;
-          saveCredits();
-        }
-        updatePlanAndCreditsUI();
-      }
-
+      // Backend cevaplarına göre kullanıcıya mesaj
       if (data.status === "login") {
-        alert(state.lang === "tr" ? "Giriş başarılı. 👌" : "Login successful. 👌");
+        if (state.lang === "tr") {
+          alert("Giriş başarılı. 👌");
+        } else {
+          alert("Login successful. 👌");
+        }
       } else if (data.status === "registered") {
-        alert(
-          state.lang === "tr"
-            ? "Hesap oluşturuldu ve giriş yapıldı. 🎉"
-            : "Account created and logged in. 🎉"
-        );
+        if (state.lang === "tr") {
+          alert("Hesap oluşturuldu ve giriş yapıldı. 🎉");
+        } else {
+          alert("Account created and logged in. 🎉");
+        }
       } else {
         alert(
           state.lang === "tr"
@@ -989,32 +981,30 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
 
+      // Başarılıysa: email'i state'e yaz, local'e kaydet, UI güncelle
+      state.email = email;
+      saveEmail();
+      updateAccountEmailUI();
+
       if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
     });
   }
 
-  // === ÇIKIŞ / HESAP DEĞİŞTİR ===
+  // === HESAP DEĞİŞTİR / ÇIKIŞ YAP ===
   if (changeEmailBtn) {
     changeEmailBtn.addEventListener("click", () => {
       if (!onboardingOverlay) return;
 
-      const sure =
-        state.lang === "tr"
-          ? "Bu cihazdan çıkış yapıp yeni hesapla giriş yapmak istiyor musun?"
-          : "Do you want to log out on this device and login with another account?";
-      if (!confirm(sure)) return;
-
-      // Local bilgileri sıfırla
+      // Mevcut email'i sil (logout gibi)
       state.email = "";
-      state.plan = "free";
-      state.credits = MAX_FREE_CREDITS;
       saveEmail();
-      savePlan();
-      saveCredits();
       updateAccountEmailUI();
-      updatePlanAndCreditsUI();
 
-      // Sadece e-posta adımını göster
+      // Şifre alanını temizle
+      if (onboardEmailInput) onboardEmailInput.value = "";
+      if (onboardPasswordInput) onboardPasswordInput.value = "";
+
+      // Dil adımını atla, direkt email+şifre adımını göster
       if (onboardStepLang) onboardStepLang.classList.add("hidden");
       if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
       onboardingOverlay.classList.remove("hidden");
@@ -1049,7 +1039,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // VOICE (Web Speech API)
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRec =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRec();
     recognition.lang = state.lang === "tr" ? "tr-TR" : "en-US";
     recognition.interimResults = false;
@@ -1067,7 +1058,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       try {
         recognition.start();
-      } catch (e) {}
+      } catch (e) {
+        // already started hatasını yut
+      }
       voiceBtn.disabled = true;
       voiceBtn.textContent = "🎤…";
 
