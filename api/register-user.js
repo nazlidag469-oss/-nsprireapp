@@ -35,10 +35,10 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
-    // 1) Bu email var mı?
+    // 1) Bu email var mı? (Password sütunu büyük P ile!)
     const { data: existing, error: selectError } = await supabase
       .from("users")
-      .select("id, email, password, plan, credits, lang")
+      .select("id, email, \"Password\", plan, credits, lang")
       .eq("email", email)
       .maybeSingle(); // 0 satırsa data = null
 
@@ -51,20 +51,21 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2) Kullanıcı yoksa → KAYIT
+    // 2) Kullanıcı yoksa → KAYIT OLUŞTUR
     if (!existing) {
       const { data: inserted, error: insertError } = await supabase
         .from("users")
         .insert([
           {
             email,
-            password, // basit şifre saklama; sonra hash geçebiliriz
+            // Tablo sütunu büyük P: "Password"
+            Password: password,
             plan,
             credits,
             lang,
           },
         ])
-        .select("id, email, plan, credits, lang")
+        .select("id, email, \"Password\", plan, credits, lang")
         .single();
 
       if (insertError) {
@@ -79,12 +80,20 @@ export default async function handler(req, res) {
       return res.status(200).json({
         status: "registered",
         message: "REGISTER_OK",
-        user: inserted,
+        user: {
+          id: inserted.id,
+          email: inserted.email,
+          plan: inserted.plan || plan,
+          credits: inserted.credits ?? credits,
+          lang: inserted.lang || lang,
+        },
       });
     }
 
     // 3) Kullanıcı VAR → şifre kontrol
-    if (existing.password !== password) {
+    const storedPassword = existing.Password; // büyük P
+
+    if (storedPassword !== password) {
       return res.status(401).json({
         status: "error",
         message: "INVALID_PASSWORD",
@@ -96,7 +105,7 @@ export default async function handler(req, res) {
       .from("users")
       .update({ plan, credits, lang })
       .eq("id", existing.id)
-      .select("id, email, plan, credits, lang")
+      .select("id, email, \"Password\", plan, credits, lang")
       .single();
 
     if (updateError) {
@@ -108,7 +117,13 @@ export default async function handler(req, res) {
     return res.status(200).json({
       status: "login",
       message: "LOGIN_OK",
-      user: userRow,
+      user: {
+        id: userRow.id,
+        email: userRow.email,
+        plan: userRow.plan || plan,
+        credits: userRow.credits ?? credits,
+        lang: userRow.lang || lang,
+      },
     });
   } catch (err) {
     console.error("register-user genel hata:", err);
