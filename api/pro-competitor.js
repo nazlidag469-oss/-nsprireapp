@@ -1,4 +1,4 @@
-// /api/pro-rival.js
+// /api/pro-competitor.js
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
