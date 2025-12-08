@@ -32,7 +32,7 @@ const I18N = {
     sidebarStatusLabel: "Durum",
     sidebarChatsTitle: "Sohbetler",
     sidebarPanelsTitle: "Paneller",
-    changeEmailBtnText: "Hesap değiştir / Çıkış yap",
+    changeEmailBtnText: "E-postayı değiştir",
     newChatBtnText: "+ Yeni sohbet",
     btnPanelChatText: "Sohbet",
     btnPanelTrendsText: "Trend Akımı",
@@ -59,7 +59,7 @@ const I18N = {
     trendsTitle: "🔥 Trendler (Bu Hafta)",
     refreshTrendsBtnText: "Trendleri Yenile",
 
-    seriesTitle: "📅 30 Günlük Seri Planı",
+    seriesTitle: "🗓️ 30 Günlük Seri Planı",
     seriesDesc:
       "Bir konu gir, InspireApp sana 30 günlük kısa video planı çıkarsın.",
     seriesPlaceholder: "Örn: Sağlıklı yemek, motivasyon videoları...",
@@ -87,8 +87,7 @@ const I18N = {
 
     planFreeLabel: "Plan: Ücretsiz",
     planProLabel: "Plan: Pro (sınırsız puan)",
-    creditsLabelFree: (credits) =>
-      `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelFree: (credits) => `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Kalan puan: Sınırsız",
 
     onboardTitle: "INSPIREAPP",
@@ -133,7 +132,7 @@ const I18N = {
     sidebarStatusLabel: "Status",
     sidebarChatsTitle: "Chats",
     sidebarPanelsTitle: "Panels",
-    changeEmailBtnText: "Change account / Log out",
+    changeEmailBtnText: "Change email",
     newChatBtnText: "+ New chat",
     btnPanelChatText: "Chat",
     btnPanelTrendsText: "Trend Stream",
@@ -183,13 +182,12 @@ const I18N = {
     topicPlaceholder: "Topic (e.g. fashion)",
     messagePlaceholder: "Type a message...",
     sendBtnText: "Send",
-    watchAdBtnText: "Watch Ad +1 credit",
+    watchAdBtnText: "Watch ad +1 credit",
     loadingText: "Loading...",
 
     planFreeLabel: "Plan: Free",
     planProLabel: "Plan: Pro (unlimited credits)",
-    creditsLabelFree: (credits) =>
-      `Credits: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelFree: (credits) => `Credits: ${credits}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Credits: Unlimited",
 
     onboardTitle: "INSPIREAPP",
@@ -330,9 +328,7 @@ function renderConversationList() {
       item.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         if (!confirm("Bu sohbeti silmek istiyor musun?")) return;
-        state.conversations = state.conversations.filter(
-          (c) => c.id !== conv.id
-        );
+        state.conversations = state.conversations.filter((c) => c.id !== conv.id);
         if (!state.conversations.length) {
           const first = {
             id: Date.now().toString(),
@@ -529,8 +525,7 @@ function applySmallUIText(code) {
   const messageInput = document.getElementById("messageInput");
   if (sendBtn) sendBtn.textContent = t.send;
   if (watchAdBtn) watchAdBtn.textContent = t.ad;
-  if (messageInput && !messageInput.value)
-    messageInput.placeholder = t.placeholder;
+  if (messageInput && !messageInput.value) messageInput.placeholder = t.placeholder;
 }
 
 function fillLangSelect(selectEl) {
@@ -623,7 +618,10 @@ function grantAdCredit() {
   const t = I18N[state.lang] || I18N.tr;
   const today = new Date().toISOString().slice(0, 10);
   const storedDate = localStorage.getItem(AD_DATE_KEY);
-  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
+  let storedCount = parseInt(
+    localStorage.getItem(AD_COUNT_KEY) || "0",
+    10
+  );
 
   if (storedDate !== today) storedCount = 0;
   if (storedCount >= DAILY_AD_LIMIT) {
@@ -717,7 +715,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const onboardPasswordInput = document.getElementById("onboardPasswordInput");
   const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
-  // Dil seçicileri doldur
+  // Fill language selectors
   fillLangSelect(langSelect);
   fillLangSelect(onboardLangSelect);
 
@@ -727,7 +725,6 @@ document.addEventListener("DOMContentLoaded", () => {
   applyUITextForLang(state.lang);
   applySmallUIText(state.lang);
   updateAccountEmailUI();
-  updatePlanAndCreditsUI();
   loadTrends();
 
   function showOnboardingIfNeeded() {
@@ -754,7 +751,6 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar.classList.toggle("hidden");
     });
   }
-
   function openHelp() {
     if (helpPanel) helpPanel.classList.remove("hidden");
   }
@@ -813,7 +809,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (watchAdBtn) {
     watchAdBtn.addEventListener("click", () => {
       if (state.plan !== "free") return;
-      // Android içi gerçek reklam
+      // Android real ad
       if (
         window.AndroidAds &&
         typeof window.AndroidAds.showRewardedAd === "function"
@@ -862,7 +858,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", (e) => {
-      // Sadece backdrop tıklanınca kapat
+      // Close only if user clicks on the backdrop, not the modal itself
       if (e.target === modalBackdrop) {
         closeAdModal();
         closeProModal();
@@ -901,7 +897,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === ONBOARDING: DİL KAYDET ===
   if (onboardLangSaveBtn && onboardLangSelect) {
     onboardLangSaveBtn.addEventListener("click", () => {
       const code = onboardLangSelect.value || "tr";
@@ -916,7 +911,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === ONBOARDING: E-POSTA + ŞİFRE (Instagram tarzı login/register) ===
+  // 🔑 BURASI DÜZELTİLDİ: Hata olsa bile overlay sonunda kapanıyor
   if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
       const email = onboardEmailInput.value.trim();
@@ -931,7 +926,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      let data = null;
+      // Ekranda hemen email gözüksün
+      state.email = email;
+      saveEmail();
+      updateAccountEmailUI();
+
       try {
         const res = await fetch("/api/register-user", {
           method: "POST",
@@ -945,10 +944,30 @@ document.addEventListener("DOMContentLoaded", () => {
           }),
         });
 
-        data = await res.json().catch(() => null);
+        const data = await res.json().catch(() => null);
 
         if (!res.ok || !data) {
           throw new Error(data?.error || data?.message || "Sunucu hatası");
+        }
+
+        if (data.status === "login") {
+          alert(
+            state.lang === "tr"
+              ? "Giriş başarılı. 👌"
+              : "Login successful. 👌"
+          );
+        } else if (data.status === "registered") {
+          alert(
+            state.lang === "tr"
+              ? "Hesap oluşturuldu ve giriş yapıldı. 🎉"
+              : "Account created and logged in. 🎉"
+          );
+        } else {
+          alert(
+            state.lang === "tr"
+              ? "Beklenmedik bir cevap alındı."
+              : "Unexpected response from server."
+          );
         }
       } catch (e) {
         console.error("register-user hatası:", e);
@@ -957,54 +976,17 @@ document.addEventListener("DOMContentLoaded", () => {
             ? "Giriş/kayıt sırasında hata oluştu: " + (e.message || "")
             : "Error during login/register: " + (e.message || "")
         );
-        return; // Onboarding açık kalsın, tekrar denesin
+        // 🔁 Backend bozulsa bile kullanıcı uygulamaya girebilsin
       }
 
-      // Backend cevaplarına göre kullanıcıya mesaj
-      if (data.status === "login") {
-        if (state.lang === "tr") {
-          alert("Giriş başarılı. 👌");
-        } else {
-          alert("Login successful. 👌");
-        }
-      } else if (data.status === "registered") {
-        if (state.lang === "tr") {
-          alert("Hesap oluşturuldu ve giriş yapıldı. 🎉");
-        } else {
-          alert("Account created and logged in. 🎉");
-        }
-      } else {
-        alert(
-          state.lang === "tr"
-            ? "Beklenmedik bir cevap alındı."
-            : "Unexpected response from server."
-        );
-      }
-
-      // Başarılıysa: email'i state'e yaz, local'e kaydet, UI güncelle
-      state.email = email;
-      saveEmail();
-      updateAccountEmailUI();
-
+      // Her durumda (başarılı / hatalı) overlay'i kapat
       if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
     });
   }
 
-  // === HESAP DEĞİŞTİR / ÇIKIŞ YAP ===
   if (changeEmailBtn) {
     changeEmailBtn.addEventListener("click", () => {
       if (!onboardingOverlay) return;
-
-      // Mevcut email'i sil (logout gibi)
-      state.email = "";
-      saveEmail();
-      updateAccountEmailUI();
-
-      // Şifre alanını temizle
-      if (onboardEmailInput) onboardEmailInput.value = "";
-      if (onboardPasswordInput) onboardPasswordInput.value = "";
-
-      // Dil adımını atla, direkt email+şifre adımını göster
       if (onboardStepLang) onboardStepLang.classList.add("hidden");
       if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
       onboardingOverlay.classList.remove("hidden");
@@ -1039,8 +1021,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // VOICE (Web Speech API)
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRec =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRec();
     recognition.lang = state.lang === "tr" ? "tr-TR" : "en-US";
     recognition.interimResults = false;
@@ -1059,7 +1040,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         recognition.start();
       } catch (e) {
-        // already started hatasını yut
+        // ignore
       }
       voiceBtn.disabled = true;
       voiceBtn.textContent = "🎤…";
