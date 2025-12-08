@@ -911,45 +911,81 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
-    onboardEmailSaveBtn.addEventListener("click", async () => {
-      const t = I18N[state.lang] || I18N.tr;
+if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
+  onboardEmailSaveBtn.addEventListener("click", async () => {
+    const t = I18N[state.lang] || I18N.tr;
 
-      const email = onboardEmailInput.value.trim();
-      const password = onboardPasswordInput.value.trim();
+    const email = onboardEmailInput.value.trim();
+    const password = onboardPasswordInput.value.trim();
 
-      if (!email || !password) {
-        alert(
-          state.lang === "tr"
-            ? "Lütfen e-posta ve şifre girin."
-            : "Please enter email and password."
-        );
-        return;
+    if (!email || !password) {
+      alert(
+        state.lang === "tr"
+          ? "Lütfen e-posta ve şifre girin."
+          : "Please enter email and password."
+      );
+      return;
+    }
+
+    // Ekranda hemen email gözüksün
+    state.email = email;
+    saveEmail();
+    updateAccountEmailUI();
+
+    let data = null;
+    try {
+      const res = await fetch("/api/register-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          plan: state.plan,
+          credits: state.credits,
+          lang: state.lang,
+        }),
+      });
+
+      data = await res.json().catch(() => null);
+
+      if (!res.ok || !data) {
+        throw new Error(data?.error || data?.message || "Sunucu hatası");
       }
+    } catch (e) {
+      console.error("register-user hatası:", e);
+      alert(
+        state.lang === "tr"
+          ? "Giriş/kayıt sırasında hata oluştu: " + (e.message || "")
+          : "Error during login/register: " + (e.message || "")
+      );
+      return; // Onboarding'i kapatma, kullanıcı tekrar denesin
+    }
 
-      state.email = email;
-      saveEmail();
-      updateAccountEmailUI();
-
-      try {
-        await fetch("/api/register-user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email,
-            password,
-            plan: state.plan,
-            credits: state.credits,
-            lang: state.lang,
-          }),
-        });
-      } catch (e) {
-        console.error("register-user hatası:", e);
+    // Backend cevaplarına göre kullanıcıya net mesaj verelim
+    if (data.status === "login") {
+      if (state.lang === "tr") {
+        alert("Giriş başarılı. 👌");
+      } else {
+        alert("Login successful. 👌");
       }
+    } else if (data.status === "registered") {
+      if (state.lang === "tr") {
+        alert("Hesap oluşturuldu ve giriş yapıldı. 🎉");
+      } else {
+        alert("Account created and logged in. 🎉");
+      }
+    } else {
+      // Beklenmedik durum
+      alert(
+        state.lang === "tr"
+          ? "Beklenmedik bir cevap alındı."
+          : "Unexpected response from server."
+      );
+    }
 
-      if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
-    });
-  }
+    if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
+  });
+}
 
   if (changeEmailBtn) {
     changeEmailBtn.addEventListener("click", () => {
