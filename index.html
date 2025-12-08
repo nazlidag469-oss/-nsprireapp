@@ -20,99 +20,122 @@
       <!-- ÜST BAR -->
       <header class="top-bar">
         <button id="menuToggle" class="icon-button">⋯</button>
-        <div class="top-title">INSPIREAPP</div>
+        <div id="topTitle" class="top-title">INSPIREAPP</div>
         <button id="helpToggle" class="icon-button">?</button>
       </header>
 
       <!-- SOL PANEL -->
       <aside id="sidebar" class="sidebar hidden">
         <div class="sidebar-header">
-          <h2>Hesap & Sohbetler</h2>
+          <h2 id="sidebarTitle">Hesap &amp; Sohbetler</h2>
         </div>
 
         <section class="sidebar-section">
-          <h3>Kullanıcı</h3>
-          <p class="muted small-label">E-posta</p>
+          <h3 id="sidebarUserTitle">Kullanıcı</h3>
+          <p class="muted small-label" id="sidebarEmailLabel">E-posta</p>
           <div id="accountEmail" class="sidebar-email">Kayıtlı değil</div>
           <button id="changeEmailBtn" class="pill-button small">
-            E-postayı değiştir
+            <span id="changeEmailBtnText">E-postayı değiştir</span>
           </button>
 
-          <p class="muted small-label">Durum</p>
-          <div id="planStatus" class="sidebar-plan-status">Plan: Ücretsiz</div>
+          <p class="muted small-label" id="sidebarStatusLabel">Durum</p>
+          <div id="planStatus" class="sidebar-plan-status">
+            Plan: Ücretsiz
+          </div>
 
           <div id="subscribeBlock">
             <button id="subscribeBtn" class="pill-button primary small">
-              <b>PRO</b>'ya geç
+              <b id="subscribeBtnText">PRO'ya geç</b>
             </button>
           </div>
         </section>
 
         <section class="sidebar-section">
-          <h3>Sohbetler</h3>
-          <button id="newChatBtn" class="pill-button">+ Yeni sohbet</button>
+          <h3 id="sidebarChatsTitle">Sohbetler</h3>
+          <button id="newChatBtn" class="pill-button">
+            <span id="newChatBtnText">+ Yeni sohbet</span>
+          </button>
           <div id="conversationList" class="conversation-list"></div>
         </section>
 
         <section class="sidebar-section">
-          <h3>Paneller</h3>
-          <button class="side-btn" data-panel="chat">💬 Sohbet</button>
-          <button class="side-btn" data-panel="trends">🔥 Trend Akımı</button>
-          <button class="side-btn" data-panel="series">📅 30 Günlük Seri</button>
-          <button class="side-btn" data-panel="hook">⚡ Hook Laboratuvarı</button>
-          <button class="side-btn" data-panel="copy">
-            🎬 Trend Kopya Makinesi
+          <h3 id="sidebarPanelsTitle">Paneller</h3>
+          <button class="side-btn" data-panel="chat" id="btnPanelChat">
+            💬 <span id="btnPanelChatText">Sohbet</span>
+          </button>
+          <button class="side-btn" data-panel="trends" id="btnPanelTrends">
+            🔥 <span id="btnPanelTrendsText">Trend Akımı</span>
+          </button>
+          <button class="side-btn" data-panel="series" id="btnPanelSeries">
+            📅 <span id="btnPanelSeriesText">30 Günlük Seri</span>
+          </button>
+          <button class="side-btn" data-panel="hook" id="btnPanelHook">
+            ⚡ <span id="btnPanelHookText">Hook Laboratuvarı</span>
+          </button>
+          <button class="side-btn" data-panel="copy" id="btnPanelCopy">
+            🎬 <span id="btnPanelCopyText">Trend Kopya Makinesi</span>
           </button>
         </section>
 
-        <button id="helpToggle2" class="help-btn">❓ Yardım</button>
+        <button id="helpToggle2" class="help-btn">
+          <span id="helpToggle2Text">❓ Yardım</span>
+        </button>
       </aside>
 
       <!-- SAĞ YARDIM PANELİ -->
       <aside id="helpPanel" class="help-panel hidden">
-        <h2>Bilgi & Destek</h2>
+        <h2 id="helpTitle">Bilgi &amp; Destek</h2>
 
-        <h3>Uygulama</h3>
-        <p>
+        <h3 id="helpAppTitle">Uygulama</h3>
+        <p id="helpAppText1">
           InspireApp, kısa video üreticileri için yapay zekâ destekli
           <b>profesyonel fikir oluşturma + akım analiz + içerik planlama</b>
           aracıdır.
         </p>
-        <p>
-          YouTube Shorts, TikTok, Instagram Reels için özel fikir, hook, başlık,
-          trend kopyalama ve içerik akışı üretir.
+        <p id="helpAppText2">
+          YouTube Shorts, TikTok, Instagram Reels için özel fikir, hook,
+          başlık, trend kopyalama ve içerik akışı üretir.
         </p>
 
-        <h3>Ücretsiz Plan</h3>
-        <p>Günlük 4 puan. Reklam izleyerek artırılabilir.</p>
+        <h3 id="helpFreeTitle">Ücretsiz Plan</h3>
+        <p id="helpFreeText">Günlük 4 puan. Reklam izleyerek artırılabilir.</p>
 
-        <h3>PRO Plan</h3>
-        <p>
-          Fiyat bilgisi ve ödeme, <b>PRO'ya geç</b> butonuna bastığınızda açılan
-          ekranda gösterilir (Google Play üzerinden satın alma).
+        <h3 id="helpProTitle">PRO Plan</h3>
+        <p id="helpProText">
+          Fiyat bilgisi ve ödeme, <b>PRO'ya geç</b> butonuna bastığınızda
+          açılan ekranda gösterilir (Google Play üzerinden satın alma).
         </p>
 
-        <h3>Destek</h3>
-        <p><b>E-posta:</b> insprireappdestek@gmail.com</p>
+        <h3 id="helpSupportTitle">Destek</h3>
+        <p id="helpSupportText">
+          <b>E-posta:</b> insprireappdestek@gmail.com
+        </p>
 
-        <button id="closeHelpBtn" class="pill-button">Kapat</button>
+        <button id="closeHelpBtn" class="pill-button">
+          <span id="closeHelpBtnText">Kapat</span>
+        </button>
       </aside>
 
       <!-- ANA BÖLÜM -->
       <main class="chat-area">
         <!-- TRENDLER -->
         <section id="panel-trends" class="panel hidden">
-          <h2 class="panel-title">🔥 Trendler (Bu Hafta)</h2>
-          <button id="refreshTrendsBtn" class="pill-button primary small">
-            Trendleri Yenile
+          <h2 id="trendsTitle" class="panel-title">🔥 Trendler (Bu Hafta)</h2>
+          <button
+            id="refreshTrendsBtn"
+            class="pill-button primary small"
+          >
+            <span id="refreshTrendsBtnText">Trendleri Yenile</span>
           </button>
           <ul id="trendsList" class="trends-list"></ul>
         </section>
 
         <!-- 30 GÜNLÜK SERİ -->
         <section id="panel-series" class="panel hidden">
-          <h2 class="panel-title">📅 30 Günlük Seri Planı</h2>
-          <p class="muted">
+          <h2 id="seriesTitle" class="panel-title">
+            📅 30 Günlük Seri Planı
+          </h2>
+          <p class="muted" id="seriesDesc">
             Bir konu gir, InspireApp sana 30 günlük kısa video planı çıkarsın.
           </p>
           <textarea
@@ -121,15 +144,15 @@
             placeholder="Örn: Sağlıklı yemek, motivasyon videoları..."
           ></textarea>
           <button id="seriesGenerate" class="pill-button primary">
-            30 günlük planı oluştur
+            <span id="seriesGenerateText">30 günlük planı oluştur</span>
           </button>
           <pre id="seriesResult" class="panel-result"></pre>
         </section>
 
         <!-- HOOK LABORATUVARI -->
         <section id="panel-hook" class="panel hidden">
-          <h2 class="panel-title">⚡ Hook Laboratuvarı</h2>
-          <p class="muted">
+          <h2 id="hookTitle" class="panel-title">⚡ Hook Laboratuvarı</h2>
+          <p class="muted" id="hookDesc">
             Konunu yaz; ilk 3 saniyede izleyiciyi çeken güçlü giriş cümleleri
             (hook) üretelim.
           </p>
@@ -139,15 +162,17 @@
             placeholder="Örn: Öğrenciler için verimli ders çalışma"
           ></textarea>
           <button id="hookGenerate" class="pill-button primary">
-            Hook önerilerini üret
+            <span id="hookGenerateText">Hook önerilerini üret</span>
           </button>
           <pre id="hookResult" class="panel-result"></pre>
         </section>
 
         <!-- TREND KOPYA MAKİNESİ -->
         <section id="panel-copy" class="panel hidden">
-          <h2 class="panel-title">🎬 Trend Kopya Makinesi</h2>
-          <p class="muted">
+          <h2 id="copyTitle" class="panel-title">
+            🎬 Trend Kopya Makinesi
+          </h2>
+          <p class="muted" id="copyDesc">
             Beğendiğin bir trend / video fikrini yaz; InspireApp bunu senin
             nişine göre yeniden yazar.
           </p>
@@ -157,25 +182,31 @@
             placeholder="Örn: Şu videoyu kendi marka tonuma uyarlamak istiyorum..."
           ></textarea>
           <button id="copyGenerate" class="pill-button primary">
-            Trend kopyasını oluştur
+            <span id="copyGenerateText">Trend kopyasını oluştur</span>
           </button>
           <pre id="copyResult" class="panel-result"></pre>
         </section>
 
         <!-- SOHBET (ANA PANEL) -->
         <section id="panel-chat" class="panel">
+          <h2 id="chatTitle" class="panel-title">💬 Sohbet</h2>
+
           <div id="chatMessages" class="chat-messages"></div>
 
           <div class="credits-row">
             <span id="planLabel" class="muted"></span>
             <span id="creditsLabel" class="muted"></span>
             <button id="watchAdBtn" class="pill-button small">
-              Reklam izle +1 puan
+              <span id="watchAdBtnText">Reklam izle +1 puan</span>
             </button>
           </div>
 
           <div class="controls">
-            <input id="topicInput" type="text" placeholder="Konu (örn: moda)" />
+            <input
+              id="topicInput"
+              type="text"
+              placeholder="Konu (örn: moda)"
+            />
             <select id="platformSelect">
               <option value="youtube">YouTube Shorts</option>
               <option value="tiktok">TikTok</option>
@@ -185,15 +216,19 @@
           </div>
 
           <form id="chatForm" class="chat-input-row">
-            <button type="button" id="voiceBtn" class="circle-button">🎤</button>
-            <button type="button" id="cameraBtn" class="circle-button">📷</button>
+            <button type="button" id="voiceBtn" class="circle-button">
+              🎤
+            </button>
+            <button type="button" id="cameraBtn" class="circle-button">
+              📷
+            </button>
             <textarea
               id="messageInput"
               rows="1"
               placeholder="Mesaj yaz..."
             ></textarea>
             <button type="submit" id="sendBtn" class="pill-button primary">
-              Gönder
+              <span id="sendBtnText">Gönder</span>
             </button>
           </form>
 
@@ -204,23 +239,23 @@
       <!-- ONBOARDING — DİL + E-POSTA -->
       <div id="onboardingOverlay" class="onboarding-overlay hidden">
         <div class="onboarding-card">
-          <h1 class="onboarding-title">INSPIREAPP</h1>
+          <h1 id="onboardTitle" class="onboarding-title">INSPIREAPP</h1>
           <div id="onboardStepLang">
-            <h2>Dil seçin</h2>
+            <h2 id="onboardLangTitle">Dil seçin</h2>
             <select id="onboardLangSelect"></select>
             <button id="onboardLangSaveBtn" class="pill-button primary">
-              Devam
+              <span id="onboardLangSaveBtnText">Devam</span>
             </button>
           </div>
           <div id="onboardStepEmail" class="hidden">
-            <h2>E-posta adresiniz</h2>
+            <h2 id="onboardEmailTitle">E-posta adresiniz</h2>
             <input
               id="onboardEmailInput"
               type="email"
               placeholder="ornek@mail.com"
             />
             <button id="onboardEmailSaveBtn" class="pill-button primary">
-              Sohbete başla
+              <span id="onboardEmailSaveBtnText">Sohbete başla</span>
             </button>
           </div>
         </div>
@@ -237,39 +272,41 @@
     />
 
     <!-- GENEL MODAL ARKA PLANI -->
-    <div id="modalBackdrop" class="modal-backdrop hidden"></div>
+    <div id="modalBackdrop" class="backdrop hidden"></div>
 
     <!-- REKLAM MODALI -->
     <div id="adModal" class="modal hidden">
-      <div class="modal-card">
+      <div class="modal-content">
         <!-- ANA ADIM -->
         <div id="adStepMain">
-          <div class="modal-header">
-            <h2>Reklam İzleyerek +1 Puan</h2>
-            <button id="adCloseIcon" class="icon-button">✕</button>
-          </div>
-          <p>
+          <button id="adCloseIcon" class="modal-close">✕</button>
+          <h2 id="adTitle">Reklam İzleyerek +1 Puan</h2>
+          <p id="adText">
             Bir video reklam izle; izledikten sonra alttaki
             <b>"Reklamı izledim"</b> butonuna bas, hesabına +1 kredi eklensin.
           </p>
           <div class="modal-actions">
-            <button id="adCancelBtn" class="pill-button">Vazgeç</button>
+            <button id="adCancelBtn" class="pill-button">
+              <span id="adCancelBtnText">Vazgeç</span>
+            </button>
             <button id="adWatchedBtn" class="pill-button primary">
-              Reklamı izledim, +1 ver
+              <span id="adWatchedBtnText">Reklamı izledim, +1 ver</span>
             </button>
           </div>
         </div>
 
         <!-- KAPATMA ONAY ADIMI -->
         <div id="adStepConfirm" class="hidden">
-          <h3>Emin misin?</h3>
-          <p>Reklamı izlemekten vazgeçmek üzeresin.</p>
+          <h3 id="adConfirmTitle">Emin misin?</h3>
+          <p id="adConfirmText">Reklamı izlemekten vazgeçmek üzeresin.</p>
           <div class="modal-actions">
             <button id="adContinueBtn" class="pill-button">
-              Reklamı izlemeye devam et
+              <span id="adContinueBtnText">
+                Reklamı izlemeye devam et
+              </span>
             </button>
             <button id="adConfirmCloseBtn" class="pill-button primary">
-              Evet, kapat
+              <span id="adConfirmCloseBtnText">Evet, kapat</span>
             </button>
           </div>
         </div>
@@ -278,19 +315,17 @@
 
     <!-- PRO PLANI MODALI -->
     <div id="proModal" class="modal hidden">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h2>InspireApp PRO</h2>
-          <button id="proCloseBtn" class="icon-button">✕</button>
-        </div>
+      <div class="modal-content">
+        <button id="proCloseBtn" class="modal-close">✕</button>
+        <h2 id="proTitle">InspireApp PRO</h2>
         <p id="proPriceText"></p>
-        <p>
+        <p id="proDesc">
           PRO plan; sınırsız kredi, reklamsız kullanım ve gelecekteki premium
           özelliklere erişim sağlar.
         </p>
         <div class="modal-actions">
           <button id="proPayBtn" class="pill-button primary">
-            PRO’ya geç
+            <span id="proPayBtnText">PRO’ya geç</span>
           </button>
         </div>
       </div>
