@@ -1,9 +1,8 @@
-// === LOCAL STORAGE KEYLERİ ===
+// === LOCAL STORAGE KEYS ===
 const STORAGE_KEY = "inspireapp_conversations_v1";
 const CREDITS_KEY = "inspireapp_credits_v1";
 const PLAN_KEY = "inspireapp_plan_v1";
 const EMAIL_KEY = "inspireapp_email_v1";
-const PASSWORD_KEY = "inspireapp_password_v1";
 const LANG_KEY = "inspireapp_lang_v1";
 
 const AD_COUNT_KEY = "inspireapp_daily_ad_count_v1";
@@ -12,9 +11,230 @@ const AD_DATE_KEY = "inspireapp_daily_ad_date_v1";
 const MAX_FREE_CREDITS = 4;
 const DAILY_AD_LIMIT = 400;
 
-// === DİL TABLOLARI ===
-const LANG_NAMES = { tr: "Turkish", en: "English" };
-const LANG_REGION = { tr: "TR", en: "US" };
+// === LANGUAGE TABLES ===
+const LANG_NAMES = {
+  tr: "Turkish",
+  en: "English",
+};
+
+const LANG_REGION = {
+  tr: "TR",
+  en: "US",
+};
+
+// Static UI texts
+const I18N = {
+  tr: {
+    topTitle: "INSPIREAPP",
+    sidebarTitle: "Hesap & Sohbetler",
+    sidebarUserTitle: "Kullanıcı",
+    sidebarEmailLabel: "E-posta",
+    sidebarStatusLabel: "Durum",
+    sidebarChatsTitle: "Sohbetler",
+    sidebarPanelsTitle: "Paneller",
+    changeEmailBtnText: "E-postayı değiştir",
+    newChatBtnText: "+ Yeni sohbet",
+    btnPanelChatText: "Sohbet",
+    btnPanelTrendsText: "Trend Akımı",
+    btnPanelSeriesText: "30 Günlük Seri",
+    btnPanelHookText: "Hook Laboratuvarı",
+    btnPanelCopyText: "Trend Kopya Makinesi",
+    helpToggle2Text: "❓ Yardım",
+
+    helpTitle: "Bilgi & Destek",
+    helpAppTitle: "Uygulama",
+    helpAppText1:
+      "InspireApp, kısa video üreticileri için yapay zekâ destekli profesyonel fikir oluşturma + akım analiz + içerik planlama aracıdır.",
+    helpAppText2:
+      "YouTube Shorts, TikTok, Instagram Reels için özel fikir, hook, başlık, trend kopyalama ve içerik akışı üretir.",
+    helpFreeTitle: "Ücretsiz Plan",
+    helpFreeText: "Günlük 4 puan. Reklam izleyerek artırılabilir.",
+    helpProTitle: "PRO Plan",
+    helpProText:
+      "Fiyat bilgisi ve ödeme, PRO'ya geç butonuna bastığınızda açılan ekranda gösterilir (Google Play üzerinden satın alma).",
+    helpSupportTitle: "Destek",
+    helpSupportText: "E-posta: insprireappdestek@gmail.com",
+    closeHelpBtnText: "Kapat",
+
+    trendsTitle: "🔥 Trendler (Bu Hafta)",
+    refreshTrendsBtnText: "Trendleri Yenile",
+
+    seriesTitle: "📅 30 Günlük Seri Planı",
+    seriesDesc:
+      "Bir konu gir, InspireApp sana 30 günlük kısa video planı çıkarsın.",
+    seriesPlaceholder: "Örn: Sağlıklı yemek, motivasyon videoları...",
+    seriesGenerateText: "30 günlük planı oluştur",
+
+    hookTitle: "⚡ Hook Laboratuvarı",
+    hookDesc:
+      "Konunu yaz; ilk 3 saniyede izleyiciyi çeken güçlü giriş cümleleri (hook) üretelim.",
+    hookPlaceholder: "Örn: Öğrenciler için verimli ders çalışma",
+    hookGenerateText: "Hook önerilerini üret",
+
+    copyTitle: "🎬 Trend Kopya Makinesi",
+    copyDesc:
+      "Beğendiğin bir trend / video fikrini yaz; InspireApp bunu senin nişine göre yeniden yazar.",
+    copyPlaceholder:
+      "Örn: Şu videoyu kendi marka tonuma uyarlamak istiyorum...",
+    copyGenerateText: "Trend kopyasını oluştur",
+
+    chatTitle: "💬 Sohbet",
+    topicPlaceholder: "Konu (örn: moda)",
+    messagePlaceholder: "Mesaj yaz...",
+    sendBtnText: "Gönder",
+    watchAdBtnText: "Reklam izle +1 puan",
+    loadingText: "Yükleniyor...",
+
+    planFreeLabel: "Plan: Ücretsiz",
+    planProLabel: "Plan: Pro (sınırsız puan)",
+    creditsLabelFree: (credits) => `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelPro: "Kalan puan: Sınırsız",
+
+    onboardTitle: "INSPIREAPP",
+    onboardLangTitle: "Dil seçin",
+    onboardLangSaveBtnText: "Devam",
+    onboardEmailTitle: "E-posta adresiniz",
+    onboardEmailPlaceholder: "ornek@mail.com",
+    onboardEmailSaveBtnText: "Sohbete başla",
+
+    adTitle: "Reklam İzleyerek +1 Puan",
+    adText:
+      'Bir video reklam izle; izledikten sonra alttaki "Reklamı izledim" butonuna bas, hesabına +1 kredi eklensin.',
+    adCancelBtnText: "Vazgeç",
+    adWatchedBtnText: "Reklamı izledim, +1 ver",
+    adConfirmTitle: "Emin misin?",
+    adConfirmText: "Reklamı izlemekten vazgeçmek üzeresin.",
+    adContinueBtnText: "Reklamı izlemeye devam et",
+    adConfirmCloseBtnText: "Evet, kapat",
+    adDailyLimit: (limit) =>
+      `Günlük reklam limiti doldu. (Limit: ${limit})`,
+    adPreparing: "Reklam hazırlanıyor...",
+
+    proTitle: "InspireApp PRO",
+    proDesc:
+      "PRO plan; sınırsız kredi, reklamsız kullanım ve gelecekteki premium özelliklere erişim sağlar.",
+    proPayBtnText: "PRO’ya geç",
+    proPriceTextTr:
+      "InspireApp PRO – aylık 299 TL (Google Play üzerinden ücretlendirilir).",
+    proPriceTextEn:
+      "InspireApp PRO – monthly subscription via Google Play.",
+
+    emailNotSavedAlert: "Lütfen geçerli bir e-posta gir.",
+    freeNoCreditsAlert:
+      "Ücretsiz planda kredi bitti. Reklam izleyerek +1 alabilirsin.",
+  },
+
+  en: {
+    topTitle: "INSPIREAPP",
+    sidebarTitle: "Account & Chats",
+    sidebarUserTitle: "User",
+    sidebarEmailLabel: "Email",
+    sidebarStatusLabel: "Status",
+    sidebarChatsTitle: "Chats",
+    sidebarPanelsTitle: "Panels",
+    changeEmailBtnText: "Change email",
+    newChatBtnText: "+ New chat",
+    btnPanelChatText: "Chat",
+    btnPanelTrendsText: "Trend Stream",
+    btnPanelSeriesText: "30-Day Series",
+    btnPanelHookText: "Hook Lab",
+    btnPanelCopyText: "Trend Copy Machine",
+    helpToggle2Text: "❓ Help",
+
+    helpTitle: "Info & Support",
+    helpAppTitle: "App",
+    helpAppText1:
+      "InspireApp is an AI-powered idea + trend + content planning assistant for short-form creators.",
+    helpAppText2:
+      "It generates ideas, hooks, titles, and trend-based flows for YouTube Shorts, TikTok and Instagram Reels.",
+    helpFreeTitle: "Free Plan",
+    helpFreeText: "4 credits per day. You can increase by watching ads.",
+    helpProTitle: "PRO Plan",
+    helpProText:
+      "Price and billing details are shown when you tap the 'Go PRO' button (billing via Google Play).",
+    helpSupportTitle: "Support",
+    helpSupportText: "Email: insprireappdestek@gmail.com",
+    closeHelpBtnText: "Close",
+
+    trendsTitle: "🔥 Trends (This Week)",
+    refreshTrendsBtnText: "Refresh trends",
+
+    seriesTitle: "📅 30-Day Series Plan",
+    seriesDesc:
+      "Enter a topic and InspireApp will create a 30-day short video plan.",
+    seriesPlaceholder: "Ex: Healthy meals, motivation videos...",
+    seriesGenerateText: "Generate 30-day plan",
+
+    hookTitle: "⚡ Hook Lab",
+    hookDesc:
+      "Write your topic; we generate strong hook sentences for the first 3 seconds.",
+    hookPlaceholder: "Ex: Efficient studying for students",
+    hookGenerateText: "Generate hook ideas",
+
+    copyTitle: "🎬 Trend Copy Machine",
+    copyDesc:
+      "Paste a trend / video idea; InspireApp rewrites it for your niche.",
+    copyPlaceholder:
+      "Ex: I want to adapt this video idea to my brand tone...",
+    copyGenerateText: "Generate trend copy",
+
+    chatTitle: "💬 Chat",
+    topicPlaceholder: "Topic (e.g. fashion)",
+    messagePlaceholder: "Type a message...",
+    sendBtnText: "Send",
+    watchAdBtnText: "Watch ad +1 credit",
+    loadingText: "Loading...",
+
+    planFreeLabel: "Plan: Free",
+    planProLabel: "Plan: Pro (unlimited credits)",
+    creditsLabelFree: (credits) => `Credits: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelPro: "Credits: Unlimited",
+
+    onboardTitle: "INSPIREAPP",
+    onboardLangTitle: "Choose language",
+    onboardLangSaveBtnText: "Continue",
+    onboardEmailTitle: "Your email address",
+    onboardEmailPlaceholder: "you@example.com",
+    onboardEmailSaveBtnText: "Start chatting",
+
+    adTitle: "Watch Ad for +1 Credit",
+    adText:
+      'Watch a video ad; then tap "I watched the ad" to add +1 credit to your account.',
+    adCancelBtnText: "Cancel",
+    adWatchedBtnText: "I watched the ad, give +1",
+    adConfirmTitle: "Are you sure?",
+    adConfirmText: "You are about to cancel watching the ad.",
+    adContinueBtnText: "Keep watching",
+    adConfirmCloseBtnText: "Yes, close",
+    adDailyLimit: (limit) => `Daily ad limit reached. (Limit: ${limit})`,
+    adPreparing: "Ad is loading...",
+
+    proTitle: "InspireApp PRO",
+    proDesc:
+      "PRO gives unlimited credits, no ads, and access to all future premium features.",
+    proPayBtnText: "Go PRO",
+    proPriceTextTr: "InspireApp PRO – monthly subscription via Google Play.",
+    proPriceTextEn: "InspireApp PRO – monthly subscription via Google Play.",
+
+    emailNotSavedAlert: "Please enter a valid email.",
+    freeNoCreditsAlert:
+      "You ran out of credits on the free plan. Watch an ad to get +1.",
+  },
+};
+
+// Small legacy UI_TEXT support
+const UI_TEXT = {
+  tr: {
+    send: "Gönder",
+    ad: "Reklam izle +1 puan",
+    placeholder: "Mesaj yaz veya konu gir...",
+  },
+  en: {
+    send: "Send",
+    ad: "Watch Ad +1 credit",
+    placeholder: "Type a message or topic...",
+  },
+};
 
 // === GLOBAL STATE ===
 const state = {
@@ -24,41 +244,9 @@ const state = {
   credits: MAX_FREE_CREDITS,
   lang: "tr",
   email: "",
-  password: "",
 };
 
-
-// ------------------------------------------------------
-// 🔐 LOGIN KONTROLÜ (ŞİFRELİ GİRİŞ) – YENİ EKLENEN BÖLÜM
-// ------------------------------------------------------
-async function tryLogin(email, password) {
-  try {
-    const res = await fetch("/api/login-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      return { ok: false, message: data.message || "Giriş yapılamadı." };
-    }
-
-    // Giriş başarılı
-    return {
-      ok: true,
-      user: data.user,
-    };
-  } catch (err) {
-    return { ok: false, message: "Sunucu hatası." };
-  }
-}
-
-
-// ----------------------------------------------
-// STATE YÜKLE / KAYDET
-// ----------------------------------------------
+// === STATE LOAD / SAVE ===
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -66,7 +254,6 @@ function loadState() {
   } catch {
     state.conversations = [];
   }
-
   if (!state.conversations.length) {
     const first = {
       id: Date.now().toString(),
@@ -76,7 +263,6 @@ function loadState() {
     };
     state.conversations.push(first);
   }
-
   state.currentId = state.conversations[0].id;
 
   const p = localStorage.getItem(PLAN_KEY);
@@ -91,37 +277,434 @@ function loadState() {
 
   const e = localStorage.getItem(EMAIL_KEY);
   if (e) state.email = e;
-
-  const pw = localStorage.getItem(PASSWORD_KEY);
-  if (pw) state.password = pw;
-}
-
-function saveEmail() {
-  if (state.email) localStorage.setItem(EMAIL_KEY, state.email);
-}
-
-function savePassword() {
-  if (state.password) localStorage.setItem(PASSWORD_KEY, state.password);
-}
-
-function saveCredits() {
-  localStorage.setItem(CREDITS_KEY, String(state.credits));
-}
-
-function savePlan() {
-  localStorage.setItem(PLAN_KEY, state.plan);
 }
 
 function saveConversations() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.conversations));
 }
+function saveCredits() {
+  localStorage.setItem(CREDITS_KEY, String(state.credits));
+}
+function savePlan() {
+  localStorage.setItem(PLAN_KEY, state.plan);
+}
+function saveEmail() {
+  if (state.email) localStorage.setItem(EMAIL_KEY, state.email);
+  else localStorage.removeItem(EMAIL_KEY);
+}
 
+function currentConv() {
+  return state.conversations.find((c) => c.id === state.currentId);
+}
 
-// ------------------------------------------------------
-// 🟣 UYGULAMA YÜKLENDİĞİNDE – ONBOARDING + LOGIN AKIŞI
-// ------------------------------------------------------
+function buildTitleFromText(text) {
+  if (!text) return "Sohbet";
+  let line = text.split("\n")[0];
+  line = line.split(/[.!?]/)[0].trim();
+  if (!line) line = text.trim();
+  if (line.length > 40) line = line.slice(0, 40) + "…";
+  return line || "Sohbet";
+}
+
+// === CONVERSATION RENDER ===
+function renderConversationList() {
+  const listEl = document.getElementById("conversationList");
+  if (!listEl) return;
+  listEl.innerHTML = "";
+  state.conversations
+    .slice()
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .forEach((conv) => {
+      const item = document.createElement("div");
+      item.className =
+        "conversation-item" + (conv.id === state.currentId ? " active" : "");
+      item.textContent = conv.title || "Sohbet";
+      item.addEventListener("click", () => {
+        state.currentId = conv.id;
+        renderConversationList();
+        renderMessages();
+      });
+
+      item.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        if (!confirm("Bu sohbeti silmek istiyor musun?")) return;
+        state.conversations = state.conversations.filter((c) => c.id !== conv.id);
+        if (!state.conversations.length) {
+          const first = {
+            id: Date.now().toString(),
+            title: "Yeni sohbet",
+            messages: [],
+            createdAt: Date.now(),
+          };
+          state.conversations.push(first);
+        }
+        state.currentId = state.conversations[0].id;
+        saveConversations();
+        renderConversationList();
+        renderMessages();
+      });
+
+      listEl.appendChild(item);
+    });
+}
+
+function renderMessages() {
+  const container = document.getElementById("chatMessages");
+  if (!container) return;
+  const conv = currentConv();
+  container.innerHTML = "";
+
+  conv.messages.forEach((m) => {
+    const row = document.createElement("div");
+    row.className = "message-row " + m.role;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    const textEl = document.createElement("pre");
+    textEl.className = "bubble-text";
+    textEl.textContent = m.text;
+
+    bubble.appendChild(textEl);
+    row.appendChild(bubble);
+    container.appendChild(row);
+  });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function addMessage(role, text) {
+  const conv = currentConv();
+  conv.messages.push({ role, text });
+  if (!conv.title || conv.title === "Yeni sohbet") {
+    const firstUserMsg = conv.messages.find((m) => m.role === "user");
+    if (firstUserMsg?.text) conv.title = buildTitleFromText(firstUserMsg.text);
+  }
+  saveConversations();
+  renderConversationList();
+  renderMessages();
+}
+
+// === PLAN & CREDITS UI ===
+function updatePlanAndCreditsUI() {
+  const t = I18N[state.lang] || I18N.tr;
+  const planLabel = document.getElementById("planLabel");
+  const creditsLabel = document.getElementById("creditsLabel");
+  const watchAdBtn = document.getElementById("watchAdBtn");
+  const planStatus = document.getElementById("planStatus");
+  const subscribeBlock = document.getElementById("subscribeBlock");
+
+  if (planLabel) {
+    planLabel.textContent =
+      state.plan === "pro" ? t.planProLabel : t.planFreeLabel;
+  }
+  if (creditsLabel) {
+    creditsLabel.textContent =
+      state.plan === "pro"
+        ? t.creditsLabelPro
+        : (t.creditsLabelFree && t.creditsLabelFree(state.credits)) || "";
+  }
+  if (watchAdBtn) {
+    watchAdBtn.classList.toggle("hidden", state.plan !== "free");
+  }
+  if (planStatus) {
+    planStatus.textContent =
+      state.plan === "pro" ? t.planProLabel : t.planFreeLabel;
+  }
+  if (subscribeBlock) {
+    subscribeBlock.classList.toggle("hidden", state.plan === "pro");
+  }
+}
+
+function updateAccountEmailUI() {
+  const el = document.getElementById("accountEmail");
+  if (el) el.textContent = state.email || "Kayıtlı değil";
+}
+
+// === APPLY LANGUAGE TO UI ===
+function applyUITextForLang(code) {
+  const t = I18N[code] || I18N.tr;
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value !== undefined) el.textContent = value;
+  };
+  const setHTML = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value !== undefined) el.innerHTML = value;
+  };
+  const setPlaceholder = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value !== undefined) el.placeholder = value;
+  };
+
+  setText("topTitle", t.topTitle);
+
+  setText("sidebarTitle", t.sidebarTitle);
+  setText("sidebarUserTitle", t.sidebarUserTitle);
+  setText("sidebarEmailLabel", t.sidebarEmailLabel);
+  setText("sidebarStatusLabel", t.sidebarStatusLabel);
+  setText("sidebarChatsTitle", t.sidebarChatsTitle);
+  setText("sidebarPanelsTitle", t.sidebarPanelsTitle);
+  setText("changeEmailBtnText", t.changeEmailBtnText);
+  setText("newChatBtnText", t.newChatBtnText);
+  setText("btnPanelChatText", t.btnPanelChatText);
+  setText("btnPanelTrendsText", t.btnPanelTrendsText);
+  setText("btnPanelSeriesText", t.btnPanelSeriesText);
+  setText("btnPanelHookText", t.btnPanelHookText);
+  setText("btnPanelCopyText", t.btnPanelCopyText);
+  setText("helpToggle2Text", t.helpToggle2Text);
+
+  setText("helpTitle", t.helpTitle);
+  setText("helpAppTitle", t.helpAppTitle);
+  setText("helpFreeTitle", t.helpFreeTitle);
+  setText("helpProTitle", t.helpProTitle);
+  setText("helpSupportTitle", t.helpSupportTitle);
+  setText("closeHelpBtnText", t.closeHelpBtnText);
+  setHTML("helpAppText1", t.helpAppText1);
+  setHTML("helpAppText2", t.helpAppText2);
+  setText("helpFreeText", t.helpFreeText);
+  setHTML("helpProText", t.helpProText);
+  setText("helpSupportText", t.helpSupportText);
+
+  setText("trendsTitle", t.trendsTitle);
+  setText("refreshTrendsBtnText", t.refreshTrendsBtnText);
+
+  setText("seriesTitle", t.seriesTitle);
+  setText("seriesDesc", t.seriesDesc);
+  setPlaceholder("seriesTopic", t.seriesPlaceholder);
+  setText("seriesGenerateText", t.seriesGenerateText);
+
+  setText("hookTitle", t.hookTitle);
+  setText("hookDesc", t.hookDesc);
+  setPlaceholder("hookTopic", t.hookPlaceholder);
+  setText("hookGenerateText", t.hookGenerateText);
+
+  setText("copyTitle", t.copyTitle);
+  setText("copyDesc", t.copyDesc);
+  setPlaceholder("copyTopic", t.copyPlaceholder);
+  setText("copyGenerateText", t.copyGenerateText);
+
+  setText("chatTitle", t.chatTitle);
+  setPlaceholder("topicInput", t.topicPlaceholder);
+  setPlaceholder("messageInput", t.messagePlaceholder);
+  setText("sendBtnText", t.sendBtnText);
+  setText("watchAdBtnText", t.watchAdBtnText);
+  const loadingEl = document.getElementById("loading");
+  if (loadingEl) loadingEl.textContent = t.loadingText;
+
+  setText("onboardTitle", t.onboardTitle);
+  setText("onboardLangTitle", t.onboardLangTitle);
+  setText("onboardLangSaveBtnText", t.onboardLangSaveBtnText);
+  setText("onboardEmailTitle", t.onboardEmailTitle);
+  setPlaceholder("onboardEmailInput", t.onboardEmailPlaceholder);
+  setText("onboardEmailSaveBtnText", t.onboardEmailSaveBtnText);
+
+  setText("adTitle", t.adTitle);
+  setHTML("adText", t.adText);
+  setText("adCancelBtnText", t.adCancelBtnText);
+  setText("adWatchedBtnText", t.adWatchedBtnText);
+  setText("adConfirmTitle", t.adConfirmTitle);
+  setText("adConfirmText", t.adConfirmText);
+  setText("adContinueBtnText", t.adContinueBtnText);
+  setText("adConfirmCloseBtnText", t.adConfirmCloseBtnText);
+
+  setText("proTitle", t.proTitle);
+  setText("proDesc", t.proDesc);
+  setText("proPayBtnText", t.proPayBtnText);
+
+  // Plan & credits (dynamic) refresh
+  updatePlanAndCreditsUI();
+}
+
+// Old small UI_TEXT usage
+function applySmallUIText(code) {
+  const t = UI_TEXT[code] || UI_TEXT.en;
+  const sendBtn = document.getElementById("sendBtnText");
+  const watchAdBtn = document.getElementById("watchAdBtnText");
+  const messageInput = document.getElementById("messageInput");
+  if (sendBtn) sendBtn.textContent = t.send;
+  if (watchAdBtn) watchAdBtn.textContent = t.ad;
+  if (messageInput && !messageInput.value) messageInput.placeholder = t.placeholder;
+}
+
+function fillLangSelect(selectEl) {
+  if (!selectEl) return;
+  selectEl.innerHTML = "";
+  Object.keys(LANG_NAMES).forEach((code) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = code === "tr" ? "Türkçe" : "English";
+    selectEl.appendChild(opt);
+  });
+  selectEl.value = state.lang;
+}
+
+// === API FUNCTIONS ===
+async function callIdeasAPI(prompt, platform, langCode) {
+  const langName = LANG_NAMES[langCode] || "Turkish";
+  try {
+    const res = await fetch("/api/ideas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, platform, lang: langName }),
+    });
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      if (data?.message) return data.message;
+    } catch {
+      if (text) return text;
+    }
+    return "API'den anlamlı bir cevap alınamadı.";
+  } catch {
+    return "Sunucuya bağlanırken bir hata oluştu.";
+  }
+}
+
+async function callSimpleAPI(route, payload) {
+  try {
+    const res = await fetch(`/api/${route}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    return data?.message || "Sunucudan anlamlı bir cevap alınamadı.";
+  } catch {
+    return "Sunucuya bağlanırken bir hata oluştu.";
+  }
+}
+
+async function loadTrends() {
+  const list = document.getElementById("trendsList");
+  if (!list) return;
+  const region = (LANG_REGION[state.lang] || "US").toUpperCase();
+  list.innerHTML = "<li>Yükleniyor...</li>";
+  try {
+    const res = await fetch(`/api/trends?region=${region}`);
+    const data = await res.json();
+    if (!res.ok) {
+      list.innerHTML =
+        "<li>Trendler alınırken hata: " + (data.message || "") + "</li>";
+      return;
+    }
+    if (!data.items?.length) {
+      list.innerHTML = "<li>Bu hafta trend bulunamadı.</li>";
+      return;
+    }
+    list.innerHTML = "";
+    data.items.forEach((item) => {
+      const li = document.createElement("li");
+      li.className = "trends-item";
+      const a = document.createElement("a");
+      a.href = item.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = item.title;
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+  } catch {
+    list.innerHTML =
+      "<li>Trendler alınırken beklenmeyen bir hata oluştu.</li>";
+  }
+}
+
+// === AD CREDIT FUNCTION ===
+function grantAdCredit() {
+  if (state.plan !== "free") return;
+
+  const t = I18N[state.lang] || I18N.tr;
+  const today = new Date().toISOString().slice(0, 10);
+  const storedDate = localStorage.getItem(AD_DATE_KEY);
+  let storedCount = parseInt(
+    localStorage.getItem(AD_COUNT_KEY) || "0",
+    10
+  );
+
+  if (storedDate !== today) storedCount = 0;
+  if (storedCount >= DAILY_AD_LIMIT) {
+    alert(t.adDailyLimit ? t.adDailyLimit(DAILY_AD_LIMIT) : "");
+    return;
+  }
+
+  storedCount += 1;
+  localStorage.setItem(AD_DATE_KEY, today);
+  localStorage.setItem(AD_COUNT_KEY, String(storedCount));
+
+  state.credits += 1;
+  saveCredits();
+  updatePlanAndCreditsUI();
+}
+
+// Android-side aliases
+window.__onRewardedAdCompletedFromAndroid = function () {
+  grantAdCredit();
+};
+window.__onRealAdReward = function () {
+  grantAdCredit();
+};
+
+// Android PRO plan activation
+window.__setProPlanFromAndroid = function () {
+  state.plan = "pro";
+  savePlan();
+  updatePlanAndCreditsUI();
+  alert("🎉 PRO üyelik Google Play üzerinden aktif edildi!");
+};
+
+// === DOM READY ===
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
+
+  const sidebar = document.getElementById("sidebar");
+  const helpPanel = document.getElementById("helpPanel");
+  const menuToggle = document.getElementById("menuToggle");
+  const helpToggle = document.getElementById("helpToggle");
+  const helpToggle2 = document.getElementById("helpToggle2");
+  const closeHelpBtn = document.getElementById("closeHelpBtn");
+
+  const chatForm = document.getElementById("chatForm");
+  const topicInput = document.getElementById("topicInput");
+  const platformSelect = document.getElementById("platformSelect");
+  const langSelect = document.getElementById("langSelect");
+  const messageInput = document.getElementById("messageInput");
+  const loadingEl = document.getElementById("loading");
+  const newChatBtn = document.getElementById("newChatBtn");
+  const watchAdBtn = document.getElementById("watchAdBtn");
+  const subscribeBtn = document.getElementById("subscribeBtn");
+  const changeEmailBtn = document.getElementById("changeEmailBtn");
+
+  const voiceBtn = document.getElementById("voiceBtn");
+  const cameraBtn = document.getElementById("cameraBtn");
+  const cameraFileInput = document.getElementById("cameraFileInput");
+
+  const refreshTrendsBtn = document.getElementById("refreshTrendsBtn");
+  const seriesGenerate = document.getElementById("seriesGenerate");
+  const seriesTopic = document.getElementById("seriesTopic");
+  const seriesResult = document.getElementById("seriesResult");
+  const hookGenerate = document.getElementById("hookGenerate");
+  const hookTopic = document.getElementById("hookTopic");
+  const hookResult = document.getElementById("hookResult");
+  const copyGenerate = document.getElementById("copyGenerate");
+  const copyTopic = document.getElementById("copyTopic");
+  const copyResult = document.getElementById("copyResult");
+
+  const modalBackdrop = document.getElementById("modalBackdrop");
+  const adModal = document.getElementById("adModal");
+  const adStepMain = document.getElementById("adStepMain");
+  const adStepConfirm = document.getElementById("adStepConfirm");
+  const adWatchedBtn = document.getElementById("adWatchedBtn");
+  const adCancelBtn = document.getElementById("adCancelBtn");
+  const adCloseIcon = document.getElementById("adCloseIcon");
+  const adContinueBtn = document.getElementById("adContinueBtn");
+  const adConfirmCloseBtn = document.getElementById("adConfirmCloseBtn");
+
+  const proModal = document.getElementById("proModal");
+  const proCloseBtn = document.getElementById("proCloseBtn");
+  const proPriceText = document.getElementById("proPriceText");
+  const proPayBtn = document.getElementById("proPayBtn");
 
   const onboardingOverlay = document.getElementById("onboardingOverlay");
   const onboardStepLang = document.getElementById("onboardStepLang");
@@ -132,135 +715,394 @@ document.addEventListener("DOMContentLoaded", () => {
   const onboardPasswordInput = document.getElementById("onboardPasswordInput");
   const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
-  // Dil menülerini doldur
-  onboardLangSelect.innerHTML = `
-    <option value="tr">Türkçe</option>
-    <option value="en">English</option>
-  `;
-  onboardLangSelect.value = state.lang;
+  // Fill language selectors
+  fillLangSelect(langSelect);
+  fillLangSelect(onboardLangSelect);
 
+  // Initial render
+  renderConversationList();
+  renderMessages();
+  applyUITextForLang(state.lang);
+  applySmallUIText(state.lang);
+  updateAccountEmailUI();
+  loadTrends();
 
-  // ----------------------------------------
-  // Eğer email + şifre kayıtlı değilse LOGIN zorunlu
-  // ----------------------------------------
-  const hasLang = !!localStorage.getItem(LANG_KEY);
-  const hasEmail = !!localStorage.getItem(EMAIL_KEY);
-  const hasPassword = !!localStorage.getItem(PASSWORD_KEY);
-
-  if (!hasLang || !hasEmail || !hasPassword) {
+  function showOnboardingIfNeeded() {
+    if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
+    const hasLang = !!localStorage.getItem(LANG_KEY);
+    const hasEmail = !!localStorage.getItem(EMAIL_KEY);
+    if (hasLang && hasEmail) {
+      onboardingOverlay.classList.add("hidden");
+      return;
+    }
     onboardingOverlay.classList.remove("hidden");
-    onboardStepLang.classList.toggle("hidden", hasLang);
-    onboardStepEmail.classList.toggle("hidden", !hasLang);
+    if (!hasLang) {
+      onboardStepLang.classList.remove("hidden");
+      onboardStepEmail.classList.add("hidden");
+    } else {
+      onboardStepLang.classList.add("hidden");
+      onboardStepEmail.classList.remove("hidden");
+    }
+  }
+  showOnboardingIfNeeded();
+
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener("click", () => {
+      sidebar.classList.toggle("hidden");
+    });
+  }
+  function openHelp() {
+    if (helpPanel) helpPanel.classList.remove("hidden");
+  }
+  function closeHelp() {
+    if (helpPanel) helpPanel.classList.add("hidden");
+  }
+  if (helpToggle) helpToggle.addEventListener("click", openHelp);
+  if (helpToggle2) helpToggle2.addEventListener("click", openHelp);
+  if (closeHelpBtn) closeHelpBtn.addEventListener("click", closeHelp);
+
+  if (newChatBtn) {
+    newChatBtn.addEventListener("click", () => {
+      const conv = {
+        id: Date.now().toString(),
+        title: "Yeni sohbet",
+        messages: [],
+        createdAt: Date.now(),
+      };
+      state.conversations.unshift(conv);
+      state.currentId = conv.id;
+      saveConversations();
+      renderConversationList();
+      renderMessages();
+    });
   }
 
+  // === AD MODAL OPEN / CLOSE ===
+  function openAdModal() {
+    if (!modalBackdrop || !adModal) return;
+    if (adStepMain) adStepMain.classList.remove("hidden");
+    if (adStepConfirm) adStepConfirm.classList.add("hidden");
+    modalBackdrop.classList.remove("hidden");
+    adModal.classList.remove("hidden");
+  }
+  function closeAdModal() {
+    if (!modalBackdrop || !adModal) return;
+    adModal.classList.add("hidden");
+  }
 
-  // -----------------------------
-  // DİL SEÇİLDİ – EMAIL ADIMINA GEÇ
-  // -----------------------------
-  onboardLangSaveBtn.addEventListener("click", () => {
-    const lang = onboardLangSelect.value || "tr";
-    state.lang = lang;
-    localStorage.setItem(LANG_KEY, lang);
-
-    onboardStepLang.classList.add("hidden");
-    onboardStepEmail.classList.remove("hidden");
-  });
-
-
-  // -----------------------------
-  // E-POSTA + ŞİFRE → LOGIN OR REGISTER
-  // -----------------------------
-  onboardEmailSaveBtn.addEventListener("click", async () => {
-    const email = onboardEmailInput.value.trim();
-    const password = onboardPasswordInput.value.trim();
-
-    if (!email || !password) {
-      alert("E-posta ve şifre zorunludur.");
-      return;
-    }
-
-    // Supabase login denemesi
-    const login = await tryLogin(email, password);
-
-    if (!login.ok) {
-      //
-      // Kullanıcı yok → otomatik kayıt
-      //
-      await fetch("/api/register-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          plan: state.plan,
-          credits: state.credits,
-          lang: state.lang,
-        }),
-      });
-
-      alert("Kayıt oluşturuldu. Giriş yapıldı.");
-    }
-
-    // Local'e kaydet
-    state.email = email;
-    state.password = password;
-    saveEmail();
-    savePassword();
-
-    onboardingOverlay.classList.add("hidden");
-  });
-
-});// === ONBOARDING EMAIL + PASSWORD KAYDETME ===
-if (onboardEmailSaveBtn && onboardEmailInput) {
-  onboardEmailSaveBtn.addEventListener("click", async () => {
+  // === PRO MODAL OPEN / CLOSE ===
+  function openProModal() {
+    if (!modalBackdrop || !proModal) return;
     const t = I18N[state.lang] || I18N.tr;
-
-    const email = onboardEmailInput.value.trim();
-    const password = onboardPasswordInput.value.trim();
-
-    if (!email) {
-      alert(t.emailNotSavedAlert);
-      return;
+    const isTr = state.lang === "tr";
+    if (proPriceText) {
+      proPriceText.textContent = isTr ? t.proPriceTextTr : t.proPriceTextEn;
     }
-    if (!password || password.length < 6) {
-      alert("Şifre en az 6 karakter olmalı!");
-      return;
-    }
+    modalBackdrop.classList.remove("hidden");
+    proModal.classList.remove("hidden");
+  }
+  function closeProModal() {
+    if (!modalBackdrop || !proModal) return;
+    proModal.classList.add("hidden");
+  }
 
-    // Local state'e kaydet
-    state.email = email;
-    saveEmail();
-    updateAccountEmailUI();
+  if (watchAdBtn) {
+    watchAdBtn.addEventListener("click", () => {
+      if (state.plan !== "free") return;
+      // Android real ad
+      if (
+        window.AndroidAds &&
+        typeof window.AndroidAds.showRewardedAd === "function"
+      ) {
+        window.AndroidAds.showRewardedAd();
+      } else {
+        // Web demo
+        openAdModal();
+      }
+    });
+  }
 
-    // 🔥 API'ye gönder — kullanıcıyı Supabase USERS tablosuna kaydet
-    try {
-      await fetch("/api/register-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          plan: state.plan,
-          credits: state.credits,
-          lang: state.lang,
-        }),
-      });
-    } catch (e) {
-      console.error("register-user hatası:", e);
-    }
+  if (adCancelBtn) {
+    adCancelBtn.addEventListener("click", () => {
+      closeAdModal();
+      if (modalBackdrop) modalBackdrop.classList.add("hidden");
+    });
+  }
 
-    onboardingOverlay.classList.add("hidden");
+  if (adWatchedBtn) {
+    adWatchedBtn.addEventListener("click", () => {
+      grantAdCredit();
+      closeAdModal();
+      if (modalBackdrop) modalBackdrop.classList.add("hidden");
+    });
+  }
+
+  if (adCloseIcon) {
+    adCloseIcon.addEventListener("click", () => {
+      if (adStepMain) adStepMain.classList.add("hidden");
+      if (adStepConfirm) adStepConfirm.classList.remove("hidden");
+    });
+  }
+  if (adContinueBtn) {
+    adContinueBtn.addEventListener("click", () => {
+      if (adStepConfirm) adStepConfirm.classList.add("hidden");
+      if (adStepMain) adStepMain.classList.remove("hidden");
+    });
+  }
+  if (adConfirmCloseBtn) {
+    adConfirmCloseBtn.addEventListener("click", () => {
+      closeAdModal();
+      if (modalBackdrop) modalBackdrop.classList.add("hidden");
+    });
+  }
+
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener("click", (e) => {
+      // Close only if user clicks on the backdrop, not the modal itself
+      if (e.target === modalBackdrop) {
+        closeAdModal();
+        closeProModal();
+        modalBackdrop.classList.add("hidden");
+      }
+    });
+  }
+
+  if (proCloseBtn) {
+    proCloseBtn.addEventListener("click", () => {
+      closeProModal();
+      if (modalBackdrop) modalBackdrop.classList.add("hidden");
+    });
+  }
+
+  if (subscribeBtn) {
+    subscribeBtn.addEventListener("click", () => {
+      if (state.plan === "pro") return;
+      openProModal();
+    });
+  }
+
+  if (proPayBtn) {
+    proPayBtn.addEventListener("click", () => {
+      const t = I18N[state.lang] || I18N.tr;
+      const isTr = state.lang === "tr";
+      const priceShort = isTr ? "aylık 299 TL" : "monthly";
+      if (window.AndroidBilling && window.AndroidBilling.startPurchase) {
+        const sku = isTr ? "pro_monthly_tr" : "pro_monthly_intl";
+        window.AndroidBilling.startPurchase(sku);
+      } else {
+        alert(
+          `PRO üyelik ${priceShort} olarak Google Play üzerinden ücretlendirilecektir.\nBu web sürümünde gerçek ödeme aktif değil.`
+        );
+      }
+    });
+  }
+
+  if (onboardLangSaveBtn && onboardLangSelect) {
+    onboardLangSaveBtn.addEventListener("click", () => {
+      const code = onboardLangSelect.value || "tr";
+      state.lang = code;
+      localStorage.setItem(LANG_KEY, code);
+      if (langSelect) langSelect.value = code;
+      applyUITextForLang(code);
+      applySmallUIText(code);
+      loadTrends();
+      if (onboardStepLang) onboardStepLang.classList.add("hidden");
+      if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
+    });
+  }
+
+  if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
+    onboardEmailSaveBtn.addEventListener("click", async () => {
+      const t = I18N[state.lang] || I18N.tr;
+
+      const email = onboardEmailInput.value.trim();
+      const password = onboardPasswordInput.value.trim();
+
+      if (!email || !password) {
+        alert(
+          state.lang === "tr"
+            ? "Lütfen e-posta ve şifre girin."
+            : "Please enter email and password."
+        );
+        return;
+      }
+
+      state.email = email;
+      saveEmail();
+      updateAccountEmailUI();
+
+      try {
+        await fetch("/api/register-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            plan: state.plan,
+            credits: state.credits,
+            lang: state.lang,
+          }),
+        });
+      } catch (e) {
+        console.error("register-user hatası:", e);
+      }
+
+      if (onboardingOverlay) onboardingOverlay.classList.add("hidden");
+    });
+  }
+
+  if (changeEmailBtn) {
+    changeEmailBtn.addEventListener("click", () => {
+      if (!onboardingOverlay) return;
+      if (onboardStepLang) onboardStepLang.classList.add("hidden");
+      if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
+      onboardingOverlay.classList.remove("hidden");
+    });
+  }
+
+  if (langSelect) {
+    langSelect.addEventListener("change", () => {
+      const code = langSelect.value;
+      if (!LANG_NAMES[code]) return;
+      state.lang = code;
+      localStorage.setItem(LANG_KEY, code);
+      applyUITextForLang(code);
+      applySmallUIText(code);
+      loadTrends();
+    });
+  }
+
+  // Panel switching
+  document.querySelectorAll(".side-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.panel;
+      document
+        .querySelectorAll("main .panel")
+        .forEach((sec) => sec.classList.add("hidden"));
+      const active = document.getElementById(`panel-${target}`);
+      if (active) active.classList.remove("hidden");
+      if (sidebar) sidebar.classList.add("hidden");
+    });
   });
-}if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
+
+  // VOICE (Web Speech API)
+  let recognition = null;
+  if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRec();
+    recognition.lang = state.lang === "tr" ? "tr-TR" : "en-US";
+    recognition.interimResults = false;
+  }
+
+  if (voiceBtn) {
+    voiceBtn.addEventListener("click", () => {
+      if (!recognition) {
+        alert(
+          state.lang === "tr"
+            ? "Bu tarayıcıda ses tanıma desteklenmiyor. (Chrome önerilir)"
+            : "Speech recognition is not supported in this browser. (Chrome recommended)"
+        );
+        return;
+      }
+      try {
+        recognition.start();
+      } catch (e) {
+        // ignore "already started" errors
+      }
+      voiceBtn.disabled = true;
+      voiceBtn.textContent = "🎤…";
+
+      recognition.onresult = (ev) => {
+        const text = ev.results?.[0]?.[0]?.transcript || "";
+        if (messageInput && text) {
+          messageInput.value = (messageInput.value + " " + text).trim();
+        }
+      };
+      recognition.onerror = () => {
+        alert(
+          state.lang === "tr"
+            ? "Ses tanıma sırasında bir hata oldu."
+            : "Error during speech recognition."
+        );
+      };
+      recognition.onend = () => {
+        voiceBtn.disabled = false;
+        voiceBtn.textContent = "🎤";
+      };
+    });
+  }
+
+  // CAMERA
+  if (cameraBtn && cameraFileInput) {
+    cameraBtn.addEventListener("click", () => {
+      cameraFileInput.click();
+    });
+    cameraFileInput.addEventListener("change", () => {
+      const file = cameraFileInput.files?.[0];
+      if (!file) return;
+      const info = `[DOSYA: ${file.name}]`;
+      if (messageInput) {
+        messageInput.value = messageInput.value
+          ? messageInput.value + " " + info
+          : info;
+      }
+    });
+  }
+
+  if (refreshTrendsBtn) {
+    refreshTrendsBtn.addEventListener("click", () => loadTrends());
+  }
+
+  if (seriesGenerate && seriesTopic && seriesResult) {
+    seriesGenerate.addEventListener("click", async () => {
+      const topic = seriesTopic.value.trim();
+      if (!topic) return;
+      seriesResult.textContent =
+        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      const text = await callSimpleAPI("series", {
+        topic,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+      });
+      seriesResult.textContent = text;
+    });
+  }
+
+  if (hookGenerate && hookTopic && hookResult) {
+    hookGenerate.addEventListener("click", async () => {
+      const topic = hookTopic.value.trim();
+      if (!topic) return;
+      hookResult.textContent =
+        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      const text = await callSimpleAPI("hook", {
+        topic,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+      });
+      hookResult.textContent = text;
+    });
+  }
+
+  if (copyGenerate && copyTopic && copyResult) {
+    copyGenerate.addEventListener("click", async () => {
+      const topic = copyTopic.value.trim();
+      if (!topic) return;
+      copyResult.textContent =
+        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      const text = await callSimpleAPI("copy", {
+        topic,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+      });
+      copyResult.textContent = text;
+    });
+  }
+
+  if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const t = I18N[state.lang] || I18N.tr;
-
       const topic = (topicInput.value || "").trim();
       const extra = (messageInput.value || "").trim();
       const platform = platformSelect.value || "tiktok";
       const prompt = extra ? `${topic}\n\n${extra}` : topic;
-
       if (!prompt) return;
 
       if (state.plan === "free" && state.credits <= 0) {
