@@ -1177,6 +1177,20 @@ window.__setProPlanFromAndroid = function () {
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
 
+  // 🔹 SOHBET YÜZÜNÜ BİRAZ KÜÇÜLT (chat-area daralsın)
+  if (!document.getElementById("chat-size-style")) {
+    const style = document.createElement("style");
+    style.id = "chat-size-style";
+    style.textContent = `
+      .chat-area {
+        max-width: 780px;      /* daha dar */
+        margin-left: auto;
+        margin-right: auto;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   const sidebar = document.getElementById("sidebar");
   const helpPanel = document.getElementById("helpPanel");
   const menuToggle = document.getElementById("menuToggle");
