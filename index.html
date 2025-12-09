@@ -37,7 +37,7 @@
           <div id="accountEmail" class="sidebar-email">Kayıtlı değil</div>
 
           <button id="changeEmailBtn" class="pill-button small">
-            <span id="changeEmailBtnText">Hesap değiştir / Çıkış yap</span>
+            <span id="changeEmailBtnText">E-postayı değiştir</span>
           </button>
 
           <p class="muted small-label" id="sidebarStatusLabel">Durum</p>
@@ -77,7 +77,7 @@
           <button class="side-btn" data-panel="copy" id="btnPanelCopy">
             🎬 <span id="btnPanelCopyText">Trend Kopya Makinesi</span>
           </button>
-          <!-- YENİ: PRO PANEL BUTONU -->
+          <!-- PRO PANEL BUTONU -->
           <button class="side-btn" data-panel="pro" id="btnPanelPro">
             ⭐ <span id="btnPanelProText">PRO Araçları</span>
           </button>
@@ -124,7 +124,7 @@
 
       <!-- ANA BÖLÜM -->
       <main class="chat-area">
-        <!-- TRENDLER -->
+        <!-- TRENDLER PANELİ -->
         <section id="panel-trends" class="panel hidden">
           <h2 id="trendsTitle" class="panel-title">🔥 Trendler (Bu Hafta)</h2>
           <button id="refreshTrendsBtn" class="pill-button primary small">
@@ -133,7 +133,7 @@
           <ul id="trendsList" class="trends-list"></ul>
         </section>
 
-        <!-- 30 GÜNLÜK SERİ -->
+        <!-- 30 GÜNLÜK SERİ PANELİ -->
         <section id="panel-series" class="panel hidden">
           <h2 id="seriesTitle" class="panel-title">
             📅 30 Günlük Seri Planı
@@ -152,7 +152,7 @@
           <pre id="seriesResult" class="panel-result"></pre>
         </section>
 
-        <!-- HOOK LABORATUVARI -->
+        <!-- HOOK LABORATUVARI PANELİ -->
         <section id="panel-hook" class="panel hidden">
           <h2 id="hookTitle" class="panel-title">⚡ Hook Laboratuvarı</h2>
           <p class="muted" id="hookDesc">
@@ -170,7 +170,7 @@
           <pre id="hookResult" class="panel-result"></pre>
         </section>
 
-        <!-- TREND KOPYA MAKİNESİ -->
+        <!-- TREND KOPYA MAKİNESİ PANELİ -->
         <section id="panel-copy" class="panel hidden">
           <h2 id="copyTitle" class="panel-title">
             🎬 Trend Kopya Makinesi
@@ -198,7 +198,7 @@
             planda çalışır ama kısıtlı içerik döner; PRO’da tam güç açılır.
           </p>
 
-          <!--  Rakip Video Analizi -->
+          <!-- 1) Rakip Video Analizi -->
           <div class="card">
             <h3 id="proTool1Title">1) Rakip Video Analizi</h3>
             <p id="proTool1Desc" class="muted">
@@ -219,7 +219,7 @@
             <pre id="proCompetitorResult" class="panel-result"></pre>
           </div>
 
-          <!--  Kitle İçgörü Analizi -->
+          <!-- 3) Kitle İçgörü Analizi -->
           <div class="card">
             <h3 id="proTool3Title">3) Kitle İçgörü Analizi</h3>
             <p id="proTool3Desc" class="muted">
@@ -237,7 +237,7 @@
             <pre id="proAudienceResult" class="panel-result"></pre>
           </div>
 
-          <!--  Sessiz Video İçerik Üreticisi -->
+          <!-- 5) Sessiz Video İçerik Üreticisi -->
           <div class="card">
             <h3 id="proTool5Title">5) Sessiz Video İçerik Üreticisi</h3>
             <p id="proTool5Desc" class="muted">
@@ -251,7 +251,9 @@
               placeholder="Örn: Sessiz motivasyon videoları ile büyümek istiyorum."
             ></textarea>
             <button id="proSilentBtn" class="pill-button primary">
-              <span id="proSilentBtnText">Sessiz içerik fikirleri üret (PRO)</span>
+              <span id="proSilentBtnText">
+                Sessiz içerik fikirleri üret (PRO)
+              </span>
             </button>
             <pre id="proSilentResult" class="panel-result"></pre>
           </div>
