@@ -125,6 +125,7 @@ body {
   height: calc(100vh - 58px);    /* üst bar hariç tüm alan */
   overflow-y: auto;              /* dikey scroll aktif */
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* === SOL SIDEBAR === */
@@ -326,6 +327,7 @@ body {
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow);
   min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .message-row {
