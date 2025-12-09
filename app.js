@@ -740,7 +740,7 @@ function renderConversationList() {
   if (!listEl) return;
   listEl.innerHTML = "";
 
-  // Mobilde uzun basınca sistem menüsü (kopyala/seç) çıkmasın diye
+  // Mobilde uzun basınca sistem menüsü çıkmasın
   if (!document.getElementById("mobile-press-style")) {
     const style = document.createElement("style");
     style.id = "mobile-press-style";
@@ -805,7 +805,7 @@ function renderConversationList() {
         renderMessages();
       });
 
-      // Masaüstü: sağ tık → sil (ve sistem menüsünü engelle)
+      // Masaüstü: sağ tık → sil
       item.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         if (!("ontouchstart" in window)) {
@@ -822,6 +822,7 @@ function renderConversationList() {
         () => {
           pressTimer = setTimeout(() => {
             handleDelete(conv.id);
+            pressTimer = null;
           }, LONG_PRESS_DURATION);
         },
         { passive: true }
@@ -932,7 +933,7 @@ function applyUITextForLang(code) {
 
   const setText = (id, value) => {
     const el = document.getElementById(id);
-    if (el && value !== undefined) el.textContent = value;
+    if (el && value !==undefined) el.textContent = value;
   };
   const setHTML = (id, value) => {
     const el = document.getElementById(id);
@@ -1177,20 +1178,6 @@ window.__setProPlanFromAndroid = function () {
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
 
-  // 🔹 SOHBET YÜZÜNÜ BİRAZ KÜÇÜLT (chat-area daralsın)
-  if (!document.getElementById("chat-size-style")) {
-    const style = document.createElement("style");
-    style.id = "chat-size-style";
-    style.textContent = `
-      .chat-area {
-        max-width: 780px;      /* daha dar */
-        margin-left: auto;
-        margin-right: auto;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
   const sidebar = document.getElementById("sidebar");
   const helpPanel = document.getElementById("helpPanel");
   const menuToggle = document.getElementById("menuToggle");
@@ -1428,7 +1415,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", (e) => {
-      // Close only if user clicks on the backdrop, not the modal itself
       if (e.target === modalBackdrop) {
         closeAdModal();
         closeProModal();
@@ -1535,9 +1521,8 @@ document.addEventListener("DOMContentLoaded", () => {
               : state.lang === "es"
               ? "Contraseña incorrecta."
               : "Wrong password. Please try again.";
-          // Android WebView tarafında alert'in her zaman düzgün görünmesi için
           setTimeout(() => alert(msg), 100);
-          return; // Onboarding açık kalsın
+          return;
         }
 
         if (!res.ok || !data) {
@@ -1556,10 +1541,9 @@ document.addEventListener("DOMContentLoaded", () => {
             ? "Error durante el login/registro: "
             : "Error during login/register: ";
         alert(msg + (e.message || ""));
-        return; // Onboarding'i kapatma, kullanıcı tekrar denesin
+        return;
       }
 
-      // Backend cevaplarına göre kullanıcıya net mesaj
       if (data.status === "login") {
         const msg =
           state.lang === "tr"
@@ -1664,9 +1648,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         recognition.lang = LANG_SPEECH[state.lang] || "en-US";
         recognition.start();
-      } catch (e) {
-        // ignore "already started" errors
-      }
+      } catch (e) {}
       voiceBtn.disabled = true;
       voiceBtn.textContent = "🎤…";
 
@@ -1759,7 +1741,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // (İSTERSEN SONRA KULLANIRSIN) PRO PANEL BUTTON'LARINA BASINCA API ÇAĞRISI
+  // PRO PANEL BUTTON'LARI
   if (proCompetitorBtn && proCompetitorInput && proCompetitorResult) {
     proCompetitorBtn.addEventListener("click", async () => {
       const value = proCompetitorInput.value.trim();
@@ -1805,7 +1787,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === CHAT SUBMIT (PRO kullanıcılara özel prompt) ===
+  // === CHAT SUBMIT ===
   if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
