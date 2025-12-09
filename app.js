@@ -1177,48 +1177,8 @@ window.__setProPlanFromAndroid = function () {
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
 
-  // 🔹 EKRAN KÜÇÜLTME + MENÜLERİ KAYDIRILABİLİR YAP (PRO ve KAPAT GÖRÜNSÜN)
-  if (!document.getElementById("layout-fix-style")) {
-    const style = document.createElement("style");
-    style.id = "layout-fix-style";
-    style.textContent = `
-      .chat-area {
-        max-width: 760px;
-        margin-left: auto;
-        margin-right: auto;
-        height: calc(100vh - 58px);  /* üst bar hariç tüm yükseklik */
-        overflow: hidden;            /* içteki kutular scroll alıyor */
-      }
-
-      #sidebar,
-      #helpPanel {
-        max-height: calc(100vh - 58px);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      @media (max-height: 750px) {
-        .top-bar {
-          height: 52px;
-        }
-        .top-title {
-          font-size: 22px;
-          letter-spacing: 0.12em;
-        }
-        .sidebar-section {
-          margin-top: 6px;
-          padding-top: 6px;
-        }
-        .side-btn,
-        .conversation-item {
-          padding-top: 8px;
-          padding-bottom: 8px;
-          margin-top: 4px;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
+  // (Eskiden burada layout-fix-style ile ekstra CSS enjekte ediliyordu.
+  // Artık her şey style.css tarafında çözüldü, buradan sildik.)
 
   const sidebar = document.getElementById("sidebar");
   const helpPanel = document.getElementById("helpPanel");
@@ -1876,4 +1836,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-```0
