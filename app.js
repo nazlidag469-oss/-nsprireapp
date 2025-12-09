@@ -740,6 +740,23 @@ function renderConversationList() {
   if (!listEl) return;
   listEl.innerHTML = "";
 
+  // Mobilde uzun basınca sistem menüsü (kopyala/seç) çıkmasın diye
+  if (!document.getElementById("mobile-press-style")) {
+    const style = document.createElement("style");
+    style.id = "mobile-press-style";
+    style.textContent = `
+      .conversation-item {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function handleDelete(convId) {
     const confirmText =
       state.lang === "tr"
@@ -781,31 +798,44 @@ function renderConversationList() {
         "conversation-item" + (conv.id === state.currentId ? " active" : "");
       item.textContent = conv.title || "Sohbet";
 
-      // Tıkla → sohbete geç
+      // Normal tıklama → sohbete geç
       item.addEventListener("click", () => {
         state.currentId = conv.id;
         renderConversationList();
         renderMessages();
       });
 
-      // Masaüstü: sağ tık → sil
+      // Masaüstü: sağ tık → sil (ve sistem menüsünü engelle)
       item.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        handleDelete(conv.id);
+        if (!("ontouchstart" in window)) {
+          handleDelete(conv.id);
+        }
       });
 
       // Mobil: uzun bas → sil
       let pressTimer = null;
-      item.addEventListener("touchstart", () => {
-        pressTimer = setTimeout(() => handleDelete(conv.id), 600);
-      });
+      const LONG_PRESS_DURATION = 600;
+
+      item.addEventListener(
+        "touchstart",
+        () => {
+          pressTimer = setTimeout(() => {
+            handleDelete(conv.id);
+          }, LONG_PRESS_DURATION);
+        },
+        { passive: true }
+      );
+
+      const cancelPress = () => {
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      };
+
       ["touchend", "touchmove", "touchcancel"].forEach((ev) => {
-        item.addEventListener(ev, () => {
-          if (pressTimer) {
-            clearTimeout(pressTimer);
-            pressTimer = null;
-          }
-        });
+        item.addEventListener(ev, cancelPress);
       });
 
       listEl.appendChild(item);
@@ -1491,7 +1521,8 @@ document.addEventListener("DOMContentLoaded", () => {
               : state.lang === "es"
               ? "Contraseña incorrecta."
               : "Wrong password. Please try again.";
-          alert(msg);
+          // Android WebView tarafında alert'in her zaman düzgün görünmesi için
+          setTimeout(() => alert(msg), 100);
           return; // Onboarding açık kalsın
         }
 
