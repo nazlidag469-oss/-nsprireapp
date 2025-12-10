@@ -11,6 +11,10 @@ const AD_DATE_KEY = "inspireapp_daily_ad_date_v1";
 const MAX_FREE_CREDITS = 4;
 const DAILY_AD_LIMIT = 400;
 
+// GİZLİLİK POLİTİKASI LİNKİ
+const POLICY_URL =
+  "https://sites.google.com/view/insprireapp-gizlilik-politikas/ana-sayfa";
+
 // === LANGUAGE TABLES ===
 const LANG_NAMES = {
   tr: "Turkish",
@@ -65,7 +69,6 @@ const I18N = {
     btnPanelCopyText: "Trend Kopya Makinesi",
     btnPanelProText: "PRO Araçları",
     helpToggle2Text: "❓ Yardım",
-    sidebarPrivacyLinkText: "Gizlilik Politikası",
 
     helpTitle: "Bilgi & Destek",
     helpAppTitle: "Uygulama",
@@ -184,7 +187,6 @@ const I18N = {
     btnPanelCopyText: "Trend Copy Machine",
     btnPanelProText: "PRO Tools",
     helpToggle2Text: "❓ Help",
-    sidebarPrivacyLinkText: "Privacy Policy",
 
     helpTitle: "Info & Support",
     helpAppTitle: "App",
@@ -301,7 +303,6 @@ const I18N = {
     btnPanelCopyText: "آلة نسخ الترند",
     btnPanelProText: "أدوات PRO",
     helpToggle2Text: "❓ مساعدة",
-    sidebarPrivacyLinkText: "سياسة الخصوصية",
 
     helpTitle: "معلومات ودعم",
     helpAppTitle: "التطبيق",
@@ -419,7 +420,6 @@ const I18N = {
     btnPanelCopyText: "Trend-Kopierer",
     btnPanelProText: "PRO-Tools",
     helpToggle2Text: "❓ Hilfe",
-    sidebarPrivacyLinkText: "Datenschutzrichtlinie",
 
     helpTitle: "Info & Support",
     helpAppTitle: "App",
@@ -538,7 +538,6 @@ const I18N = {
     btnPanelCopyText: "Copiadora de tendencias",
     btnPanelProText: "Herramientas PRO",
     helpToggle2Text: "❓ Ayuda",
-    sidebarPrivacyLinkText: "Política de privacidad",
 
     helpTitle: "Info y soporte",
     helpAppTitle: "App",
@@ -965,7 +964,6 @@ function applyUITextForLang(code) {
   setText("btnPanelCopyText", t.btnPanelCopyText);
   setText("btnPanelProText", t.btnPanelProText);
   setText("helpToggle2Text", t.helpToggle2Text);
-  setText("sidebarPrivacyLinkText", t.sidebarPrivacyLinkText);
 
   setText("helpTitle", t.helpTitle);
   setText("helpAppTitle", t.helpAppTitle);
@@ -1189,7 +1187,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const helpToggle = document.getElementById("helpToggle");
   const helpToggle2 = document.getElementById("helpToggle2");
   const closeHelpBtn = document.getElementById("closeHelpBtn");
-  const privacyBtn = document.getElementById("privacyBtn");
+
+  // Yardım panelinin sonuna gizlilik politikası kutusu ekle
+  if (helpPanel) {
+    const policyBox = document.createElement("div");
+    policyBox.className = "policy-box";
+    policyBox.innerHTML =
+      'Gizlilik politikası: <a href="' +
+      POLICY_URL +
+      '" target="_blank" rel="noopener noreferrer">buraya tıkla</a>';
+    helpPanel.appendChild(policyBox);
+  }
 
   const chatForm = document.getElementById("chatForm");
   const topicInput = document.getElementById("topicInput");
@@ -1291,28 +1299,36 @@ document.addEventListener("DOMContentLoaded", () => {
   // === Sidebar'ı yana kaydırarak kapatma (mobil swipe) ===
   let swipeStartX = null;
 
-  document.addEventListener("touchstart", (e) => {
-    if (!sidebar || sidebar.classList.contains("hidden")) return;
-    if (!e.touches || !e.touches.length) return;
-    swipeStartX = e.touches[0].clientX;
-  });
+  document.addEventListener(
+    "touchstart",
+    (e) => {
+      if (!sidebar || sidebar.classList.contains("hidden")) return;
+      if (!e.touches || !e.touches.length) return;
+      swipeStartX = e.touches[0].clientX;
+    },
+    { passive: true }
+  );
 
-  document.addEventListener("touchend", (e) => {
-    if (swipeStartX === null) return;
-    if (!sidebar || sidebar.classList.contains("hidden")) {
+  document.addEventListener(
+    "touchend",
+    (e) => {
+      if (swipeStartX === null) return;
+      if (!sidebar || sidebar.classList.contains("hidden")) {
+        swipeStartX = null;
+        return;
+      }
+      if (!e.changedTouches || !e.changedTouches.length) return;
+
+      const endX = e.changedTouches[0].clientX;
+      const diffX = endX - swipeStartX;
+
+      if (Math.abs(diffX) > 60) {
+        sidebar.classList.add("hidden");
+      }
       swipeStartX = null;
-      return;
-    }
-    if (!e.changedTouches || !e.changedTouches.length) return;
-
-    const endX = e.changedTouches[0].clientX;
-    const diffX = endX - swipeStartX;
-
-    if (Math.abs(diffX) > 60) {
-      sidebar.classList.add("hidden");
-    }
-    swipeStartX = null;
-  });
+    },
+    { passive: true }
+  );
 
   function openHelp() {
     if (helpPanel) helpPanel.classList.remove("hidden");
@@ -1323,14 +1339,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (helpToggle) helpToggle.addEventListener("click", openHelp);
   if (helpToggle2) helpToggle2.addEventListener("click", openHelp);
   if (closeHelpBtn) closeHelpBtn.addEventListener("click", closeHelp);
-
-  if (privacyBtn) {
-    privacyBtn.addEventListener("click", () => {
-      const url =
-        "https://sites.google.com/view/insprireapp-gizlilik-politikas/ana-sayfa";
-      window.open(url, "_blank");
-    });
-  }
 
   if (newChatBtn) {
     newChatBtn.addEventListener("click", () => {
@@ -1537,7 +1545,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ? "Contraseña incorrecta."
               : "Wrong password. Please try again.";
           setTimeout(() => alert(msg), 100);
-          return;
+          return; // Onboarding açık kalsın
         }
 
         if (!res.ok || !data) {
@@ -1556,9 +1564,10 @@ document.addEventListener("DOMContentLoaded", () => {
             ? "Error durante el login/registro: "
             : "Error during login/register: ";
         alert(msg + (e.message || ""));
-        return;
+        return; // Onboarding'i kapatma, kullanıcı tekrar denesin
       }
 
+      // Backend cevaplarına göre kullanıcıya net mesaj
       if (data.status === "login") {
         const msg =
           state.lang === "tr"
@@ -1622,17 +1631,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Panel switching
+  // === PANEL GEÇİŞLERİ + GERİ TUŞU DAVRANIŞI ===
+
+  function showPanel(target, pushState = false) {
+    document
+      .querySelectorAll("main .panel")
+      .forEach((sec) => sec.classList.add("hidden"));
+    const active = document.getElementById(`panel-${target}`);
+    if (active) active.classList.remove("hidden");
+    if (sidebar) sidebar.classList.add("hidden");
+
+    if (pushState && window.history && window.history.pushState) {
+      window.history.pushState({ panel: target }, "", "#" + target);
+    }
+  }
+
+  // Başlangıçta sohbet panelini state'e yaz
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({ panel: "chat" }, "", "#chat");
+  }
+
+  // Panel butonları
   document.querySelectorAll(".side-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const target = btn.dataset.panel;
-      document
-        .querySelectorAll("main .panel")
-        .forEach((sec) => sec.classList.add("hidden"));
-      const active = document.getElementById(`panel-${target}`);
-      if (active) active.classList.remove("hidden");
-      if (sidebar) sidebar.classList.add("hidden");
+      const target = btn.dataset.panel || "chat";
+      const push = target !== "chat"; // sohbet dışına geçerken history'e ekle
+      showPanel(target, push);
     });
+  });
+
+  // Tarayıcı / Android geri tuşu
+  window.addEventListener("popstate", (event) => {
+    const panel = (event.state && event.state.panel) || "chat";
+    showPanel(panel, false);
   });
 
   // VOICE (Web Speech API)
