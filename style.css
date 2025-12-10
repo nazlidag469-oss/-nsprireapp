@@ -110,7 +110,7 @@ body {
   transform: scale(0.92);
 }
 
-/* === LAYOUT === */
+/* === ANA LAYOUT === */
 
 .chat-area {
   margin-top: 58px;
@@ -119,11 +119,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 760px;              /* biraz daralttım */
+  max-width: 760px;
   margin-left: auto;
   margin-right: auto;
-  height: calc(100vh - 58px);    /* üst bar hariç tüm alan */
-  overflow-y: auto;              /* dikey scroll aktif */
+  height: calc(100vh - 58px);
+  overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
@@ -141,6 +141,7 @@ body {
 
   background: var(--glass-bg);
   backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   border-right: 1px solid var(--glass-border);
 
   box-shadow: var(--shadow);
@@ -150,8 +151,8 @@ body {
   transition: transform 0.25s ease-out;
   z-index: 40;
 
-  max-height: calc(100vh - 58px); /* tam yükseklik */
-  overflow-y: auto;               /* TÜM menü kaydırılabilir */
+  max-height: calc(100vh - 58px);
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -216,7 +217,7 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* === HELP PANEL (SAĞ) === */
+/* === SAĞ YARDIM PANELİ === */
 
 .help-panel {
   position: fixed;
@@ -237,8 +238,11 @@ body {
   transition: transform 0.25s ease-out;
   z-index: 40;
 
-  max-height: calc(100vh - 58px); /* yüksekliği sınırladım */
-  overflow-y: auto;               /* içi kaydırılabilir – KAPAT butonu her zaman ulaşılır */
+  /* ÖNEMLİ: içerik kaydırılabilir, kapat butonu için flex */
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 58px);
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -263,6 +267,32 @@ body {
   background: #fee2e2;
   color: #b91c1c;
   cursor: pointer;
+}
+
+/* Yardım panelinde Kapat butonu her zaman altta görünsün */
+#closeHelpBtn {
+  position: sticky;
+  bottom: 0;
+  margin-top: 16px;
+  align-self: stretch;
+  background: #b91c1c;
+  color: #fff;
+  box-shadow: 0 -4px 10px rgba(185, 28, 28, 0.25);
+}
+
+/* Gizlilik politikası kutusu */
+.policy-box {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #fee2e2;
+  font-size: 12px;
+  color: #7f1d1d;
+}
+
+.policy-box a {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
 /* === GENEL PANEL TASARIMI === */
@@ -526,15 +556,6 @@ textarea {
   opacity: 0.8;
 }
 
-/* Modal altındaki butonlar */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-}
-
 /* === ONBOARDING OVERLAY === */
 
 .onboarding-overlay {
@@ -616,42 +637,6 @@ textarea {
   margin-top: 6px;
 }
 
-/* === ANIMATIONS === */
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* === RESPONSIVE === */
-
-@media (max-width: 768px) {
-  .bubble {
-    max-width: 85%;
-    font-size: 14px;
-  }
-
-  .chat-area {
-    padding: 10px 8px 40px;
-    max-width: 100%;
-  }
-
-  .sidebar,
-  .help-panel {
-    width: 230px;
-  }
-
-  .controls {
-    flex-direction: column;
-  }
-}
-
 /* === PRO PANELİ İÇİN KARTLAR ve SONUÇ ALANI === */
 
 .card {
@@ -689,38 +674,38 @@ textarea {
   overflow-y: auto;
 }
 
-/* === GİZLİLİK POLİTİKASI BLOĞU === */
-/* Bunu mesela help panelinin en altına ya da chat panelinin altına
-   şu HTML ile kullanabilirsin:
-   <div class="policy-box">
-     Gizlilik politikamız:
-     <a href="https://sites.google.com/view/insprireapp-gizlilik-politikas/ana-sayfa"
-        target="_blank" rel="noopener noreferrer">
-        Gizlilik Politikası
-     </a>
-   </div>
-*/
+/* === ANIMATIONS === */
 
-.policy-box {
-  margin-top: 10px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px dashed var(--glass-border);
-  font-size: 11px;
-  color: var(--text-muted);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.policy-box strong {
-  color: var(--text-main);
-}
+/* === RESPONSIVE === */
 
-.policy-box a {
-  color: var(--blue);
-  font-weight: 600;
-  text-decoration: none;
-}
+@media (max-width: 768px) {
+  .bubble {
+    max-width: 85%;
+    font-size: 14px;
+  }
 
-.policy-box a:hover {
-  text-decoration: underline;
+  .chat-area {
+    padding: 10px 8px 40px;
+    max-width: 100%;
+  }
+
+  .sidebar,
+  .help-panel {
+    width: 230px;
+  }
+
+  .controls {
+    flex-direction: column;
+  }
 }
