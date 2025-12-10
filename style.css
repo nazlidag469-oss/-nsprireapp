@@ -526,6 +526,15 @@ textarea {
   opacity: 0.8;
 }
 
+/* Modal altındaki butonlar */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
 /* === ONBOARDING OVERLAY === */
 
 .onboarding-overlay {
@@ -678,4 +687,40 @@ textarea {
   white-space: pre-wrap;
   max-height: 260px;
   overflow-y: auto;
+}
+
+/* === GİZLİLİK POLİTİKASI BLOĞU === */
+/* Bunu mesela help panelinin en altına ya da chat panelinin altına
+   şu HTML ile kullanabilirsin:
+   <div class="policy-box">
+     Gizlilik politikamız:
+     <a href="https://sites.google.com/view/insprireapp-gizlilik-politikas/ana-sayfa"
+        target="_blank" rel="noopener noreferrer">
+        Gizlilik Politikası
+     </a>
+   </div>
+*/
+
+.policy-box {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px dashed var(--glass-border);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.policy-box strong {
+  color: var(--text-main);
+}
+
+.policy-box a {
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.policy-box a:hover {
+  text-decoration: underline;
 }
