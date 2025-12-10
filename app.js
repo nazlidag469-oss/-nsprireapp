@@ -65,6 +65,7 @@ const I18N = {
     btnPanelCopyText: "Trend Kopya Makinesi",
     btnPanelProText: "PRO Araçları",
     helpToggle2Text: "❓ Yardım",
+    sidebarPrivacyLinkText: "Gizlilik Politikası",
 
     helpTitle: "Bilgi & Destek",
     helpAppTitle: "Uygulama",
@@ -183,6 +184,7 @@ const I18N = {
     btnPanelCopyText: "Trend Copy Machine",
     btnPanelProText: "PRO Tools",
     helpToggle2Text: "❓ Help",
+    sidebarPrivacyLinkText: "Privacy Policy",
 
     helpTitle: "Info & Support",
     helpAppTitle: "App",
@@ -299,6 +301,7 @@ const I18N = {
     btnPanelCopyText: "آلة نسخ الترند",
     btnPanelProText: "أدوات PRO",
     helpToggle2Text: "❓ مساعدة",
+    sidebarPrivacyLinkText: "سياسة الخصوصية",
 
     helpTitle: "معلومات ودعم",
     helpAppTitle: "التطبيق",
@@ -416,6 +419,7 @@ const I18N = {
     btnPanelCopyText: "Trend-Kopierer",
     btnPanelProText: "PRO-Tools",
     helpToggle2Text: "❓ Hilfe",
+    sidebarPrivacyLinkText: "Datenschutzrichtlinie",
 
     helpTitle: "Info & Support",
     helpAppTitle: "App",
@@ -534,6 +538,7 @@ const I18N = {
     btnPanelCopyText: "Copiadora de tendencias",
     btnPanelProText: "Herramientas PRO",
     helpToggle2Text: "❓ Ayuda",
+    sidebarPrivacyLinkText: "Política de privacidad",
 
     helpTitle: "Info y soporte",
     helpAppTitle: "App",
@@ -960,6 +965,7 @@ function applyUITextForLang(code) {
   setText("btnPanelCopyText", t.btnPanelCopyText);
   setText("btnPanelProText", t.btnPanelProText);
   setText("helpToggle2Text", t.helpToggle2Text);
+  setText("sidebarPrivacyLinkText", t.sidebarPrivacyLinkText);
 
   setText("helpTitle", t.helpTitle);
   setText("helpAppTitle", t.helpAppTitle);
@@ -1177,15 +1183,13 @@ window.__setProPlanFromAndroid = function () {
 document.addEventListener("DOMContentLoaded", () => {
   loadState();
 
-  // (Eskiden burada layout-fix-style ile ekstra CSS enjekte ediliyordu.
-  // Artık her şey style.css tarafında çözüldü, buradan sildik.)
-
   const sidebar = document.getElementById("sidebar");
   const helpPanel = document.getElementById("helpPanel");
   const menuToggle = document.getElementById("menuToggle");
   const helpToggle = document.getElementById("helpToggle");
   const helpToggle2 = document.getElementById("helpToggle2");
   const closeHelpBtn = document.getElementById("closeHelpBtn");
+  const privacyBtn = document.getElementById("privacyBtn");
 
   const chatForm = document.getElementById("chatForm");
   const topicInput = document.getElementById("topicInput");
@@ -1319,6 +1323,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (helpToggle) helpToggle.addEventListener("click", openHelp);
   if (helpToggle2) helpToggle2.addEventListener("click", openHelp);
   if (closeHelpBtn) closeHelpBtn.addEventListener("click", closeHelp);
+
+  if (privacyBtn) {
+    privacyBtn.addEventListener("click", () => {
+      const url =
+        "https://sites.google.com/view/insprireapp-gizlilik-politikas/ana-sayfa";
+      window.open(url, "_blank");
+    });
+  }
 
   if (newChatBtn) {
     newChatBtn.addEventListener("click", () => {
@@ -1524,9 +1536,8 @@ document.addEventListener("DOMContentLoaded", () => {
               : state.lang === "es"
               ? "Contraseña incorrecta."
               : "Wrong password. Please try again.";
-          // Android WebView tarafında alert'in her zaman düzgün görünmesi için
           setTimeout(() => alert(msg), 100);
-          return; // Onboarding açık kalsın
+          return;
         }
 
         if (!res.ok || !data) {
@@ -1545,10 +1556,9 @@ document.addEventListener("DOMContentLoaded", () => {
             ? "Error durante el login/registro: "
             : "Error during login/register: ";
         alert(msg + (e.message || ""));
-        return; // Onboarding'i kapatma, kullanıcı tekrar denesin
+        return;
       }
 
-      // Backend cevaplarına göre kullanıcıya net mesaj
       if (data.status === "login") {
         const msg =
           state.lang === "tr"
