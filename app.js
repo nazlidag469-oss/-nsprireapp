@@ -674,6 +674,9 @@ const state = {
 let currentPanel = "chat";
 let previousPanel = null;
 
+// === YAZILIM İÇİ EVRENSEL GERİ BUTONU ===
+let softBackBtn = null;
+
 // === STATE LOAD / SAVE ===
 function loadState() {
   try {
@@ -1077,26 +1080,16 @@ async function callIdeasAPI(prompt, platform, langCode) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt, platform, lang: langName }),
     });
-
     const text = await res.text();
-
-    // Önce JSON dene
     try {
       const data = JSON.parse(text);
       if (data?.message) return data.message;
-      if (data?.error) return data.error;
     } catch {
-      // JSON değilse metnin kendisini göstereceğiz
+      if (text) return text;
     }
-
-    // Sunucudan gelen ham metni direkt göster
-    if (text) return text.trim();
-
-    // Hiçbir şey yoksa son çare
+    // Sunucu / API vurgusu yerine sade hata
     return "Şu an yanıt üretilemedi, lütfen tekrar dene.";
-  } catch (e) {
-    // Gerçek hata mesajını göster (varsa)
-    if (e && e.message) return e.message;
+  } catch {
     return "Şu an yanıt üretilemedi, lütfen tekrar dene.";
   }
 }
@@ -1108,24 +1101,18 @@ async function callSimpleAPI(route, payload) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
     const text = await res.text();
-
-    // JSON ise message/error alanını kullan
+    // Önce JSON olarak parse etmeyi dene
     try {
       const data = JSON.parse(text);
       if (data?.message) return data.message;
-      if (data?.error) return data.error;
+      if (data?.result) return data.result;
     } catch {
-      // JSON değilse direkt devam
+      // JSON değilse, gelen düz metni aynen göster
+      if (text) return text;
     }
-
-    // JSON parse edilemese bile sunucunun gönderdiği ham text'i göster
-    if (text) return text.trim();
-
     return "Şu an içerik üretilemedi, lütfen tekrar dene.";
-  } catch (e) {
-    if (e && e.message) return e.message;
+  } catch {
     return "Şu an içerik üretilemedi, lütfen tekrar dene.";
   }
 }
@@ -1302,6 +1289,45 @@ document.addEventListener("DOMContentLoaded", () => {
   applySmallUIText(state.lang);
   updateAccountEmailUI();
   loadTrends();
+
+  // === WEB İÇİ EVRENSEL GERİ BUTONU OLUŞTUR ===
+  if (!softBackBtn) {
+    softBackBtn = document.createElement("button");
+    softBackBtn.id = "softBackBtn";
+    softBackBtn.textContent = "◀";
+    softBackBtn.style.position = "fixed";
+    softBackBtn.style.left = "16px";
+    softBackBtn.style.bottom = "16px";
+    softBackBtn.style.zIndex = "9999";
+    softBackBtn.style.width = "44px";
+    softBackBtn.style.height = "44px";
+    softBackBtn.style.borderRadius = "999px";
+    softBackBtn.style.border = "none";
+    softBackBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+    softBackBtn.style.background =
+      "linear-gradient(135deg, #ffffff, #f3e9ff)";
+    softBackBtn.style.fontSize = "20px";
+    softBackBtn.style.display = "flex";
+    softBackBtn.style.alignItems = "center";
+    softBackBtn.style.justifyContent = "center";
+    softBackBtn.style.cursor = "pointer";
+    softBackBtn.style.userSelect = "none";
+    document.body.appendChild(softBackBtn);
+
+    softBackBtn.addEventListener("click", () => {
+      // Önce JS içindeki geri mantığını çalıştır
+      if (
+        typeof window.__inspireHandleBack === "function" &&
+        window.__inspireHandleBack()
+      ) {
+        return;
+      }
+      // Eğer hiçbir şey kapanmadıysa panel geçmişine göre geri dön
+      if (currentPanel && currentPanel !== "chat") {
+        showPanel(previousPanel || "chat");
+      }
+    });
+  }
 
   function showOnboardingIfNeeded() {
     if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail)
@@ -1584,9 +1610,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!res.ok || !data) {
           throw new Error(
-            data?.error ||
-              data?.message ||
-              "Bilinmeyen bir hata oluştu"
+            data?.error || data?.message || "Sunucu hatası"
           );
         }
       } catch (e) {
