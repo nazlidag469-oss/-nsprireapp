@@ -674,6 +674,42 @@ textarea {
   overflow-y: auto;
 }
 
+/* === PRO PANEL LAYOUT (liste + detay) === */
+
+.pro-layout {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 4px;
+}
+
+.pro-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 190px;
+  flex-shrink: 0;
+}
+
+.pro-content {
+  flex: 1;
+  min-height: 220px;
+}
+
+/* Soldaki PRO menü butonları (liste) */
+.pro-menu-btn {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+/* PRO panelinde geri dön satırı */
+.pro-back-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
 /* === ANIMATIONS === */
 
 @keyframes fadeIn {
@@ -707,5 +743,15 @@ textarea {
 
   .controls {
     flex-direction: column;
+  }
+
+  /* Mobilde PRO paneli: liste üstte, içerik altta */
+  .pro-layout {
+    flex-direction: column;
+  }
+
+  .pro-menu {
+    width: 100%;
+    min-width: 0;
   }
 }
