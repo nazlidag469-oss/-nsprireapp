@@ -10,19 +10,32 @@ const supabase =
     ? createClient(supabaseUrl, serviceKey)
     : null;
 
-async function ensurePro(email) {
-  if (!supabase) throw new Error("SUPABASE_CONFIG_MISSING");
-  const { data, error } = await supabase
-    .from("users")
-    .select("plan")
-    .eq("email", email)
-    .single();
+// Dil kodunu normalize et (tr, en, de, es, ar)
+function detectLangCode(lang) {
+  const l = (lang || "").toLowerCase();
+  if (l.startsWith("en")) return "en";
+  if (l.startsWith("es")) return "es";
+  if (l.startsWith("de")) return "de";
+  if (l.startsWith("ar")) return "ar";
+  return "tr";
+}
 
-  if (error && error.code !== "PGRST116") throw error;
-  if (!data || data.plan !== "pro") {
-    const e = new Error("ONLY_PRO");
-    e.code = "ONLY_PRO";
-    throw e;
+// PRO olmayan kullanıcıya gösterilecek mesaj (çok dilli)
+function getProRequiredMessage(lang) {
+  const code = detectLangCode(lang);
+
+  switch (code) {
+    case "en":
+      return "This competitor analysis tool is only available for PRO users. Upgrade to PRO to unlock detailed breakdowns instantly.";
+    case "es":
+      return "Esta herramienta de análisis de competidores solo está disponible para usuarios PRO. Actualiza a PRO para desbloquear análisis detallados al instante.";
+    case "de":
+      return "Dieses Konkurrenzanalyse-Tool ist nur für PRO-Nutzer verfügbar. Wechsle zu PRO, um sofort detaillierte Analysen freizuschalten.";
+    case "ar":
+      return "أداة تحليل المنافسين هذه متاحة فقط لمستخدمي PRO. قم بالترقية إلى PRO للحصول على تحليلات مفصلة فورًا.";
+    case "tr":
+    default:
+      return "Bu rakip video analiz aracı sadece PRO kullanıcılar için açıktır. Detaylı analizleri anında görmek için PRO’ya geç.";
   }
 }
 
@@ -43,7 +56,7 @@ async function callAi(fullPrompt) {
         {
           role: "system",
           content:
-            "You are InspireApp PRO, an expert at analyzing viral short videos. Answer in clear, structured Turkish.",
+            "You are InspireApp PRO, an expert at analyzing viral short videos. Answer in clear, structured language.",
         },
         { role: "user", content: fullPrompt },
       ],
@@ -61,18 +74,18 @@ Kullanıcı InspireApp PRO üyesi.
 
 Görev: "Rakip Video Analizi" özelliği.
 
-Girdi: 
+Rakip video / fikir girdisi: 
 ${input}
 
 Lisan: ${lang}
 
-Aşağıdaki formatta ve Türkçe cevap ver:
+Aşağıdaki formatta ve mümkün olduğunca bu dilde cevap ver:
 
 1) Bu videonun / fikrin NEDEN tuttuğunu açıkla (algoritma, watch time, retention, psikoloji).
 2) Aynı konuyu daha güçlü hale getiren 3 alternatif HOOK (ilk 3 saniye).
 3) Kullanıcının kendi nişine göre yeniden yazılmış tam bir video fikri (hook + kısa script).
 4) %100 kopya olmayan, türev bir trend önerisi (farklı açıdan ama benzer hissiyatlı).
-5) Kısa "CTA" önerileri (takip et, kaydet, yorum yaztır).
+5) Kısa "CTA" önerileri (takip et, kaydet, yorum yazdır).
 `.trim();
 }
 
@@ -81,30 +94,59 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "METHOD_NOT_ALLOWED" });
   }
 
-  const { email, input, lang = "Turkish" } = req.body || {};
+  if (!supabase) {
+    return res.status(500).json({ message: "SUPABASE_CONFIG_MISSING" });
+  }
+
+  const { email, input, lang = "tr" } = req.body || {};
 
   if (!email || !input) {
     return res.status(400).json({ message: "EMAIL_AND_INPUT_REQUIRED" });
   }
 
+  // 1) Kullanıcıyı Supabase'den çek
+  let user;
   try {
-    await ensurePro(email);
-  } catch (e) {
-    if (e.code === "ONLY_PRO") {
-      return res
-        .status(403)
-        .json({ message: "ONLY_PRO", detail: "Bu özellik sadece PRO üyeler için." });
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, email, plan, lang")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) {
+      console.error("pro-competitor Supabase hatası:", error);
+      return res.status(500).json({ message: "DB_ERROR" });
     }
-    console.error("pro-rival Supabase hatası:", e);
+
+    user = data || null;
+  } catch (e) {
+    console.error("pro-competitor Supabase genel hata:", e);
     return res.status(500).json({ message: "DB_ERROR" });
   }
 
+  const userLang = user?.lang || lang || "tr";
+
+  // 2) PRO değilse → 200 OK + PRO mesajı
+  if (!user || user.plan !== "pro") {
+    const proMsg = getProRequiredMessage(userLang);
+
+    return res.status(200).json({
+      message: proMsg,
+      proRequired: true,
+    });
+  }
+
+  // 3) PRO ise → AI ile gerçek analiz üret
   try {
-    const prompt = buildPromptRival(input, lang);
+    const prompt = buildPromptRival(input, userLang);
     const text = await callAi(prompt);
-    return res.status(200).json({ message: text });
+
+    return res.status(200).json({
+      message: text,
+      proRequired: false,
+    });
   } catch (e) {
-    console.error("pro-rival AI hatası:", e);
+    console.error("pro-competitor AI hatası:", e);
     return res.status(500).json({ message: "AI_ERROR" });
   }
 }
