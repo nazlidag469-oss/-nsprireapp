@@ -13,6 +13,57 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="style.css" />
+
+    <!-- PRO PANELİ İÇİN EK STİLLER -->
+    <style>
+      .pro-tools-layout {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .pro-tools-menu {
+        width: 36%;
+        max-width: 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .pro-tool-link {
+        width: 100%;
+        text-align: left;
+        border: none;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-size: 14px;
+        background: rgba(124, 58, 237, 0.12);
+        color: #ffffff;
+      }
+      .pro-tool-link.active {
+        background: #7c3aed;
+        color: #ffffff;
+        font-weight: 600;
+      }
+      .pro-tools-content {
+        flex: 1;
+        min-width: 0;
+      }
+      .pro-tool-page {
+        display: none;
+      }
+      .pro-tool-page.active {
+        display: block;
+      }
+
+      @media (max-width: 768px) {
+        .pro-tools-layout {
+          flex-direction: column;
+        }
+        .pro-tools-menu {
+          width: 100%;
+          max-width: 100%;
+        }
+      }
+    </style>
   </head>
 
   <body>
@@ -190,7 +241,7 @@
           <pre id="copyResult" class="panel-result"></pre>
         </section>
 
-        <!-- ⭐⭐ PRO PANELİ (1, 3, 5) ⭐⭐ -->
+        <!-- ⭐⭐ PRO PANELİ (1, 2, 3) ⭐⭐ -->
         <section id="panel-pro" class="panel hidden">
           <h2 id="proPanelTitle" class="panel-title">⭐ PRO Araçları</h2>
           <p id="proPanelDesc" class="muted">
@@ -198,64 +249,95 @@
             planda çalışır ama kısıtlı içerik döner; PRO’da tam güç açılır.
           </p>
 
-          <!-- 1) Rakip Video Analizi -->
-          <div class="card">
-            <h3 id="proTool1Title">1) Rakip Video Analizi</h3>
-            <p id="proTool1Desc" class="muted">
-              TikTok / Reels / Shorts linki veya açıklamasını gir. InspireApp;
-              neden tuttuğunu, daha güçlü hook’ları ve sana özel bir versiyon
-              üretir.
-            </p>
-            <textarea
-              id="proCompetitorInput"
-              rows="3"
-              placeholder="Örn: TikTok linki veya rakip videonun açıklaması..."
-            ></textarea>
-            <button id="proCompetitorBtn" class="pill-button primary">
-              <span id="proCompetitorBtnText">
-                Rakip videoyu analiz et (PRO)
-              </span>
-            </button>
-            <pre id="proCompetitorResult" class="panel-result"></pre>
-          </div>
+          <!-- PRO ALT ARAÇ LAYOUT: SOL MENÜ + SAĞ SAYFA -->
+          <div class="pro-tools-layout">
+            <!-- SOL PRO MENÜSÜ -->
+            <div class="pro-tools-menu">
+              <button
+                class="pro-tool-link"
+                data-pro-tool="tool1"
+                id="proMenuTool1"
+              >
+                1) Rakip Video Analizi
+              </button>
+              <button
+                class="pro-tool-link"
+                data-pro-tool="tool3"
+                id="proMenuTool3"
+              >
+                2) Kitle İçgörü Analizi
+              </button>
+              <button
+                class="pro-tool-link"
+                data-pro-tool="tool5"
+                id="proMenuTool5"
+              >
+                3) Sessiz Video İçerik Üreticisi
+              </button>
+            </div>
 
-          <!-- 3) Kitle İçgörü Analizi -->
-          <div class="card">
-            <h3 id="proTool3Title">3) Kitle İçgörü Analizi</h3>
-            <p id="proTool3Desc" class="muted">
-              Hedef kitleni tek cümle ile anlat. InspireApp senin için
-              psikoloji, format, hook ve CTA kalıplarını çıkarır.
-            </p>
-            <textarea
-              id="proAudienceInput"
-              rows="3"
-              placeholder="Örn: 17–24 yaş, fitness nişinde hedef kitlem var."
-            ></textarea>
-            <button id="proAudienceBtn" class="pill-button primary">
-              <span id="proAudienceBtnText">Kitle içgörüsü üret (PRO)</span>
-            </button>
-            <pre id="proAudienceResult" class="panel-result"></pre>
-          </div>
+            <!-- SAĞ TARAFTA SEÇİLEN ARAÇ SAYFASI -->
+            <div class="pro-tools-content">
+              <!-- 1) Rakip Video Analizi -->
+              <div class="card pro-tool-page" data-pro-page="tool1">
+                <h3 id="proTool1Title">1) Rakip Video Analizi</h3>
+                <p id="proTool1Desc" class="muted">
+                  TikTok / Reels / Shorts linki veya açıklamasını gir.
+                  InspireApp; neden tuttuğunu, daha güçlü hook’ları ve sana
+                  özel bir versiyon üretir.
+                </p>
+                <textarea
+                  id="proCompetitorInput"
+                  rows="3"
+                  placeholder="Örn: TikTok linki veya rakip videonun açıklaması..."
+                ></textarea>
+                <button id="proCompetitorBtn" class="pill-button primary">
+                  <span id="proCompetitorBtnText">
+                    Rakip videoyu analiz et (PRO)
+                  </span>
+                </button>
+                <pre id="proCompetitorResult" class="panel-result"></pre>
+              </div>
 
-          <!-- 5) Sessiz Video İçerik Üreticisi -->
-          <div class="card">
-            <h3 id="proTool5Title">5) Sessiz Video İçerik Üreticisi</h3>
-            <p id="proTool5Desc" class="muted">
-              Yüzünü göstermeden, ses kullanmadan içerik üretmek istiyorsan
-              konunu yaz. Sessiz video akışları, sahne önerileri ve metinler
-              üretelim.
-            </p>
-            <textarea
-              id="proSilentInput"
-              rows="3"
-              placeholder="Örn: Sessiz motivasyon videoları ile büyümek istiyorum."
-            ></textarea>
-            <button id="proSilentBtn" class="pill-button primary">
-              <span id="proSilentBtnText">
-                Sessiz içerik fikirleri üret (PRO)
-              </span>
-            </button>
-            <pre id="proSilentResult" class="panel-result"></pre>
+              <!-- 3) Kitle İçgörü Analizi -->
+              <div class="card pro-tool-page" data-pro-page="tool3">
+                <h3 id="proTool3Title">3) Kitle İçgörü Analizi</h3>
+                <p id="proTool3Desc" class="muted">
+                  Hedef kitleni tek cümle ile anlat. InspireApp senin için
+                  psikoloji, format, hook ve CTA kalıplarını çıkarır.
+                </p>
+                <textarea
+                  id="proAudienceInput"
+                  rows="3"
+                  placeholder="Örn: 17–24 yaş, fitness nişinde hedef kitlem var."
+                ></textarea>
+                <button id="proAudienceBtn" class="pill-button primary">
+                  <span id="proAudienceBtnText">Kitle içgörüsü üret (PRO)</span>
+                </button>
+                <pre id="proAudienceResult" class="panel-result"></pre>
+              </div>
+
+              <!-- 5) Sessiz Video İçerik Üreticisi -->
+              <div class="card pro-tool-page" data-pro-page="tool5">
+                <h3 id="proTool5Title">5) Sessiz Video İçerik Üreticisi</h3>
+                <p id="proTool5Desc" class="muted">
+                  Yüzünü göstermeden, ses kullanmadan içerik üretmek istiyorsan
+                  konunu yaz. Sessiz video akışları, sahne önerileri ve metinler
+                  üretelim.
+                </p>
+                <textarea
+                  id="proSilentInput"
+                  rows="3"
+                  placeholder="Örn: Sessiz motivasyon videoları ile büyümek istiyorum."
+                ></textarea>
+                <button id="proSilentBtn" class="pill-button primary">
+                  <span id="proSilentBtnText">
+                    Sessiz içerik fikirleri üret (PRO)
+                  </span>
+                </button>
+                <pre id="proSilentResult" class="panel-result"></pre>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1457,6 +1539,11 @@
         setText("proAudienceBtnText", t.proAudienceBtnText);
         setText("proSilentBtnText", t.proSilentBtnText);
 
+        // PRO sol menü butonları da aynı başlıkları kullansın
+        setText("proMenuTool1", t.proTool1Title);
+        setText("proMenuTool3", t.proTool3Title);
+        setText("proMenuTool5", t.proTool5Title);
+
         // Plan & credits (dynamic) refresh
         updatePlanAndCreditsUI();
       }
@@ -1682,6 +1769,44 @@
         const onboardEmailSaveBtn =
           document.getElementById("onboardEmailSaveBtn");
 
+        // PRO mini sayfa menü/sayfa nodeları
+        const proToolLinks = document.querySelectorAll(".pro-tool-link");
+        const proToolPages = document.querySelectorAll(".pro-tool-page");
+
+        function openProTool(name) {
+          proToolPages.forEach((page) => {
+            page.classList.toggle(
+              "active",
+              page.dataset.proPage === name
+            );
+          });
+          proToolLinks.forEach((btn) => {
+            btn.classList.toggle(
+              "active",
+              btn.dataset.proTool === name
+            );
+          });
+        }
+
+        proToolLinks.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const name = btn.dataset.proTool;
+            if (!name) return;
+            openProTool(name);
+          });
+        });
+
+        // Global fonksiyonlar: geri tuşu bunları kullanacak
+        window.__inspirePro_isToolOpen = function () {
+          return Array.from(proToolPages).some((p) =>
+            p.classList.contains("active")
+          );
+        };
+        window.__inspirePro_closeTool = function () {
+          proToolPages.forEach((p) => p.classList.remove("active"));
+          proToolLinks.forEach((b) => b.classList.remove("active"));
+        };
+
         // Fill language selectors
         fillLangSelect(langSelect);
         fillLangSelect(onboardLangSelect);
@@ -1720,31 +1845,51 @@
           });
         }
 
-        // === Sidebar'ı yana kaydırarak kapatma (mobil swipe) ===
+        // === Sidebar / Yardım panelini yana kaydırarak kapatma (mobil swipe) ===
         let swipeStartX = null;
 
-        document.addEventListener("touchstart", (e) => {
-          if (!sidebar || sidebar.classList.contains("hidden")) return;
-          if (!e.touches || !e.touches.length) return;
-          swipeStartX = e.touches[0].clientX;
-        });
+        document.addEventListener(
+          "touchstart",
+          (e) => {
+            const sidebarOpen =
+              sidebar && !sidebar.classList.contains("hidden");
+            const helpOpen =
+              helpPanel && !helpPanel.classList.contains("hidden");
+            if (!sidebarOpen && !helpOpen) return;
+            if (!e.touches || !e.touches.length) return;
+            swipeStartX = e.touches[0].clientX;
+          },
+          { passive: true }
+        );
 
-        document.addEventListener("touchend", (e) => {
-          if (swipeStartX === null) return;
-          if (!sidebar || sidebar.classList.contains("hidden")) {
+        document.addEventListener(
+          "touchend",
+          (e) => {
+            if (swipeStartX === null) return;
+            const sidebarOpen =
+              sidebar && !sidebar.classList.contains("hidden");
+            const helpOpen =
+              helpPanel && !helpPanel.classList.contains("hidden");
+            if (!sidebarOpen && !helpOpen) {
+              swipeStartX = null;
+              return;
+            }
+            if (!e.changedTouches || !e.changedTouches.length) {
+              swipeStartX = null;
+              return;
+            }
+
+            const endX = e.changedTouches[0].clientX;
+            const diffX = endX - swipeStartX;
+
+            if (Math.abs(diffX) > 60) {
+              if (sidebarOpen) sidebar.classList.add("hidden");
+              if (helpOpen) helpPanel.classList.add("hidden");
+            }
             swipeStartX = null;
-            return;
-          }
-          if (!e.changedTouches || !e.changedTouches.length) return;
-
-          const endX = e.changedTouches[0].clientX;
-          const diffX = endX - swipeStartX;
-
-          if (Math.abs(diffX) > 60) {
-            sidebar.classList.add("hidden");
-          }
-          swipeStartX = null;
-        });
+          },
+          { passive: true }
+        );
 
         function openHelp() {
           if (helpPanel) helpPanel.classList.remove("hidden");
@@ -2067,6 +2212,13 @@
             const target = btn.dataset.panel;
             showPanel(target);
             if (sidebar) sidebar.classList.add("hidden");
+
+            // PRO paneline ilk girişte alt sayfaları kapalı tut
+            if (target === "pro") {
+              if (window.__inspirePro_closeTool) {
+                window.__inspirePro_closeTool();
+              }
+            }
           });
         });
 
@@ -2348,9 +2500,20 @@
           return true;
         }
 
-        // 6) PRO panelindeysen sohbet ekranına dön
+        // 6) PRO panelindeysen önce açık PRO alt aracını kapat, sonra sohbete dön
         const proPanel = $("panel-pro");
         if (proPanel && !proPanel.classList.contains("hidden")) {
+          // Eğer bir PRO alt aracı açıksa, sadece onu kapat (PRO ana panelinde kal)
+          if (
+            window.__inspirePro_isToolOpen &&
+            window.__inspirePro_isToolOpen()
+          ) {
+            if (window.__inspirePro_closeTool) {
+              window.__inspirePro_closeTool();
+            }
+            return true;
+          }
+          // Hiç alt araç açık değilse PRO'dan çıkıp sohbete dön
           showPanel("chat");
           return true;
         }
