@@ -131,6 +131,10 @@ const I18N = {
     proAudienceBtnText: "Kitle içgörüsü üret (PRO)",
     proSilentBtnText: "Sessiz içerik fikirleri üret (PRO)",
 
+    // YENİ: PRO sadece mesajı (her dilde var)
+    proOnlyShort:
+      "Bu özellik sadece PRO üyeler için. Uygulamadaki PRO planına geçerek hemen kullanabilirsin.",
+
     planFreeLabel: "Plan: Ücretsiz",
     planProLabel: "Plan: Pro (sınırsız puan)",
     creditsLabelFree: (credits) => `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`,
@@ -232,7 +236,6 @@ const I18N = {
     watchAdBtnText: "Watch Ad +1 credit",
     loadingText: "Loading...",
 
-    // PRO PANEL UI
     proPanelTitle: "⭐ PRO Tools",
     proPanelDesc:
       "These tools are designed for PRO users. On free plan they are limited; PRO unlocks full power.",
@@ -248,6 +251,9 @@ const I18N = {
     proCompetitorBtnText: "Analyze competitor video (PRO)",
     proAudienceBtnText: "Generate audience insights (PRO)",
     proSilentBtnText: "Generate silent content ideas (PRO)",
+
+    proOnlyShort:
+      "This feature is only available for PRO users. Upgrade to PRO in the app to unlock it.",
 
     planFreeLabel: "Plan: Free",
     planProLabel: "Plan: Pro (unlimited credits)",
@@ -363,6 +369,9 @@ const I18N = {
     proCompetitorBtnText: "تحليل فيديو منافس (PRO)",
     proAudienceBtnText: "توليد رؤى الجمهور (PRO)",
     proSilentBtnText: "توليد أفكار محتوى صامت (PRO)",
+
+    proOnlyShort:
+      "هذه الميزة متاحة فقط لمستخدمي PRO. يمكنك ترقية حسابك إلى PRO داخل التطبيق لاستخدامها.",
 
     planFreeLabel: "الخطة: مجانية",
     planProLabel: "الخطة: PRO (نقاط غير محدودة)",
@@ -481,6 +490,9 @@ const I18N = {
     proAudienceBtnText: "Zielgruppen-Insights erzeugen (PRO)",
     proSilentBtnText: "Ideen für stillen Content (PRO)",
 
+    proOnlyShort:
+      "Diese Funktion ist nur für PRO-Nutzer verfügbar. Wechsle im App-Interface auf PRO, um sie freizuschalten.",
+
     planFreeLabel: "Plan: Gratis",
     planProLabel: "Plan: PRO (unbegrenzte Credits)",
     creditsLabelFree: (credits) => `Credits: ${credits}/${MAX_FREE_CREDITS}`,
@@ -598,6 +610,9 @@ const I18N = {
     proCompetitorBtnText: "Analizar video competidor (PRO)",
     proAudienceBtnText: "Generar insights de audiencia (PRO)",
     proSilentBtnText: "Generar ideas de contenido silencioso (PRO)",
+
+    proOnlyShort:
+      "Esta función solo está disponible para usuarios PRO. Pásate al plan PRO dentro de la app para desbloquearla.",
 
     planFreeLabel: "Plan: Gratis",
     planProLabel: "Plan: PRO (créditos ilimitados)",
@@ -1085,14 +1100,51 @@ async function callIdeasAPI(prompt, platform, langCode) {
   }
 }
 
+// 🔥 YENİ: PRO kontrolü + email/ dil ekleyen callSimpleAPI
 async function callSimpleAPI(route, payload) {
   try {
+    // PRO endpoint'leri için: önce email girilmiş mi kontrol et
+    if (route.startsWith("pro-")) {
+      if (!state.email) {
+        const t = I18N[state.lang] || I18N.tr;
+        return (
+          t.emailNotSavedAlert ||
+          "Lütfen önce e-posta ile giriş yapın (üstteki e-posta alanından)."
+        );
+      }
+    }
+
+    const body = { ...(payload || {}) };
+
+    // PRO endpoint'leri için email ve lang'i her zaman backend'e gönder
+    if (route.startsWith("pro-")) {
+      if (!body.email) body.email = state.email;
+      if (!body.lang) body.lang = LANG_NAMES[state.lang] || "Turkish";
+    }
+
     const res = await fetch(`/api/${route}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
+
     const data = await res.json().catch(() => null);
+
+    // PRO DEĞİL kullanıcılar için özel mesaj
+    if (
+      route.startsWith("pro-") &&
+      (res.status === 403 ||
+        data?.message === "ONLY_PRO" ||
+        data?.code === "ONLY_PRO")
+    ) {
+      const t = I18N[state.lang] || I18N.tr;
+      return (
+        t.proOnlyShort ||
+        "Bu özellik sadece PRO üyeler için. Uygulamadaki PRO planına geçerek kullanabilirsin."
+      );
+    }
+
+    // Normal durum: backend'den gelen mesajı göster
     return data?.message || "Sunucudan anlamlı bir cevap alınamadı.";
   } catch {
     return "Sunucuya bağlanırken bir hata oluştu.";
