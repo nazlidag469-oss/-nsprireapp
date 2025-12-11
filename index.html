@@ -190,79 +190,72 @@
           <pre id="copyResult" class="panel-result"></pre>
         </section>
 
-        <!-- ⭐⭐ YENİ PRO PANELİ (Liste + Tam ekran detay) ⭐⭐ -->
+        <!-- ⭐⭐ PRO PANELİ (1, 3, 5) ⭐⭐ -->
         <section id="panel-pro" class="panel hidden">
-          <!-- LİSTE GÖRÜNÜMÜ -->
-          <div id="proListView">
-            <h2 id="proPanelTitle" class="panel-title">⭐ PRO Araçları</h2>
-            <p id="proPanelDesc" class="muted">
-              Bu bölümdeki araçlar PRO kullanıcılar için tasarlandı. Ücretsiz
-              planda çalışır ama kısıtlı içerik döner; PRO’da tam güç açılır.
+          <h2 id="proPanelTitle" class="panel-title">⭐ PRO Araçları</h2>
+          <p id="proPanelDesc" class="muted">
+            Bu bölümdeki araçlar PRO kullanıcılar için tasarlandı. Ücretsiz
+            planda çalışır ama kısıtlı içerik döner; PRO’da tam güç açılır.
+          </p>
+
+          <!-- 1) Rakip Video Analizi -->
+          <div class="card">
+            <h3 id="proTool1Title">1) Rakip Video Analizi</h3>
+            <p id="proTool1Desc" class="muted">
+              TikTok / Reels / Shorts linki veya açıklamasını gir. InspireApp;
+              neden tuttuğunu, daha güçlü hook’ları ve sana özel bir versiyon
+              üretir.
             </p>
-
-            <div class="card">
-              <p class="muted">
-                Aşağıdan bir PRO aracı seç. Seçtiğin araç bir sonraki ekranda
-                tam ekran açılacak.
-              </p>
-
-              <button
-                id="proListCompetitor"
-                type="button"
-                class="pill-button"
-              >
-                1) Rakip Video Analizi
-              </button>
-
-              <button
-                id="proListAudience"
-                type="button"
-                class="pill-button"
-                style="margin-top: 8px"
-              >
-                3) Kitle İçgörü Analizi
-              </button>
-
-              <button
-                id="proListSilent"
-                type="button"
-                class="pill-button"
-                style="margin-top: 8px"
-              >
-                5) Sessiz Video İçerik Üreticisi
-              </button>
-            </div>
+            <textarea
+              id="proCompetitorInput"
+              rows="3"
+              placeholder="Örn: TikTok linki veya rakip videonun açıklaması..."
+            ></textarea>
+            <button id="proCompetitorBtn" class="pill-button primary">
+              <span id="proCompetitorBtnText">
+                Rakip videoyu analiz et (PRO)
+              </span>
+            </button>
+            <pre id="proCompetitorResult" class="panel-result"></pre>
           </div>
 
-          <!-- DETAY GÖRÜNÜMÜ (TEK ARÇ TAM EKRAN) -->
-          <div id="proDetailView" class="hidden">
-            <button id="proBackBtn" type="button" class="pill-button small">
-              ← Geri
-            </button>
-
-            <h2 id="proDetailTitle" class="panel-title">
-              PRO Aracı
-            </h2>
-            <p id="proDetailDesc" class="muted">
-              Seçilen PRO aracının açıklaması burada görünecek.
+          <!-- 3) Kitle İçgörü Analizi -->
+          <div class="card">
+            <h3 id="proTool3Title">3) Kitle İçgörü Analizi</h3>
+            <p id="proTool3Desc" class="muted">
+              Hedef kitleni tek cümle ile anlat. InspireApp senin için
+              psikoloji, format, hook ve CTA kalıplarını çıkarır.
             </p>
-
             <textarea
-              id="proDetailInput"
+              id="proAudienceInput"
               rows="3"
-              placeholder="Buraya metnini / linkini yaz..."
+              placeholder="Örn: 17–24 yaş, fitness nişinde hedef kitlem var."
             ></textarea>
-
-            <button
-              id="proDetailBtn"
-              type="button"
-              class="pill-button primary"
-              style="margin-top: 8px"
-            >
-              <span id="proDetailBtnText">Çalıştır (PRO)</span>
+            <button id="proAudienceBtn" class="pill-button primary">
+              <span id="proAudienceBtnText">Kitle içgörüsü üret (PRO)</span>
             </button>
+            <pre id="proAudienceResult" class="panel-result"></pre>
+          </div>
 
-            <pre id="proDetailResult" class="panel-result"></pre>
+          <!-- 5) Sessiz Video İçerik Üreticisi -->
+          <div class="card">
+            <h3 id="proTool5Title">5) Sessiz Video İçerik Üreticisi</h3>
+            <p id="proTool5Desc" class="muted">
+              Yüzünü göstermeden, ses kullanmadan içerik üretmek istiyorsan
+              konunu yaz. Sessiz video akışları, sahne önerileri ve metinler
+              üretelim.
+            </p>
+            <textarea
+              id="proSilentInput"
+              rows="3"
+              placeholder="Örn: Sessiz motivasyon videoları ile büyümek istiyorum."
+            ></textarea>
+            <button id="proSilentBtn" class="pill-button primary">
+              <span id="proSilentBtnText">
+                Sessiz içerik fikirleri üret (PRO)
+              </span>
+            </button>
+            <pre id="proSilentResult" class="panel-result"></pre>
           </div>
         </section>
 
@@ -1395,15 +1388,15 @@
 
         setText("helpTitle", t.helpTitle);
         setText("helpAppTitle", t.helpAppTitle);
-        setText("helpFreeTitle", t.helpFreeTitle);
-        setText("helpProTitle", t.helpProTitle);
-        setText("helpSupportTitle", t.helpSupportTitle);
-        setText("closeHelpBtnText", t.closeHelpBtnText);
         setHTML("helpAppText1", t.helpAppText1);
         setHTML("helpAppText2", t.helpAppText2);
+        setText("helpFreeTitle", t.helpFreeTitle);
         setText("helpFreeText", t.helpFreeText);
+        setText("helpProTitle", t.helpProTitle);
         setHTML("helpProText", t.helpProText);
+        setText("helpSupportTitle", t.helpSupportTitle);
         setText("helpSupportText", t.helpSupportText);
+        setText("closeHelpBtnText", t.closeHelpBtnText);
 
         setText("trendsTitle", t.trendsTitle);
         setText("refreshTrendsBtnText", t.refreshTrendsBtnText);
@@ -1451,9 +1444,18 @@
         setText("proDesc", t.proDesc);
         setText("proPayBtnText", t.proPayBtnText);
 
-        // PRO panel genel başlık & açıklama
+        // PRO panel metinleri
         setText("proPanelTitle", t.proPanelTitle);
         setText("proPanelDesc", t.proPanelDesc);
+        setText("proTool1Title", t.proTool1Title);
+        setText("proTool1Desc", t.proTool1Desc);
+        setText("proTool3Title", t.proTool3Title);
+        setText("proTool3Desc", t.proTool3Desc);
+        setText("proTool5Title", t.proTool5Title);
+        setText("proTool5Desc", t.proTool5Desc);
+        setText("proCompetitorBtnText", t.proCompetitorBtnText);
+        setText("proAudienceBtnText", t.proAudienceBtnText);
+        setText("proSilentBtnText", t.proSilentBtnText);
 
         // Plan & credits (dynamic) refresh
         updatePlanAndCreditsUI();
@@ -1636,19 +1638,17 @@
         const copyTopic = document.getElementById("copyTopic");
         const copyResult = document.getElementById("copyResult");
 
-        // YENİ PRO PANEL SELECTORLERİ
-        const proListView = document.getElementById("proListView");
-        const proDetailView = document.getElementById("proDetailView");
-        const proListCompetitor = document.getElementById("proListCompetitor");
-        const proListAudience = document.getElementById("proListAudience");
-        const proListSilent = document.getElementById("proListSilent");
-        const proBackBtn = document.getElementById("proBackBtn");
-        const proDetailTitle = document.getElementById("proDetailTitle");
-        const proDetailDesc = document.getElementById("proDetailDesc");
-        const proDetailInput = document.getElementById("proDetailInput");
-        const proDetailBtn = document.getElementById("proDetailBtn");
-        const proDetailBtnText = document.getElementById("proDetailBtnText");
-        const proDetailResult = document.getElementById("proDetailResult");
+        const proCompetitorInput = document.getElementById("proCompetitorInput");
+        const proCompetitorBtn = document.getElementById("proCompetitorBtn");
+        const proCompetitorResult =
+          document.getElementById("proCompetitorResult");
+        const proAudienceInput = document.getElementById("proAudienceInput");
+        const proAudienceBtn = document.getElementById("proAudienceBtn");
+        const proAudienceResult =
+          document.getElementById("proAudienceResult");
+        const proSilentInput = document.getElementById("proSilentInput");
+        const proSilentBtn = document.getElementById("proSilentBtn");
+        const proSilentResult = document.getElementById("proSilentResult");
 
         const modalBackdrop = document.getElementById("modalBackdrop");
         const adModal = document.getElementById("adModal");
@@ -2024,7 +2024,7 @@
             } else {
               const msg =
                 state.lang === "tr"
-                  ? "Beklenek bir cevap alındı."
+                  ? "Beklenmedik bir cevap alındı."
                   : state.lang === "ar"
                   ? "تم استلام استجابة غير متوقعة."
                   : state.lang === "de"
@@ -2061,15 +2061,11 @@
           });
         }
 
-        // Panel switching
+        // Panel switching (yan menü butonları)
         document.querySelectorAll(".side-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
             const target = btn.dataset.panel;
-            document
-              .querySelectorAll("main .panel")
-              .forEach((sec) => sec.classList.add("hidden"));
-            const active = document.getElementById(`panel-${target}`);
-            if (active) active.classList.remove("hidden");
+            showPanel(target);
             if (sidebar) sidebar.classList.add("hidden");
           });
         });
@@ -2201,79 +2197,49 @@
           });
         }
 
-        // === YENİ PRO PANEL LOJİĞİ (Liste + Tam ekran) ===
-        let currentProTool = null;
-
-        function openProDetail(toolKey) {
-          if (!proListView || !proDetailView) return;
-          const t = I18N[state.lang] || I18N.tr;
-          currentProTool = toolKey;
-          proListView.classList.add("hidden");
-          proDetailView.classList.remove("hidden");
-
-          if (!proDetailTitle || !proDetailDesc || !proDetailBtnText) return;
-
-          // input & result sıfırla
-          if (proDetailInput) proDetailInput.value = "";
-          if (proDetailResult) proDetailResult.textContent = "";
-
-          if (toolKey === "competitor") {
-            proDetailTitle.textContent = t.proTool1Title;
-            proDetailDesc.textContent = t.proTool1Desc;
-            proDetailBtnText.textContent = t.proCompetitorBtnText;
-          } else if (toolKey === "audience") {
-            proDetailTitle.textContent = t.proTool3Title;
-            proDetailDesc.textContent = t.proTool3Desc;
-            proDetailBtnText.textContent = t.proAudienceBtnText;
-          } else if (toolKey === "silent") {
-            proDetailTitle.textContent = t.proTool5Title;
-            proDetailDesc.textContent = t.proTool5Desc;
-            proDetailBtnText.textContent = t.proSilentBtnText;
-          }
-        }
-
-        if (proListCompetitor) {
-          proListCompetitor.addEventListener("click", () =>
-            openProDetail("competitor")
-          );
-        }
-        if (proListAudience) {
-          proListAudience.addEventListener("click", () =>
-            openProDetail("audience")
-          );
-        }
-        if (proListSilent) {
-          proListSilent.addEventListener("click", () =>
-            openProDetail("silent")
-          );
-        }
-
-        if (proBackBtn && proListView && proDetailView) {
-          proBackBtn.addEventListener("click", () => {
-            proDetailView.classList.add("hidden");
-            proListView.classList.remove("hidden");
-          });
-        }
-
-        if (proDetailBtn && proDetailInput && proDetailResult) {
-          proDetailBtn.addEventListener("click", async () => {
-            const value = proDetailInput.value.trim();
-            if (!value || !currentProTool) return;
-            const t = I18N[state.lang] || I18N.tr;
-            proDetailResult.textContent = t.loadingText || "Yükleniyor...";
-
-            let route = null;
-            if (currentProTool === "competitor") route = "pro-competitor";
-            else if (currentProTool === "audience") route = "pro-audience";
-            else if (currentProTool === "silent") route = "pro-silent";
-
-            if (!route) return;
-            const text = await callSimpleAPI(route, {
+        // PRO PANEL BUTTON'LARI
+        if (proCompetitorBtn && proCompetitorInput && proCompetitorResult) {
+          proCompetitorBtn.addEventListener("click", async () => {
+            const value = proCompetitorInput.value.trim();
+            if (!value) return;
+            proCompetitorResult.textContent =
+              I18N[state.lang]?.loadingText || "Yükleniyor...";
+            const text = await callSimpleAPI("pro-competitor", {
               input: value,
               lang: LANG_NAMES[state.lang] || "Turkish",
               plan: state.plan,
             });
-            proDetailResult.textContent = text;
+            proCompetitorResult.textContent = text;
+          });
+        }
+
+        if (proAudienceBtn && proAudienceInput && proAudienceResult) {
+          proAudienceBtn.addEventListener("click", async () => {
+            const value = proAudienceInput.value.trim();
+            if (!value) return;
+            proAudienceResult.textContent =
+              I18N[state.lang]?.loadingText || "Yükleniyor...";
+            const text = await callSimpleAPI("pro-audience", {
+              input: value,
+              lang: LANG_NAMES[state.lang] || "Turkish",
+              plan: state.plan,
+            });
+            proAudienceResult.textContent = text;
+          });
+        }
+
+        if (proSilentBtn && proSilentInput && proSilentResult) {
+          proSilentBtn.addEventListener("click", async () => {
+            const value = proSilentInput.value.trim();
+            if (!value) return;
+            proSilentResult.textContent =
+              I18N[state.lang]?.loadingText || "Yükleniyor...";
+            const text = await callSimpleAPI("pro-silent", {
+              input: value,
+              lang: LANG_NAMES[state.lang] || "Turkish",
+              plan: state.plan,
+            });
+            proSilentResult.textContent = text;
           });
         }
 
@@ -2325,6 +2291,90 @@
           });
         }
       });
+
+      // === GLOBAL PANEL GÖSTER FONKSİYONU (geri tuşu da kullanıyor) ===
+      function showPanel(name) {
+        // Tüm panelleri gizle
+        document.querySelectorAll("main .panel").forEach((sec) => {
+          sec.classList.add("hidden");
+        });
+        // İstenen paneli aç
+        const active = document.getElementById("panel-" + name);
+        if (active) active.classList.remove("hidden");
+      }
+
+      // === ANDROID GERİ TUŞU GENEL YÖNETİMİ ===
+      // Android tarafı her geri tuşunda:
+      // if (window.__inspireHandleBack && window.__inspireHandleBack()) { /* JS halletti */ } else { super.onBackPressed(); }
+      window.__inspireHandleBack = function () {
+        const $ = (id) => document.getElementById(id);
+
+        // 1) Onboarding açıksa kapat
+        const onboarding = $("onboardingOverlay");
+        if (onboarding && !onboarding.classList.contains("hidden")) {
+          onboarding.classList.add("hidden");
+          return true;
+        }
+
+        // 2) PRO ödeme modali açıksa kapat
+        const proModal = $("proModal");
+        if (proModal && !proModal.classList.contains("hidden")) {
+          proModal.classList.add("hidden");
+          const backdrop = $("modalBackdrop");
+          if (backdrop) backdrop.classList.add("hidden");
+          return true;
+        }
+
+        // 3) Reklam modali açıksa kapat
+        const adModal = $("adModal");
+        if (adModal && !adModal.classList.contains("hidden")) {
+          adModal.classList.add("hidden");
+          const backdrop = $("modalBackdrop");
+          if (backdrop) backdrop.classList.add("hidden");
+          return true;
+        }
+
+        // 4) Yardım paneli açıksa kapat
+        const helpPanel = $("helpPanel");
+        if (helpPanel && !helpPanel.classList.contains("hidden")) {
+          helpPanel.classList.add("hidden");
+          return true;
+        }
+
+        // 5) Sol sidebar açıksa kapat
+        const sidebar = $("sidebar");
+        if (sidebar && !sidebar.classList.contains("hidden")) {
+          sidebar.classList.add("hidden");
+          return true;
+        }
+
+        // 6) PRO panelindeysen sohbet ekranına dön
+        const proPanel = $("panel-pro");
+        if (proPanel && !proPanel.classList.contains("hidden")) {
+          showPanel("chat");
+          return true;
+        }
+
+        // 7) Diğer panellerden (trend, seri, hook, copy) sohbete dön
+        const otherPanels = ["trends", "series", "hook", "copy"];
+        for (const name of otherPanels) {
+          const el = $("panel-" + name);
+          if (el && !el.classList.contains("hidden")) {
+            showPanel("chat");
+            return true;
+          }
+        }
+
+        // 8) Eğer bir şekilde sohbet paneli gizliyse, onu aç
+        const chatPanel = $("panel-chat");
+        if (chatPanel && chatPanel.classList.contains("hidden")) {
+          showPanel("chat");
+          return true;
+        }
+
+        // 9) Artık gerçekten ana ekrandayız, Android normal geri (uygulamadan çık)
+        return false;
+      };
     </script>
 
     <!-- PWA: Service Worker Kaydı -->
