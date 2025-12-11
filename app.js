@@ -458,7 +458,7 @@ const I18N = {
     topicPlaceholder: "Thema (z.B. Mode)",
     messagePlaceholder: "Nachricht schreiben...",
     sendBtnText: "Senden",
-    watchAdBtnText: "Werbung ansehen +1 Credit",
+    watchAdBtnText: "Werbung ansehen +1 Punkt",
     loadingText: "Lädt...",
 
     proPanelTitle: "⭐ PRO-Tools",
@@ -669,6 +669,10 @@ const state = {
   lang: "tr",
   email: "",
 };
+
+// === PANEL GEÇMİŞİ (GERİ TUŞU İÇİN) ===
+let currentPanel = "chat";
+let previousPanel = null;
 
 // === STATE LOAD / SAVE ===
 function loadState() {
@@ -1080,9 +1084,10 @@ async function callIdeasAPI(prompt, platform, langCode) {
     } catch {
       if (text) return text;
     }
-    return "API'den anlamlı bir cevap alınamadı.";
+    // Sunucu / API vurgusu yerine sade hata
+    return "Şu an yanıt üretilemedi, lütfen tekrar dene.";
   } catch {
-    return "Sunucuya bağlanırken bir hata oluştu.";
+    return "Şu an yanıt üretilemedi, lütfen tekrar dene.";
   }
 }
 
@@ -1094,9 +1099,9 @@ async function callSimpleAPI(route, payload) {
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => null);
-    return data?.message || "Sunucudan anlamlı bir cevap alınamadı.";
+    return data?.message || "Şu an içerik üretilemedi, lütfen tekrar dene.";
   } catch {
-    return "Sunucuya bağlanırken bir hata oluştu.";
+    return "Şu an içerik üretilemedi, lütfen tekrar dene.";
   }
 }
 
@@ -1637,7 +1642,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Panel switching
+  // Panel switching (global paneller: chat, trends, series, hook, copy, pro)
   document.querySelectorAll(".side-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.panel;
@@ -1771,9 +1776,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PRO PANEL BUTTON'LARI
+  // === PRO PANEL BUTTON'LARI (PRO plan kontrolü ile) ===
   if (proCompetitorBtn && proCompetitorInput && proCompetitorResult) {
     proCompetitorBtn.addEventListener("click", async () => {
+      if (state.plan !== "pro") {
+        openProModal();
+        return;
+      }
       const value = proCompetitorInput.value.trim();
       if (!value) return;
       proCompetitorResult.textContent =
@@ -1789,6 +1798,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (proAudienceBtn && proAudienceInput && proAudienceResult) {
     proAudienceBtn.addEventListener("click", async () => {
+      if (state.plan !== "pro") {
+        openProModal();
+        return;
+      }
       const value = proAudienceInput.value.trim();
       if (!value) return;
       proAudienceResult.textContent =
@@ -1804,6 +1817,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (proSilentBtn && proSilentInput && proSilentResult) {
     proSilentBtn.addEventListener("click", async () => {
+      if (state.plan !== "pro") {
+        openProModal();
+        return;
+      }
       const value = proSilentInput.value.trim();
       if (!value) return;
       proSilentResult.textContent =
@@ -1868,7 +1885,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // === GLOBAL PANEL GÖSTER FONKSİYONU ===
 function showPanel(name) {
-  document.querySelectorAll("main .panel").forEach((sec) => {
+  const panels = document.querySelectorAll("main .panel");
+  if (!panels.length) return;
+  if (name === currentPanel) return;
+  previousPanel = currentPanel;
+  currentPanel = name;
+  panels.forEach((sec) => {
     sec.classList.add("hidden");
   });
   const active = document.getElementById("panel-" + name);
@@ -1919,31 +1941,14 @@ window.__inspireHandleBack = function () {
     return true;
   }
 
-  // 6) PRO panelindeysen sohbet ekranına dön
-  const proPanel = $("panel-pro");
-  if (proPanel && !proPanel.classList.contains("hidden")) {
-    showPanel("chat");
+  // 6) Panel geçmişine göre geri git (chat dışı panellerden)
+  if (currentPanel && currentPanel !== "chat") {
+    const target = previousPanel || "chat";
+    showPanel(target);
     return true;
   }
 
-  // 7) Diğer panellerden sohbete dön
-  const otherPanels = ["trends", "series", "hook", "copy"];
-  for (const name of otherPanels) {
-    const el = $("panel-" + name);
-    if (el && !el.classList.contains("hidden")) {
-      showPanel("chat");
-      return true;
-    }
-  }
-
-  // 8) Sohbet paneli gizliyse aç
-  const chatPanel = $("panel-chat");
-  if (chatPanel && chatPanel.classList.contains("hidden")) {
-    showPanel("chat");
-    return true;
-  }
-
-  // 9) Artık ana ekrandayız → Android normal geri (uygulamadan çık)
+  // 7) Artık ana ekrandayız → Android normal geri (uygulamadan çık)
   return false;
 };
 
