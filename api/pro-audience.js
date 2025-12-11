@@ -10,19 +10,32 @@ const supabase =
     ? createClient(supabaseUrl, serviceKey)
     : null;
 
-async function ensurePro(email) {
-  if (!supabase) throw new Error("SUPABASE_CONFIG_MISSING");
-  const { data, error } = await supabase
-    .from("users")
-    .select("plan")
-    .eq("email", email)
-    .single();
+// Dil kodunu normalize et (tr, en, de, es, ar)
+function detectLangCode(lang) {
+  const l = (lang || "").toLowerCase();
+  if (l.startsWith("en")) return "en";
+  if (l.startsWith("es")) return "es";
+  if (l.startsWith("de")) return "de";
+  if (l.startsWith("ar")) return "ar";
+  return "tr";
+}
 
-  if (error && error.code !== "PGRST116") throw error;
-  if (!data || data.plan !== "pro") {
-    const e = new Error("ONLY_PRO");
-    e.code = "ONLY_PRO";
-    throw e;
+// PRO olmayan kullanıcıya gösterilecek mesaj (çok dilli)
+function getProRequiredMessage(lang) {
+  const code = detectLangCode(lang);
+
+  switch (code) {
+    case "en":
+      return "This audience insight tool is only available for PRO users. Upgrade to PRO to unlock detailed psychology and content strategies.";
+    case "es":
+      return "Esta herramienta de análisis de audiencia solo está disponible para usuarios PRO. Actualiza a PRO para desbloquear estrategias detalladas de psicología y contenido.";
+    case "de":
+      return "Dieses Tool zur Zielgruppenanalyse ist nur für PRO-Nutzer verfügbar. Wechsle zu PRO, um detaillierte Psychologie- und Content-Strategien freizuschalten.";
+    case "ar":
+      return "أداة تحليل الجمهور هذه متاحة فقط لمستخدمي PRO. قم بالترقية إلى PRO للحصول على استراتيجيات مفصلة لعلم النفس والمحتوى.";
+    case "tr":
+    default:
+      return "Bu kitle içgörü analizi aracı sadece PRO kullanıcılar için açıktır. Detaylı psikoloji ve içerik stratejilerini görmek için PRO’ya geç.";
   }
 }
 
@@ -43,7 +56,7 @@ async function callAi(fullPrompt) {
         {
           role: "system",
           content:
-            "You are InspireApp PRO, an expert on audience psychology and short-form content. Answer in clear Turkish.",
+            "You are InspireApp PRO, an expert on audience psychology and short-form content. Answer in the requested language, clearly and in structured bullet-points.",
         },
         { role: "user", content: fullPrompt },
       ],
@@ -81,28 +94,57 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "METHOD_NOT_ALLOWED" });
   }
 
-  const { email, input, lang = "Turkish" } = req.body || {};
+  if (!supabase) {
+    return res.status(500).json({ message: "SUPABASE_CONFIG_MISSING" });
+  }
+
+  const { email, input, lang = "tr" } = req.body || {};
 
   if (!email || !input) {
     return res.status(400).json({ message: "EMAIL_AND_INPUT_REQUIRED" });
   }
 
+  // 1) Kullanıcıyı Supabase'ten çek
+  let user;
   try {
-    await ensurePro(email);
-  } catch (e) {
-    if (e.code === "ONLY_PRO") {
-      return res
-        .status(403)
-        .json({ message: "ONLY_PRO", detail: "Bu özellik sadece PRO üyeler için." });
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, email, plan, lang")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) {
+      console.error("pro-audience Supabase hatası:", error);
+      return res.status(500).json({ message: "DB_ERROR" });
     }
-    console.error("pro-audience Supabase hatası:", e);
+
+    user = data || null;
+  } catch (e) {
+    console.error("pro-audience Supabase genel hata:", e);
     return res.status(500).json({ message: "DB_ERROR" });
   }
 
+  const userLang = user?.lang || lang || "tr";
+
+  // 2) PRO değilse → 200 OK + PRO mesajı
+  if (!user || user.plan !== "pro") {
+    const proMsg = getProRequiredMessage(userLang);
+
+    return res.status(200).json({
+      message: proMsg,
+      proRequired: true,
+    });
+  }
+
+  // 3) PRO ise → AI ile gerçek kitle analizi üret
   try {
-    const prompt = buildPromptAudience(input, lang);
+    const prompt = buildPromptAudience(input, userLang);
     const text = await callAi(prompt);
-    return res.status(200).json({ message: text });
+
+    return res.status(200).json({
+      message: text,
+      proRequired: false,
+    });
   } catch (e) {
     console.error("pro-audience AI hatası:", e);
     return res.status(500).json({ message: "AI_ERROR" });
