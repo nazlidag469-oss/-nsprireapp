@@ -43,22 +43,20 @@ body {
   );
   min-height: 100vh;
   color: var(--text-main);
-  overflow: hidden; /* Sayfa scroll yok, içerideki kutular scroll alıyor */
+  overflow: hidden;
 }
 
-/* Tam ekran kaplasın */
+/* Tam ekran */
 #app {
   min-height: 100vh;
   display: flex;
 }
 
-/* === GİZLEME SINIFI === */
 .hidden {
   display: none !important;
 }
 
-/* === TOP BAR / HEADER === */
-
+/* === TOP BAR === */
 .top-bar {
   position: fixed;
   top: 0;
@@ -69,11 +67,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-
   border-bottom: 1px solid var(--glass-border);
   box-shadow: var(--shadow);
   z-index: 50;
@@ -82,13 +78,12 @@ body {
 .top-title {
   font-size: 26px;
   font-weight: 900;
-  color: #000000;
+  color: #000;
   text-transform: uppercase;
   letter-spacing: 0.16em;
 }
 
-/* === ICON BUTTONS === */
-
+/* ICON BUTTON */
 .icon-button {
   width: 36px;
   height: 36px;
@@ -96,22 +91,18 @@ body {
   border: none;
   background: rgba(255, 255, 255, 0.85);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   font-size: 18px;
-  transition: transform 0.15s ease;
-  cursor: pointer;
+  transition: 0.15s ease;
 }
 
 .icon-button:active {
   transform: scale(0.92);
 }
 
-/* === ANA LAYOUT === */
-
+/* CHAT LAYOUT */
 .chat-area {
   margin-top: 58px;
   flex: 1;
@@ -124,179 +115,61 @@ body {
   margin-right: auto;
   height: calc(100vh - 58px);
   overflow-y: auto;
-  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
-/* === SOL SIDEBAR === */
-
+/* SIDEBAR */
 .sidebar {
   position: fixed;
   top: 58px;
-  left: 0;
   bottom: 0;
+  left: 0;
   width: 260px;
   max-width: 80%;
   padding: 14px;
-
   background: var(--glass-bg);
   backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
   border-right: 1px solid var(--glass-border);
-
-  box-shadow: var(--shadow);
-  border-top-right-radius: 16px;
-
   transform: translateX(-100%);
-  transition: transform 0.25s ease-out;
+  transition: 0.25s ease;
   z-index: 40;
-
-  max-height: calc(100vh - 58px);
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .sidebar:not(.hidden) {
   transform: translateX(0);
 }
 
-.sidebar-header h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.sidebar-section {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--glass-border);
-  font-size: 13px;
-}
-
-.sidebar-email {
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-
-.sidebar-plan-status {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-/* sadece sohbet listesi için max-height bırakıyorum */
-.conversation-list {
-  margin-top: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.conversation-item {
-  background: var(--purple-soft);
-  padding: 10px;
-  border-radius: 12px;
-  margin-bottom: 8px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.conversation-item.active {
-  background: var(--purple);
-  color: #fff;
-}
-
-.muted {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.small-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-/* === SAĞ YARDIM PANELİ === */
-
+/* HELP PANEL */
 .help-panel {
   position: fixed;
   top: 58px;
-  right: 0;
   bottom: 0;
+  right: 0;
   width: 260px;
   max-width: 80%;
-  padding: 16px 16px 20px;
-
   background: #fef2f2;
   border-left: 1px solid #fecaca;
   box-shadow: -10px 0 30px rgba(127, 29, 29, 0.25);
-
   border-top-left-radius: 16px;
-
+  padding: 16px;
   transform: translateX(100%);
-  transition: transform 0.25s ease-out;
+  transition: 0.25s ease;
   z-index: 40;
-
-  /* ÖNEMLİ: içerik kaydırılabilir, kapat butonu için flex */
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100vh - 58px);
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .help-panel:not(.hidden) {
   transform: translateX(0);
 }
 
-.help-panel h2 {
-  margin-top: 0;
-  font-size: 18px;
-  color: #b91c1c;
-}
-
-/* sidebar içi yardım butonu */
-.help-btn {
-  margin-top: 12px;
-  width: 100%;
-  border: none;
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 13px;
-  background: #fee2e2;
-  color: #b91c1c;
-  cursor: pointer;
-}
-
-/* Yardım panelinde Kapat butonu her zaman altta görünsün */
 #closeHelpBtn {
   position: sticky;
   bottom: 0;
-  margin-top: 16px;
-  align-self: stretch;
-  background: #b91c1c;
-  color: #fff;
-  box-shadow: 0 -4px 10px rgba(185, 28, 28, 0.25);
+  margin-top: 20px;
 }
 
-/* Gizlilik politikası kutusu */
-.policy-box {
-  margin-top: 12px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: #fee2e2;
-  font-size: 12px;
-  color: #7f1d1d;
-}
-
-.policy-box a {
-  color: #2563eb;
-  text-decoration: underline;
-}
-
-/* === GENEL PANEL TASARIMI === */
-
+/* PANELS */
 .panel {
   padding: 12px;
   border-radius: 20px;
@@ -305,59 +178,16 @@ body {
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  min-height: 0;
 }
 
-/* Sohbet paneli tam alanı kullansın */
-#panel-chat {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.panel-title {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-/* Sol menü panel butonları */
-.side-btn {
-  width: 100%;
-  text-align: left;
-  border: none;
-  border-radius: 999px;
-  padding: 8px 12px;
-  margin-top: 6px;
-  font-size: 13px;
-  background: rgba(255, 255, 255, 0.9);
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.side-btn:hover {
-  background: #eef2ff;
-}
-
-.side-btn:active {
-  transform: scale(0.97);
-}
-
-/* === CHAT MESSAGES === */
-
+/* CHAT BUBBLES */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 8px;
-  margin-bottom: 8px;
-  border-radius: 18px;
   background: rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow);
-  min-height: 0;
-  -webkit-overflow-scrolling: touch;
+  padding: 10px;
 }
 
 .message-row {
@@ -369,147 +199,36 @@ body {
   justify-content: flex-end;
 }
 
-.message-row.assistant {
-  justify-content: flex-start;
-}
-
 .bubble {
   max-width: 78%;
-  padding: 12px 14px;
+  padding: 12px;
   border-radius: 20px;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.45;
-  animation: fadeIn 0.2s ease;
   box-shadow: var(--shadow);
 }
 
 .user .bubble {
   background: var(--user-bubble);
-  color: #fff;
-  border-bottom-right-radius: 6px;
-}
-
-.assistant .bubble {
-  background: var(--assistant-bubble);
-  border-bottom-left-radius: 6px;
-}
-
-/* Mesaj metnini okunaklı göster */
-.bubble-text {
-  white-space: pre-wrap;
-  line-height: 1.6;
-  font-size: 14px;
-  word-break: break-word;
-}
-
-/* === CONTROLS / FORM ELEMANLARI === */
-
-.controls {
-  padding: 10px 12px;
-  border-radius: 20px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.controls input,
-.controls select {
-  flex: 1 1 30%;
-  min-width: 0;
-}
-
-input,
-select,
-textarea {
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-  outline: none;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: var(--purple);
-  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.35);
-}
-
-textarea {
-  resize: none;
-  min-height: 48px;
-}
-
-/* === BUTONLAR === */
-
-.pill-button {
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-
-  background: var(--purple-soft);
-  color: var(--purple);
-
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  cursor: pointer;
-}
-
-.pill-button.primary {
-  background: var(--purple);
   color: white;
 }
 
-.pill-button.small {
-  font-size: 12px;
-  padding: 6px 10px;
+.assistant .bubble {
+  background: white;
 }
 
-.pill-button:active {
-  transform: scale(0.95);
-}
-
-/* Yuvarlak ikon butonları (mikrofon / kamera) */
-.circle-button {
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
-  border: none;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
-  cursor: pointer;
+/* INPUT CONTROLS */
+.controls {
+  padding: 10px;
+  border-radius: 20px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-/* === CHAT INPUT ROW === */
-
-.chat-input-row {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  margin-top: 8px;
-}
-
-/* === CREDITS / PUAN === */
-
-.credits-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-
-/* === MODAL (REKLAM & PRO) === */
-
+/* MODALS */
 .backdrop {
   position: fixed;
   inset: 0;
@@ -522,236 +241,67 @@ textarea {
   inset: 0;
   z-index: 70;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
 
 .modal-content {
-  position: relative;
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
   width: 90%;
   max-width: 380px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 18px;
   box-shadow: var(--shadow-strong);
 }
 
-/* Reklam / PRO modalındaki X (kapat) butonu */
-.modal-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  border: none;
-  background: rgba(0, 0, 0, 0.05);
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.modal-close:active {
-  transform: scale(0.96);
-  opacity: 0.8;
-}
-
-/* === ONBOARDING OVERLAY === */
-
-.onboarding-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 80;
-}
-
-.onboarding-card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 20px;
-  max-width: 360px;
-  width: calc(100% - 40px);
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.4);
-  text-align: center;
-}
-
-.onboarding-title {
-  margin: 0 0 12px 0;
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-}
-
-.onboarding-card h2 {
-  margin-top: 0;
-  margin-bottom: 8px;
-}
-
-.onboarding-card p {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.onboarding-card select,
-.onboarding-card input {
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-/* Email + şifre arasını biraz açtım */
-.onboarding-card input + input {
-  margin-top: 8px;
-}
-
-/* === TRENDLER KUTUSU === */
-
-.trends-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: 13px;
-}
-
-.trends-item + .trends-item {
-  margin-top: 4px;
-}
-
-.trends-item a {
-  text-decoration: none;
-  color: var(--blue);
-}
-
-.trends-item a:hover {
-  text-decoration: underline;
-}
-
-/* === LOADING === */
-
-.loading {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 6px;
-}
-
-/* === PRO PANELİ İÇİN KARTLAR ve SONUÇ ALANI === */
-
-.card {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 18px;
-  padding: 12px 12px 10px;
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
-  margin-bottom: 10px;
-}
-
-.card h3 {
-  margin: 0 0 6px 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.card p {
-  margin: 0 0 8px 0;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-/* PRO panelinde AI çıktısı */
-.panel-result {
-  margin-top: 6px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(249, 250, 251, 0.9);
-  border: 1px dashed var(--glass-border);
-  font-size: 13px;
-  white-space: pre-wrap;
-  max-height: 260px;
-  overflow-y: auto;
-}
-
-/* === PRO PANEL LAYOUT (liste + detay) === */
-
+/* === PRO PANEL === */
 .pro-layout {
   display: flex;
   gap: 10px;
-  align-items: flex-start;
-  margin-top: 4px;
 }
 
 .pro-menu {
+  min-width: 180px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 190px;
-  flex-shrink: 0;
 }
 
 .pro-content {
   flex: 1;
-  min-height: 220px;
 }
 
-/* Soldaki PRO menü butonları (liste) */
-.pro-menu-btn {
-  width: 100%;
-  text-align: left;
-  justify-content: flex-start;
-}
+/* === YUMUŞAK GERİ BUTONU (EKRAN İÇİ BACK BUTTON) === */
 
-/* PRO panelinde geri dön satırı */
-.pro-back-row {
+.soft-back-btn {
+  position: fixed;
+  bottom: 18px;
+  left: 18px;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-size: 20px;
   display: flex;
-  justify-content: flex-start;
-  margin-bottom: 8px;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
 }
 
-/* === ANIMATIONS === */
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.soft-back-btn:active {
+  transform: scale(0.92);
 }
 
-/* === RESPONSIVE === */
-
+/* === RESPONSIVE MOBILE === */
 @media (max-width: 768px) {
-  .bubble {
-    max-width: 85%;
-    font-size: 14px;
-  }
-
-  .chat-area {
-    padding: 10px 8px 40px;
-    max-width: 100%;
-  }
-
-  .sidebar,
-  .help-panel {
-    width: 230px;
-  }
-
-  .controls {
-    flex-direction: column;
-  }
-
-  /* Mobilde PRO paneli: liste üstte, içerik altta */
   .pro-layout {
     flex-direction: column;
   }
 
   .pro-menu {
     width: 100%;
-    min-width: 0;
   }
 }
