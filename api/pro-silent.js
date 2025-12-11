@@ -10,19 +10,32 @@ const supabase =
     ? createClient(supabaseUrl, serviceKey)
     : null;
 
-async function ensurePro(email) {
-  if (!supabase) throw new Error("SUPABASE_CONFIG_MISSING");
-  const { data, error } = await supabase
-    .from("users")
-    .select("plan")
-    .eq("email", email)
-    .single();
+// Dil kodunu normalize et (tr, en, de, es, ar)
+function detectLangCode(lang) {
+  const l = (lang || "").toLowerCase();
+  if (l.startsWith("en")) return "en";
+  if (l.startsWith("es")) return "es";
+  if (l.startsWith("de")) return "de";
+  if (l.startsWith("ar")) return "ar";
+  return "tr";
+}
 
-  if (error && error.code !== "PGRST116") throw error;
-  if (!data || data.plan !== "pro") {
-    const e = new Error("ONLY_PRO");
-    e.code = "ONLY_PRO";
-    throw e;
+// PRO olmayan kullanıcıya gösterilecek mesaj (çok dilli)
+function getProRequiredMessage(lang) {
+  const code = detectLangCode(lang);
+
+  switch (code) {
+    case "en":
+      return "This tool is only available for PRO users. Upgrade to PRO to unlock all features instantly.";
+    case "es":
+      return "Esta herramienta solo está disponible para usuarios PRO. Actualiza a PRO para desbloquear todas las funciones al instante.";
+    case "de":
+      return "Dieses Tool ist nur für PRO-Nutzer verfügbar. Wechsle zu PRO, um alle Funktionen sofort freizuschalten.";
+    case "ar":
+      return "هذه الأداة متاحة فقط لمستخدمي PRO. قم بالترقية إلى PRO لاستخدام جميع المزايا فورًا.";
+    case "tr":
+    default:
+      return "Bu araç yalnızca PRO kullanıcılar için açıktır. Tüm özellikleri anında kullanmak için PRO’ya geç.";
   }
 }
 
@@ -81,28 +94,58 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "METHOD_NOT_ALLOWED" });
   }
 
-  const { email, input, lang = "Turkish" } = req.body || {};
+  if (!supabase) {
+    return res.status(500).json({ message: "SUPABASE_CONFIG_MISSING" });
+  }
+
+  const { email, input, lang = "tr" } = req.body || {};
 
   if (!email || !input) {
+    // Bu durumda bile anlamlı bir mesaj dönüyoruz ki UI'da çirkin sabit text görünmesin
     return res.status(400).json({ message: "EMAIL_AND_INPUT_REQUIRED" });
   }
 
+  // 1) Kullanıcıyı Supabase'den çek
+  let user;
   try {
-    await ensurePro(email);
-  } catch (e) {
-    if (e.code === "ONLY_PRO") {
-      return res
-        .status(403)
-        .json({ message: "ONLY_PRO", detail: "Bu özellik sadece PRO üyeler için." });
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, email, plan, lang")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) {
+      console.error("pro-silent Supabase hatası:", error);
+      return res.status(500).json({ message: "DB_ERROR" });
     }
-    console.error("pro-silent Supabase hatası:", e);
+
+    user = data || null;
+  } catch (e) {
+    console.error("pro-silent Supabase genel hata:", e);
     return res.status(500).json({ message: "DB_ERROR" });
   }
 
+  const userLang = user?.lang || lang || "tr";
+
+  // 2) PRO değilse → 200 OK + PRO mesajı
+  if (!user || user.plan !== "pro") {
+    const proMsg = getProRequiredMessage(userLang);
+
+    return res.status(200).json({
+      message: proMsg,
+      proRequired: true,
+    });
+  }
+
+  // 3) PRO ise → AI cevabı üret
   try {
-    const prompt = buildPromptSilent(input, lang);
+    const prompt = buildPromptSilent(input, userLang);
     const text = await callAi(prompt);
-    return res.status(200).json({ message: text });
+
+    return res.status(200).json({
+      message: text,
+      proRequired: false,
+    });
   } catch (e) {
     console.error("pro-silent AI hatası:", e);
     return res.status(500).json({ message: "AI_ERROR" });
