@@ -11,10 +11,6 @@ const AD_DATE_KEY = "inspireapp_daily_ad_date_v1";
 const MAX_FREE_CREDITS = 4;
 const DAILY_AD_LIMIT = 400;
 
-// GİZLİLİK POLİTİKASI LİNKİ
-const POLICY_URL =
-  "https://sites.google.com/view/insprireapp-gizlilik-politikas/ana-sayfa";
-
 // === LANGUAGE TABLES ===
 const LANG_NAMES = {
   tr: "Turkish",
@@ -133,7 +129,8 @@ const I18N = {
 
     planFreeLabel: "Plan: Ücretsiz",
     planProLabel: "Plan: Pro (sınırsız puan)",
-    creditsLabelFree: (credits) => `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`,
+    creditsLabelFree: (credits) =>
+      `Kalan puan: ${credits}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Kalan puan: Sınırsız",
 
     onboardTitle: "INSPIREAPP",
@@ -385,17 +382,16 @@ const I18N = {
     adConfirmText: "أنت على وشك إلغاء مشاهدة الإعلان.",
     adContinueBtnText: "الاستمرار في المشاهدة",
     adConfirmCloseBtnText: "نعم، إغلاق",
-    adDailyLimit: (limit) => `تم بلوغ حد الإعلانات اليومي. (الحد: ${limit})`,
+    adDailyLimit: (limit) =>
+      `تم بلوغ حد الإعلانات اليومي. (الحد: ${limit})`,
     adPreparing: "جاري تجهيز الإعلان...",
 
     proTitle: "InspireApp PRO",
     proDesc:
       "خطة PRO تعطيك نقاطًا غير محدودة، بدون إعلانات، ووصولًا للميزات المميزة.",
     proPayBtnText: "الانتقال إلى PRO",
-    proPriceTextTr:
-      "InspireApp PRO – اشتراك شهري عبر Google Play.",
-    proPriceTextEn:
-      "InspireApp PRO – monthly subscription via Google Play.",
+    proPriceTextTr: "InspireApp PRO – اشتراك شهري عبر Google Play.",
+    proPriceTextEn: "InspireApp PRO – monthly subscription via Google Play.",
 
     emailNotSavedAlert: "يرجى إدخال بريد إلكتروني صحيح.",
     freeNoCreditsAlert:
@@ -510,10 +506,8 @@ const I18N = {
     proDesc:
       "PRO bietet unbegrenzte Credits, keine Werbung und Zugriff auf Premium-Features.",
     proPayBtnText: "Zu PRO wechseln",
-    proPriceTextTr:
-      "InspireApp PRO – Monatsabo über Google Play.",
-    proPriceTextEn:
-      "InspireApp PRO – monthly subscription via Google Play.",
+    proPriceTextTr: "InspireApp PRO – Monatsabo über Google Play.",
+    proPriceTextEn: "InspireApp PRO – monthly subscription via Google Play.",
 
     emailNotSavedAlert: "Bitte eine gültige E-Mail eingeben.",
     freeNoCreditsAlert:
@@ -628,10 +622,8 @@ const I18N = {
     proDesc:
       "PRO ofrece créditos ilimitados, sin anuncios y acceso a funciones premium.",
     proPayBtnText: "Ir a PRO",
-    proPriceTextTr:
-      "InspireApp PRO – suscripción mensual vía Google Play.",
-    proPriceTextEn:
-      "InspireApp PRO – monthly subscription via Google Play.",
+    proPriceTextTr: "InspireApp PRO – suscripción mensual vía Google Play.",
+    proPriceTextEn: "InspireApp PRO – monthly subscription via Google Play.",
 
     emailNotSavedAlert: "Por favor, introduce un correo válido.",
     freeNoCreditsAlert:
@@ -744,7 +736,7 @@ function renderConversationList() {
   if (!listEl) return;
   listEl.innerHTML = "";
 
-  // Mobilde uzun basınca sistem menüsü (kopyala/seç) çıkmasın diye
+  // Mobilde uzun basınca sistem menüsü çıkmasın diye
   if (!document.getElementById("mobile-press-style")) {
     const style = document.createElement("style");
     style.id = "mobile-press-style";
@@ -799,7 +791,8 @@ function renderConversationList() {
     .forEach((conv) => {
       const item = document.createElement("div");
       item.className =
-        "conversation-item" + (conv.id === state.currentId ? " active" : "");
+        "conversation-item" +
+        (conv.id === state.currentId ? " active" : "");
       item.textContent = conv.title || "Sohbet";
 
       // Normal tıklama → sohbete geç
@@ -809,7 +802,7 @@ function renderConversationList() {
         renderMessages();
       });
 
-      // Masaüstü: sağ tık → sil (ve sistem menüsünü engelle)
+      // Masaüstü: sağ tık → sil
       item.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         if (!("ontouchstart" in window)) {
@@ -874,9 +867,14 @@ function renderMessages() {
 function addMessage(role, text) {
   const conv = currentConv();
   conv.messages.push({ role, text });
-  if (!conv.title || conv.title === "Yeni sohbet" || conv.title === "New chat") {
+  if (
+    !conv.title ||
+    conv.title === "Yeni sohbet" ||
+    conv.title === "New chat"
+  ) {
     const firstUserMsg = conv.messages.find((m) => m.role === "user");
-    if (firstUserMsg?.text) conv.title = buildTitleFromText(firstUserMsg.text);
+    if (firstUserMsg?.text)
+      conv.title = buildTitleFromText(firstUserMsg.text);
   }
   saveConversations();
   renderConversationList();
@@ -900,7 +898,9 @@ function updatePlanAndCreditsUI() {
     creditsLabel.textContent =
       state.plan === "pro"
         ? t.creditsLabelPro
-        : (t.creditsLabelFree && t.creditsLabelFree(state.credits)) || "";
+        : (t.creditsLabelFree &&
+            t.creditsLabelFree(state.credits)) ||
+          "";
   }
   if (watchAdBtn) {
     watchAdBtn.classList.toggle("hidden", state.plan !== "free");
@@ -967,15 +967,15 @@ function applyUITextForLang(code) {
 
   setText("helpTitle", t.helpTitle);
   setText("helpAppTitle", t.helpAppTitle);
-  setText("helpFreeTitle", t.helpFreeTitle);
-  setText("helpProTitle", t.helpProTitle);
-  setText("helpSupportTitle", t.helpSupportTitle);
-  setText("closeHelpBtnText", t.closeHelpBtnText);
   setHTML("helpAppText1", t.helpAppText1);
   setHTML("helpAppText2", t.helpAppText2);
+  setText("helpFreeTitle", t.helpFreeTitle);
   setText("helpFreeText", t.helpFreeText);
+  setText("helpProTitle", t.helpProTitle);
   setHTML("helpProText", t.helpProText);
+  setText("helpSupportTitle", t.helpSupportTitle);
   setText("helpSupportText", t.helpSupportText);
+  setText("closeHelpBtnText", t.closeHelpBtnText);
 
   setText("trendsTitle", t.trendsTitle);
   setText("refreshTrendsBtnText", t.refreshTrendsBtnText);
@@ -1048,7 +1048,8 @@ function applySmallUIText(code) {
   const messageInput = document.getElementById("messageInput");
   if (sendBtn) sendBtn.textContent = t.send;
   if (watchAdBtn) watchAdBtn.textContent = t.ad;
-  if (messageInput && !messageInput.value) messageInput.placeholder = t.placeholder;
+  if (messageInput && !messageInput.value)
+    messageInput.placeholder = t.placeholder;
 }
 
 function fillLangSelect(selectEl) {
@@ -1099,66 +1100,6 @@ async function callSimpleAPI(route, payload) {
   }
 }
 
-// === PRO API HELPER – email + ONLY_PRO kontrolü ===
-async function callProAPI(route, inputValue, resultEl) {
-  const t = I18N[state.lang] || I18N.tr;
-
-  if (!state.email) {
-    const msg =
-      state.lang === "tr"
-        ? "PRO araçlarını kullanmak için önce geçerli bir e-posta ile giriş yapmalısın."
-        : state.lang === "ar"
-        ? "لاستخدام أدوات PRO يجب أولاً حفظ بريد إلكتروني صالح."
-        : state.lang === "de"
-        ? "Um PRO-Tools zu nutzen, musst du zuerst eine gültige E-Mail speichern."
-        : state.lang === "es"
-        ? "Para usar las herramientas PRO, primero debes guardar un correo válido."
-        : "To use PRO tools, please save a valid email first.";
-    resultEl.textContent = msg;
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/${route}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: state.email,
-        input: inputValue,
-        lang: LANG_NAMES[state.lang] || "Turkish",
-      }),
-    });
-
-    const data = await res.json().catch(() => null);
-
-    if (res.status === 403 && data?.message === "ONLY_PRO") {
-      const proMsg =
-        state.lang === "tr"
-          ? "Bu özellik sadece PRO üyeler için. Uygulamadaki PRO’ya geç butonunu kullanarak yükseltebilirsin."
-          : state.lang === "ar"
-          ? "هذه الميزة متاحة فقط لمستخدمي PRO. يمكنك الترقية عبر زر الانتقال إلى PRO في التطبيق."
-          : state.lang === "de"
-          ? "Dieses Feature ist nur für PRO-Nutzer. Du kannst über den „Zu PRO wechseln“-Button upgraden."
-          : state.lang === "es"
-          ? "Esta función solo está disponible para usuarios PRO. Puedes actualizar con el botón Ir a PRO."
-          : "This feature is only available for PRO users. Please upgrade using the Go PRO button.";
-      resultEl.textContent = proMsg;
-      return;
-    }
-
-    if (!res.ok) {
-      resultEl.textContent =
-        data?.message || "Sunucudan anlamlı bir cevap alınamadı.";
-      return;
-    }
-
-    resultEl.textContent =
-      data?.message || "Sunucudan anlamlı bir cevap alınamadı.";
-  } catch (e) {
-    resultEl.textContent = "Sunucuya bağlanırken bir hata oluştu.";
-  }
-}
-
 async function loadTrends() {
   const list = document.getElementById("trendsList");
   if (!list) return;
@@ -1169,7 +1110,9 @@ async function loadTrends() {
     const data = await res.json();
     if (!res.ok) {
       list.innerHTML =
-        "<li>Trendler alınırken hata: " + (data.message || "") + "</li>";
+        "<li>Trendler alınırken hata: " +
+        (data.message || "") +
+        "</li>";
       return;
     }
     if (!data.items?.length) {
@@ -1248,17 +1191,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const helpToggle2 = document.getElementById("helpToggle2");
   const closeHelpBtn = document.getElementById("closeHelpBtn");
 
-  // Yardım panelinin sonuna gizlilik politikası kutusu ekle
-  if (helpPanel) {
-    const policyBox = document.createElement("div");
-    policyBox.className = "policy-box";
-    policyBox.innerHTML =
-      'Gizlilik politikası: <a href="' +
-      POLICY_URL +
-      '" target="_blank" rel="noopener noreferrer">buraya tıkla</a>';
-    helpPanel.appendChild(policyBox);
-  }
-
   const chatForm = document.getElementById("chatForm");
   const topicInput = document.getElementById("topicInput");
   const platformSelect = document.getElementById("platformSelect");
@@ -1287,10 +1219,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const proCompetitorInput = document.getElementById("proCompetitorInput");
   const proCompetitorBtn = document.getElementById("proCompetitorBtn");
-  const proCompetitorResult = document.getElementById("proCompetitorResult");
+  const proCompetitorResult =
+    document.getElementById("proCompetitorResult");
   const proAudienceInput = document.getElementById("proAudienceInput");
   const proAudienceBtn = document.getElementById("proAudienceBtn");
-  const proAudienceResult = document.getElementById("proAudienceResult");
+  const proAudienceResult =
+    document.getElementById("proAudienceResult");
   const proSilentInput = document.getElementById("proSilentInput");
   const proSilentBtn = document.getElementById("proSilentBtn");
   const proSilentResult = document.getElementById("proSilentResult");
@@ -1303,23 +1237,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const adCancelBtn = document.getElementById("adCancelBtn");
   const adCloseIcon = document.getElementById("adCloseIcon");
   const adContinueBtn = document.getElementById("adContinueBtn");
-  const adConfirmCloseBtn = document.getElementById("adConfirmCloseBtn");
+  const adConfirmCloseBtn =
+    document.getElementById("adConfirmCloseBtn");
 
   const proModal = document.getElementById("proModal");
   const proCloseBtn = document.getElementById("proCloseBtn");
   const proPriceText = document.getElementById("proPriceText");
   const proPayBtn = document.getElementById("proPayBtn");
 
-  const onboardingOverlay = document.getElementById("onboardingOverlay");
+  const onboardingOverlay =
+    document.getElementById("onboardingOverlay");
   const onboardStepLang = document.getElementById("onboardStepLang");
-  const onboardStepEmail = document.getElementById("onboardStepEmail");
-  const onboardLangSelect = document.getElementById("onboardLangSelect");
-  const onboardLangSaveBtn = document.getElementById("onboardLangSaveBtn");
-  const onboardEmailInput = document.getElementById("onboardEmailInput");
-  const onboardPasswordInput = document.getElementById("onboardPasswordInput");
-  const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
+  const onboardStepEmail =
+    document.getElementById("onboardStepEmail");
+  const onboardLangSelect =
+    document.getElementById("onboardLangSelect");
+  const onboardLangSaveBtn =
+    document.getElementById("onboardLangSaveBtn");
+  const onboardEmailInput =
+    document.getElementById("onboardEmailInput");
+  const onboardPasswordInput =
+    document.getElementById("onboardPasswordInput");
+  const onboardEmailSaveBtn =
+    document.getElementById("onboardEmailSaveBtn");
 
-  // Fill language selectors
+  // Dil select doldur
   fillLangSelect(langSelect);
   fillLangSelect(onboardLangSelect);
 
@@ -1332,7 +1274,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTrends();
 
   function showOnboardingIfNeeded() {
-    if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
+    if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail)
+      return;
     const hasLang = !!localStorage.getItem(LANG_KEY);
     const hasEmail = !!localStorage.getItem(EMAIL_KEY);
     if (hasLang && hasEmail) {
@@ -1359,36 +1302,28 @@ document.addEventListener("DOMContentLoaded", () => {
   // === Sidebar'ı yana kaydırarak kapatma (mobil swipe) ===
   let swipeStartX = null;
 
-  document.addEventListener(
-    "touchstart",
-    (e) => {
-      if (!sidebar || sidebar.classList.contains("hidden")) return;
-      if (!e.touches || !e.touches.length) return;
-      swipeStartX = e.touches[0].clientX;
-    },
-    { passive: true }
-  );
+  document.addEventListener("touchstart", (e) => {
+    if (!sidebar || sidebar.classList.contains("hidden")) return;
+    if (!e.touches || !e.touches.length) return;
+    swipeStartX = e.touches[0].clientX;
+  });
 
-  document.addEventListener(
-    "touchend",
-    (e) => {
-      if (swipeStartX === null) return;
-      if (!sidebar || sidebar.classList.contains("hidden")) {
-        swipeStartX = null;
-        return;
-      }
-      if (!e.changedTouches || !e.changedTouches.length) return;
-
-      const endX = e.changedTouches[0].clientX;
-      const diffX = endX - swipeStartX;
-
-      if (Math.abs(diffX) > 60) {
-        sidebar.classList.add("hidden");
-      }
+  document.addEventListener("touchend", (e) => {
+    if (swipeStartX === null) return;
+    if (!sidebar || sidebar.classList.contains("hidden")) {
       swipeStartX = null;
-    },
-    { passive: true }
-  );
+      return;
+    }
+    if (!e.changedTouches || !e.changedTouches.length) return;
+
+    const endX = e.changedTouches[0].clientX;
+    const diffX = endX - swipeStartX;
+
+    if (Math.abs(diffX) > 60) {
+      sidebar.classList.add("hidden");
+    }
+    swipeStartX = null;
+  });
 
   function openHelp() {
     if (helpPanel) helpPanel.classList.remove("hidden");
@@ -1435,7 +1370,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const t = I18N[state.lang] || I18N.tr;
     const isTr = state.lang === "tr";
     if (proPriceText) {
-      proPriceText.textContent = isTr ? t.proPriceTextTr : t.proPriceTextEn;
+      proPriceText.textContent = isTr
+        ? t.proPriceTextTr
+        : t.proPriceTextEn;
     }
     modalBackdrop.classList.remove("hidden");
     proModal.classList.remove("hidden");
@@ -1497,7 +1434,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", (e) => {
-      // Close only if user clicks on the backdrop, not the modal itself
       if (e.target === modalBackdrop) {
         closeAdModal();
         closeProModal();
@@ -1525,7 +1461,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const t = I18N[state.lang] || I18N.tr;
       const isTr = state.lang === "tr";
       const priceShort = isTr ? "aylık 299 TL" : "monthly";
-      if (window.AndroidBilling && window.AndroidBilling.startPurchase) {
+      if (
+        window.AndroidBilling &&
+        window.AndroidBilling.startPurchase
+      ) {
         const sku = isTr ? "pro_monthly_tr" : "pro_monthly_intl";
         window.AndroidBilling.startPurchase(sku);
       } else {
@@ -1546,12 +1485,17 @@ document.addEventListener("DOMContentLoaded", () => {
       applySmallUIText(code);
       loadTrends();
       if (onboardStepLang) onboardStepLang.classList.add("hidden");
-      if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
+      if (onboardStepEmail)
+        onboardStepEmail.classList.remove("hidden");
     });
   }
 
   // === GİRİŞ / KAYIT – ŞİFRE YANLIŞ MESAJI DAHİL ===
-  if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
+  if (
+    onboardEmailSaveBtn &&
+    onboardEmailInput &&
+    onboardPasswordInput
+  ) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
       const email = onboardEmailInput.value.trim();
       const password = onboardPasswordInput.value.trim();
@@ -1605,11 +1549,13 @@ document.addEventListener("DOMContentLoaded", () => {
               ? "Contraseña incorrecta."
               : "Wrong password. Please try again.";
           setTimeout(() => alert(msg), 100);
-          return; // Onboarding açık kalsın
+          return;
         }
 
         if (!res.ok || !data) {
-          throw new Error(data?.error || data?.message || "Sunucu hatası");
+          throw new Error(
+            data?.error || data?.message || "Sunucu hatası"
+          );
         }
       } catch (e) {
         console.error("register-user hatası:", e);
@@ -1624,10 +1570,9 @@ document.addEventListener("DOMContentLoaded", () => {
             ? "Error durante el login/registro: "
             : "Error during login/register: ";
         alert(msg + (e.message || ""));
-        return; // Onboarding'i kapatma, kullanıcı tekrar denesin
+        return;
       }
 
-      // Backend cevaplarına göre kullanıcıya net mesaj
       if (data.status === "login") {
         const msg =
           state.lang === "tr"
@@ -1674,7 +1619,8 @@ document.addEventListener("DOMContentLoaded", () => {
     changeEmailBtn.addEventListener("click", () => {
       if (!onboardingOverlay) return;
       if (onboardStepLang) onboardStepLang.classList.add("hidden");
-      if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
+      if (onboardStepEmail)
+        onboardStepEmail.classList.remove("hidden");
       onboardingOverlay.classList.remove("hidden");
     });
   }
@@ -1691,62 +1637,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === PANEL GEÇİŞLERİ + GERİ TUŞU DAVRANIŞI ===
-
-  function showPanel(target, pushState = false) {
-    document
-      .querySelectorAll("main .panel")
-      .forEach((sec) => sec.classList.add("hidden"));
-    const active = document.getElementById(`panel-${target}`);
-    if (active) active.classList.remove("hidden");
-    if (sidebar) sidebar.classList.add("hidden");
-
-    if (pushState && window.history && window.history.pushState) {
-      window.history.pushState({ panel: target }, "", "#" + target);
-    }
-  }
-
-  // Başlangıçta sohbet panelini state'e yaz
-  if (window.history && window.history.replaceState) {
-    window.history.replaceState({ panel: "chat" }, "", "#chat");
-  }
-
-  // Panel butonları (sol menü)
+  // Panel switching
   document.querySelectorAll(".side-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const target = btn.dataset.panel || "chat";
-      const push = target !== "chat"; // sohbet dışına geçerken history'e ekle
-      showPanel(target, push);
+      const target = btn.dataset.panel;
+      showPanel(target);
+      if (sidebar) sidebar.classList.add("hidden");
     });
-  });
-
-  // PRO ana liste → PRO detay paneller
-  document.querySelectorAll(".pro-tool-item").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.dataset.proTarget; // örn: "pro-competitor"
-      if (!target) return;
-      showPanel(target, true); // panel-pro-competitor
-    });
-  });
-
-  // PRO detay ekranlarının üstündeki geri butonları
-  document.querySelectorAll("[data-pro-back]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const backTarget = btn.dataset.proBack || "pro";
-      showPanel(backTarget, true); // tekrar panel-pro
-    });
-  });
-
-  // Tarayıcı / Android geri tuşu
-  window.addEventListener("popstate", (event) => {
-    const panel = (event.state && event.state.panel) || "chat";
-    showPanel(panel, false);
   });
 
   // VOICE (Web Speech API)
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRec =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRec();
     recognition.lang = LANG_SPEECH[state.lang] || "en-US";
     recognition.interimResults = false;
@@ -1771,16 +1675,17 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         recognition.lang = LANG_SPEECH[state.lang] || "en-US";
         recognition.start();
-      } catch (e) {
-        // ignore "already started" errors
-      }
+      } catch (e) {}
       voiceBtn.disabled = true;
       voiceBtn.textContent = "🎤…";
 
       recognition.onresult = (ev) => {
-        const text = ev.results?.[0]?.[0]?.transcript || "";
+        const text =
+          ev.results?.[0]?.[0]?.transcript || "";
         if (messageInput && text) {
-          messageInput.value = (messageInput.value + " " + text).trim();
+          messageInput.value = (
+            messageInput.value + " " + text
+          ).trim();
         }
       };
       recognition.onerror = () => {
@@ -1866,14 +1771,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // PRO PANEL BUTTON'LARI – yeni callProAPI kullanıyor
+  // PRO PANEL BUTTON'LARI
   if (proCompetitorBtn && proCompetitorInput && proCompetitorResult) {
     proCompetitorBtn.addEventListener("click", async () => {
       const value = proCompetitorInput.value.trim();
       if (!value) return;
       proCompetitorResult.textContent =
         I18N[state.lang]?.loadingText || "Yükleniyor...";
-      await callProAPI("pro-competitor", value, proCompetitorResult);
+      const text = await callSimpleAPI("pro-competitor", {
+        input: value,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+        plan: state.plan,
+      });
+      proCompetitorResult.textContent = text;
     });
   }
 
@@ -1883,7 +1793,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!value) return;
       proAudienceResult.textContent =
         I18N[state.lang]?.loadingText || "Yükleniyor...";
-      await callProAPI("pro-audience", value, proAudienceResult);
+      const text = await callSimpleAPI("pro-audience", {
+        input: value,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+        plan: state.plan,
+      });
+      proAudienceResult.textContent = text;
     });
   }
 
@@ -1893,12 +1808,23 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!value) return;
       proSilentResult.textContent =
         I18N[state.lang]?.loadingText || "Yükleniyor...";
-      await callProAPI("pro-silent", value, proSilentResult);
+      const text = await callSimpleAPI("pro-silent", {
+        input: value,
+        lang: LANG_NAMES[state.lang] || "Turkish",
+        plan: state.plan,
+      });
+      proSilentResult.textContent = text;
     });
   }
 
-  // === CHAT SUBMIT (PRO kullanıcılara özel prompt) ===
-  if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
+  // === CHAT SUBMIT ===
+  if (
+    chatForm &&
+    topicInput &&
+    platformSelect &&
+    messageInput &&
+    loadingEl
+  ) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const t = I18N[state.lang] || I18N.tr;
@@ -1939,3 +1865,92 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// === GLOBAL PANEL GÖSTER FONKSİYONU ===
+function showPanel(name) {
+  document.querySelectorAll("main .panel").forEach((sec) => {
+    sec.classList.add("hidden");
+  });
+  const active = document.getElementById("panel-" + name);
+  if (active) active.classList.remove("hidden");
+}
+
+// === ANDROID GERİ TUŞU GENEL YÖNETİMİ ===
+// Android: if (window.__inspireHandleBack && window.__inspireHandleBack()) { } else { super.onBackPressed(); }
+window.__inspireHandleBack = function () {
+  const $ = (id) => document.getElementById(id);
+
+  // 1) Onboarding açıksa kapat
+  const onboarding = $("onboardingOverlay");
+  if (onboarding && !onboarding.classList.contains("hidden")) {
+    onboarding.classList.add("hidden");
+    return true;
+  }
+
+  // 2) PRO ödeme modali açıksa kapat
+  const proModal = $("proModal");
+  if (proModal && !proModal.classList.contains("hidden")) {
+    proModal.classList.add("hidden");
+    const backdrop = $("modalBackdrop");
+    if (backdrop) backdrop.classList.add("hidden");
+    return true;
+  }
+
+  // 3) Reklam modali açıksa kapat
+  const adModal = $("adModal");
+  if (adModal && !adModal.classList.contains("hidden")) {
+    adModal.classList.add("hidden");
+    const backdrop = $("modalBackdrop");
+    if (backdrop) backdrop.classList.add("hidden");
+    return true;
+  }
+
+  // 4) Yardım paneli açıksa kapat
+  const helpPanel = $("helpPanel");
+  if (helpPanel && !helpPanel.classList.contains("hidden")) {
+    helpPanel.classList.add("hidden");
+    return true;
+  }
+
+  // 5) Sol sidebar açıksa kapat
+  const sidebar = $("sidebar");
+  if (sidebar && !sidebar.classList.contains("hidden")) {
+    sidebar.classList.add("hidden");
+    return true;
+  }
+
+  // 6) PRO panelindeysen sohbet ekranına dön
+  const proPanel = $("panel-pro");
+  if (proPanel && !proPanel.classList.contains("hidden")) {
+    showPanel("chat");
+    return true;
+  }
+
+  // 7) Diğer panellerden sohbete dön
+  const otherPanels = ["trends", "series", "hook", "copy"];
+  for (const name of otherPanels) {
+    const el = $("panel-" + name);
+    if (el && !el.classList.contains("hidden")) {
+      showPanel("chat");
+      return true;
+    }
+  }
+
+  // 8) Sohbet paneli gizliyse aç
+  const chatPanel = $("panel-chat");
+  if (chatPanel && chatPanel.classList.contains("hidden")) {
+    showPanel("chat");
+    return true;
+  }
+
+  // 9) Artık ana ekrandayız → Android normal geri (uygulamadan çık)
+  return false;
+};
+
+// === PWA: Service Worker Kaydı ===
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/service-worker.js")
+    .then(() => console.log("Service Worker yüklendi ✔"))
+    .catch((err) => console.error("SW hatası:", err));
+}
