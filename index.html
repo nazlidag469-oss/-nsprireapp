@@ -13,6 +13,34 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="style.css" />
+
+    <!-- PRO panel layout için küçük ekstra CSS -->
+    <style>
+      .pro-layout {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+      }
+      .pro-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 190px;
+      }
+      .pro-content {
+        flex: 1;
+        min-height: 220px;
+      }
+      .pro-menu-btn {
+        width: 100%;
+        text-align: left;
+      }
+      .pro-back-row {
+        display: flex;
+        justify-content: flex-start;
+        margin-bottom: 0.5rem;
+      }
+    </style>
   </head>
 
   <body>
@@ -190,72 +218,134 @@
           <pre id="copyResult" class="panel-result"></pre>
         </section>
 
-        <!-- ⭐⭐ PRO PANELİ (1, 3, 5) ⭐⭐ -->
+        <!-- ⭐⭐ PRO PANELİ (LİSTE + TAM EKRAN ARAÇLAR) ⭐⭐ -->
         <section id="panel-pro" class="panel hidden">
           <h2 id="proPanelTitle" class="panel-title">⭐ PRO Araçları</h2>
           <p class="muted" id="proPanelDesc">
             Bu bölümdeki araçlar PRO kullanıcılar için tasarlandı. Ücretsiz
-            planda çalışır ama kısıtlı içerik döner; PRO’da tam güç açılır.
+            planda kısıtlı, PRO’da tam güç açılır.
           </p>
 
-          <!-- 1) Rakip Video Analizi -->
-          <div class="card">
-            <h3 id="proTool1Title">1) Rakip Video Analizi</h3>
-            <p id="proTool1Desc" class="muted">
-              TikTok / Reels / Shorts linki veya açıklamasını gir. InspireApp;
-              neden tuttuğunu, daha güçlü hook’ları ve sana özel bir versiyon
-              üretir.
-            </p>
-            <textarea
-              id="proCompetitorInput"
-              rows="3"
-              placeholder="Örn: TikTok linki veya rakip videonun açıklaması..."
-            ></textarea>
-            <button id="proCompetitorBtn" class="pill-button primary">
-              <span id="proCompetitorBtnText">
-                Rakip videoyu analiz et (PRO)
-              </span>
-            </button>
-            <pre id="proCompetitorResult" class="panel-result"></pre>
-          </div>
+          <div class="pro-layout">
+            <!-- SOL: PRO ARAÇ MENÜSÜ -->
+            <div id="proMenu" class="pro-menu">
+              <button
+                type="button"
+                class="pill-button pro-menu-btn"
+                data-pro-tool="competitor"
+              >
+                <span id="proMenu1Label">1) Rakip Video Analizi</span>
+              </button>
+              <button
+                type="button"
+                class="pill-button pro-menu-btn"
+                data-pro-tool="audience"
+              >
+                <span id="proMenu3Label">3) Kitle İçgörü Analizi</span>
+              </button>
+              <button
+                type="button"
+                class="pill-button pro-menu-btn"
+                data-pro-tool="silent"
+              >
+                <span id="proMenu5Label">5) Sessiz Video İçerik Üreticisi</span>
+              </button>
+            </div>
 
-          <!-- 3) Kitle İçgörü Analizi -->
-          <div class="card">
-            <h3 id="proTool3Title">3) Kitle İçgörü Analizi</h3>
-            <p id="proTool3Desc" class="muted">
-              Hedef kitleni tek cümle ile anlat. InspireApp senin için
-              psikoloji, format, hook ve CTA kalıplarını çıkarır.
-            </p>
-            <textarea
-              id="proAudienceInput"
-              rows="3"
-              placeholder="Örn: 17–24 yaş, fitness nişinde hedef kitlem var."
-            ></textarea>
-            <button id="proAudienceBtn" class="pill-button primary">
-              <span id="proAudienceBtnText">Kitle içgörüsü üret (PRO)</span>
-            </button>
-            <pre id="proAudienceResult" class="panel-result"></pre>
-          </div>
+            <!-- SAĞ: DETAY / TAM EKRAN BENZERİ ALAN -->
+            <div class="pro-content">
+              <!-- GİRİŞ KARTI (liste açıkken görünen) -->
+              <div id="proIntro" class="card">
+                <p class="muted" id="proIntroText">
+                  Soldaki listeden bir PRO aracı seç; seçtiğin araç burada
+                  tek başına, tam ekran gibi açılır.
+                </p>
+              </div>
 
-          <!-- 5) Sessiz Video İçerik Üreticisi -->
-          <div class="card">
-            <h3 id="proTool5Title">5) Sessiz Video İçerik Üreticisi</h3>
-            <p id="proTool5Desc" class="muted">
-              Yüzünü göstermeden, ses kullanmadan içerik üretmek istiyorsan
-              konunu yaz. Sessiz video akışları, sahne önerileri ve metinler
-              üretelim.
-            </p>
-            <textarea
-              id="proSilentInput"
-              rows="3"
-              placeholder="Örn: Sessiz motivasyon videoları ile büyümek istiyorum."
-            ></textarea>
-            <button id="proSilentBtn" class="pill-button primary">
-              <span id="proSilentBtnText">
-                Sessiz içerik fikirleri üret (PRO)
-              </span>
-            </button>
-            <pre id="proSilentResult" class="panel-result"></pre>
+              <!-- 1) Rakip Video Analizi -->
+              <div id="proToolCompetitor" class="card hidden">
+                <div class="pro-back-row">
+                  <button
+                    type="button"
+                    class="pill-button small pro-back-btn"
+                  >
+                    ← <span id="proBackFrom1Text">PRO listesine dön</span>
+                  </button>
+                </div>
+                <h3 id="proTool1Title">1) Rakip Video Analizi</h3>
+                <p id="proTool1Desc" class="muted">
+                  TikTok / Reels / Shorts linki veya açıklamasını gir.
+                  InspireApp; neden tuttuğunu, daha güçlü hook’ları ve sana
+                  özel bir versiyon üretir.
+                </p>
+                <textarea
+                  id="proCompetitorInput"
+                  rows="5"
+                  placeholder="Örn: TikTok linki veya rakip videonun açıklaması..."
+                ></textarea>
+                <button id="proCompetitorBtn" class="pill-button primary">
+                  <span id="proCompetitorBtnText">
+                    Rakip videoyu analiz et (PRO)
+                  </span>
+                </button>
+                <pre id="proCompetitorResult" class="panel-result"></pre>
+              </div>
+
+              <!-- 3) Kitle İçgörü Analizi -->
+              <div id="proToolAudience" class="card hidden">
+                <div class="pro-back-row">
+                  <button
+                    type="button"
+                    class="pill-button small pro-back-btn"
+                  >
+                    ← <span id="proBackFrom3Text">PRO listesine dön</span>
+                  </button>
+                </div>
+                <h3 id="proTool3Title">3) Kitle İçgörü Analizi</h3>
+                <p id="proTool3Desc" class="muted">
+                  Hedef kitleni tek cümle ile anlat. InspireApp senin için
+                  psikoloji, format, hook ve CTA kalıplarını çıkarır.
+                </p>
+                <textarea
+                  id="proAudienceInput"
+                  rows="5"
+                  placeholder="Örn: 17–24 yaş, fitness nişinde hedef kitlem var."
+                ></textarea>
+                <button id="proAudienceBtn" class="pill-button primary">
+                  <span id="proAudienceBtnText">Kitle içgörüsü üret (PRO)</span>
+                </button>
+                <pre id="proAudienceResult" class="panel-result"></pre>
+              </div>
+
+              <!-- 5) Sessiz Video İçerik Üreticisi -->
+              <div id="proToolSilent" class="card hidden">
+                <div class="pro-back-row">
+                  <button
+                    type="button"
+                    class="pill-button small pro-back-btn"
+                  >
+                    ← <span id="proBackFrom5Text">PRO listesine dön</span>
+                  </button>
+                </div>
+                <h3 id="proTool5Title">5) Sessiz Video İçerik Üreticisi</h3>
+                <p id="proTool5Desc" class="muted">
+                  Yüzünü göstermeden, ses kullanmadan içerik üretmek
+                  istiyorsan konunu yaz. Sessiz video akışları, sahne
+                  önerileri ve metinler üretelim.
+                </p>
+                <textarea
+                  id="proSilentInput"
+                  rows="5"
+                  placeholder="Örn: Sessiz motivasyon videoları ile büyümek istiyorum."
+                ></textarea>
+                <button id="proSilentBtn" class="pill-button primary">
+                  <span id="proSilentBtnText">
+                    Sessiz içerik fikirleri üret (PRO)
+                  </span>
+                </button>
+                <pre id="proSilentResult" class="panel-result"></pre>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -581,6 +671,13 @@
           emailNotSavedAlert: "Lütfen geçerli bir e-posta gir.",
           freeNoCreditsAlert:
             "Ücretsiz planda kredi bitti. Reklam izleyerek +1 alabilirsin.",
+
+          // Yeni: PRO liste / intro / sadece PRO mesajı
+          proBackToListText: "PRO listesine dön",
+          proIntroText:
+            "Soldaki listeden bir PRO aracı seç; seçtiğin araç sağda tam ekran gibi açılır.",
+          proOnlyMessage:
+            "Bu özellik sadece PRO kullanıcılar içindir. PRO'ya geçerek tam erişim sağlayabilirsin.",
         },
 
         en: {
@@ -664,7 +761,8 @@
 
           planFreeLabel: "Plan: Free",
           planProLabel: "Plan: Pro (unlimited credits)",
-          creditsLabelFree: (credits) => `Credits: ${credits}/${MAX_FREE_CREDITS}`,
+          creditsLabelFree: (credits) =>
+            `Credits: ${credits}/${MAX_FREE_CREDITS}`,
           creditsLabelPro: "Credits: Unlimited",
 
           onboardTitle: "INSPIREAPP",
@@ -683,19 +781,28 @@
           adConfirmText: "You are about to cancel watching the ad.",
           adContinueBtnText: "Keep watching",
           adConfirmCloseBtnText: "Yes, close",
-          adDailyLimit: (limit) => `Daily ad limit reached. (Limit: ${limit})`,
+          adDailyLimit: (limit) =>
+            `Daily ad limit reached. (Limit: ${limit})`,
           adPreparing: "Ad is loading...",
 
           proTitle: "InspireApp PRO",
           proDesc:
             "PRO gives unlimited credits, no ads, and access to all future premium features.",
           proPayBtnText: "Go PRO",
-          proPriceTextTr: "InspireApp PRO – monthly subscription via Google Play.",
-          proPriceTextEn: "InspireApp PRO – monthly subscription via Google Play.",
+          proPriceTextTr:
+            "InspireApp PRO – monthly subscription via Google Play.",
+          proPriceTextEn:
+            "InspireApp PRO – monthly subscription via Google Play.",
 
           emailNotSavedAlert: "Please enter a valid email.",
           freeNoCreditsAlert:
             "You ran out of credits on the free plan. Watch an ad to get +1.",
+
+          proBackToListText: "Back to PRO tools",
+          proIntroText:
+            "Select a PRO tool from the left; it will open here in a focused full view.",
+          proOnlyMessage:
+            "This feature is only available for PRO users. Upgrade to PRO to unlock it.",
         },
 
         // === ARABIC ===
@@ -779,7 +886,8 @@
 
           planFreeLabel: "الخطة: مجانية",
           planProLabel: "الخطة: PRO (نقاط غير محدودة)",
-          creditsLabelFree: (credits) => `النقاط: ${credits}/${MAX_FREE_CREDITS}`,
+          creditsLabelFree: (credits) =>
+            `النقاط: ${credits}/${MAX_FREE_CREDITS}`,
           creditsLabelPro: "النقاط: غير محدودة",
 
           onboardTitle: "INSPIREAPP",
@@ -798,7 +906,8 @@
           adConfirmText: "أنت على وشك إلغاء مشاهدة الإعلان.",
           adContinueBtnText: "الاستمرار في المشاهدة",
           adConfirmCloseBtnText: "نعم، إغلاق",
-          adDailyLimit: (limit) => `تم بلوغ حد الإعلانات اليومي. (الحد: ${limit})`,
+          adDailyLimit: (limit) =>
+            `تم بلوغ حد الإعلانات اليومي. (الحد: ${limit})`,
           adPreparing: "جاري تجهيز الإعلان...",
 
           proTitle: "InspireApp PRO",
@@ -813,6 +922,12 @@
           emailNotSavedAlert: "يرجى إدخال بريد إلكتروني صحيح.",
           freeNoCreditsAlert:
             "انتهت نقاط الخطة المجانية. شاهد إعلانًا لتحصل على +1.",
+
+          proBackToListText: "العودة إلى قائمة PRO",
+          proIntroText:
+            "اختر أداة PRO من القائمة على اليسار؛ ستظهر هنا في عرض مركّز.",
+          proOnlyMessage:
+            "هذه الميزة متاحة فقط لمستخدمي PRO. يمكنك الترقية للوصول الكامل.",
         },
 
         // === GERMAN ===
@@ -896,7 +1011,8 @@
 
           planFreeLabel: "Plan: Gratis",
           planProLabel: "Plan: PRO (unbegrenzte Credits)",
-          creditsLabelFree: (credits) => `Credits: ${credits}/${MAX_FREE_CREDITS}`,
+          creditsLabelFree: (credits) =>
+            `Credits: ${credits}/${MAX_FREE_CREDITS}`,
           creditsLabelPro: "Credits: Unbegrenzt",
 
           onboardTitle: "INSPIREAPP",
@@ -931,6 +1047,12 @@
           emailNotSavedAlert: "Bitte eine gültige E-Mail eingeben.",
           freeNoCreditsAlert:
             "Deine Gratis-Credits sind aufgebraucht. Sieh dir eine Werbung an, um +1 zu erhalten.",
+
+          proBackToListText: "Zur PRO-Liste zurück",
+          proIntroText:
+            "Wähle links ein PRO-Tool; es öffnet sich rechts in einer fokussierten Ansicht.",
+          proOnlyMessage:
+            "Diese Funktion ist nur für PRO-Nutzer. Upgrade auf PRO, um sie freizuschalten.",
         },
 
         // === SPANISH ===
@@ -1014,7 +1136,8 @@
 
           planFreeLabel: "Plan: Gratis",
           planProLabel: "Plan: PRO (créditos ilimitados)",
-          creditsLabelFree: (credits) => `Créditos: ${credits}/${MAX_FREE_CREDITS}`,
+          creditsLabelFree: (credits) =>
+            `Créditos: ${credits}/${MAX_FREE_CREDITS}`,
           creditsLabelPro: "Créditos: Ilimitados",
 
           onboardTitle: "INSPIREAPP",
@@ -1049,6 +1172,12 @@
           emailNotSavedAlert: "Por favor, introduce un correo válido.",
           freeNoCreditsAlert:
             "Se han agotado tus créditos gratuitos. Mira un anuncio para obtener +1.",
+
+          proBackToListText: "Volver a la lista PRO",
+          proIntroText:
+            "Elige una herramienta PRO a la izquierda; se abrirá aquí en vista enfocada.",
+          proOnlyMessage:
+            "Esta función solo está disponible para usuarios PRO. Pásate a PRO para desbloquearla.",
         },
       };
 
@@ -1457,6 +1586,15 @@
         setText("proAudienceBtnText", t.proAudienceBtnText);
         setText("proSilentBtnText", t.proSilentBtnText);
 
+        // Yeni: PRO menü etiketleri + geri tuşları + intro
+        setText("proMenu1Label", t.proTool1Title);
+        setText("proMenu3Label", t.proTool3Title);
+        setText("proMenu5Label", t.proTool5Title);
+        setText("proBackFrom1Text", t.proBackToListText);
+        setText("proBackFrom3Text", t.proBackToListText);
+        setText("proBackFrom5Text", t.proBackToListText);
+        setText("proIntroText", t.proIntroText);
+
         // Plan & credits (dynamic) refresh
         updatePlanAndCreditsUI();
       }
@@ -1514,8 +1652,42 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
+
           const data = await res.json().catch(() => null);
-          return data?.message || "Sunucudan anlamlı bir cevap alınamadı.";
+          if (!data || typeof data.message === "undefined") {
+            return "Sunucudan anlamlı bir cevap alınamadı.";
+          }
+
+          // PRO kontrol hatası
+          if (data.message === "ONLY_PRO") {
+            const t = I18N[state?.lang || "tr"] || I18N.tr;
+            return (
+              t.proOnlyMessage ||
+              "Bu özellik sadece PRO kullanıcılar içindir. PRO'ya geçerek tam erişim sağlayabilirsin."
+            );
+          }
+
+          // Email eksikse
+          if (data.message === "EMAIL_REQUIRED") {
+            if (state.lang === "tr") {
+              return "Bu özelliği kullanmak için e-posta ile giriş yapmalısın.";
+            }
+            if (state.lang === "en") {
+              return "You need to sign in with an email to use this feature.";
+            }
+            if (state.lang === "ar") {
+              return "يجب تسجيل الدخول بالبريد الإلكتروني لاستخدام هذه الميزة.";
+            }
+            if (state.lang === "de") {
+              return "Du musst dich mit einer E-Mail anmelden, um diese Funktion zu nutzen.";
+            }
+            if (state.lang === "es") {
+              return "Debes iniciar sesión con correo electrónico para usar esta función.";
+            }
+            return "Please sign in with an email to use this feature.";
+          }
+
+          return data.message;
         } catch {
           return "Sunucuya bağlanırken bir hata oluştu.";
         }
@@ -1650,6 +1822,15 @@
         const proSilentBtn = document.getElementById("proSilentBtn");
         const proSilentResult = document.getElementById("proSilentResult");
 
+        const proMenu = document.getElementById("proMenu");
+        const proIntro = document.getElementById("proIntro");
+        const proToolCompetitor =
+          document.getElementById("proToolCompetitor");
+        const proToolAudience = document.getElementById("proToolAudience");
+        const proToolSilent = document.getElementById("proToolSilent");
+        const proMenuButtons = document.querySelectorAll(".pro-menu-btn");
+        const proBackButtons = document.querySelectorAll(".pro-back-btn");
+
         const modalBackdrop = document.getElementById("modalBackdrop");
         const adModal = document.getElementById("adModal");
         const adStepMain = document.getElementById("adStepMain");
@@ -1682,6 +1863,34 @@
         const onboardEmailSaveBtn =
           document.getElementById("onboardEmailSaveBtn");
 
+        // PRO panel state – liste & detay
+        function showProList() {
+          if (proMenu) proMenu.classList.remove("hidden");
+          if (proIntro) proIntro.classList.remove("hidden");
+          if (proToolCompetitor)
+            proToolCompetitor.classList.add("hidden");
+          if (proToolAudience) proToolAudience.classList.add("hidden");
+          if (proToolSilent) proToolSilent.classList.add("hidden");
+        }
+
+        function openProTool(tool) {
+          if (proMenu) proMenu.classList.add("hidden");
+          if (proIntro) proIntro.classList.add("hidden");
+
+          if (proToolCompetitor)
+            proToolCompetitor.classList.add("hidden");
+          if (proToolAudience) proToolAudience.classList.add("hidden");
+          if (proToolSilent) proToolSilent.classList.add("hidden");
+
+          if (tool === "competitor" && proToolCompetitor) {
+            proToolCompetitor.classList.remove("hidden");
+          } else if (tool === "audience" && proToolAudience) {
+            proToolAudience.classList.remove("hidden");
+          } else if (tool === "silent" && proToolSilent) {
+            proToolSilent.classList.remove("hidden");
+          }
+        }
+
         // Fill language selectors
         fillLangSelect(langSelect);
         fillLangSelect(onboardLangSelect);
@@ -1693,6 +1902,9 @@
         applySmallUIText(state.lang);
         updateAccountEmailUI();
         loadTrends();
+
+        // PRO paneli varsayılan olarak liste modunda başlat
+        showProList();
 
         function showOnboardingIfNeeded() {
           if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail)
@@ -1970,7 +2182,6 @@
                     : state.lang === "es"
                     ? "Contraseña incorrecta."
                     : "Wrong password. Please try again.";
-                // Android WebView tarafında alert'in her zaman düzgün görünmesi için
                 setTimeout(() => alert(msg), 100);
                 return; // Onboarding açık kalsın
               }
@@ -2071,8 +2282,30 @@
             const active = document.getElementById(`panel-${target}`);
             if (active) active.classList.remove("hidden");
             if (sidebar) sidebar.classList.add("hidden");
+
+            // PRO paneline geçerken her seferinde liste görünümüne dön
+            if (target === "pro") {
+              showProList();
+            }
           });
         });
+
+        if (proMenuButtons && proMenuButtons.length) {
+          proMenuButtons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const tool = btn.dataset.proTool;
+              openProTool(tool);
+            });
+          });
+        }
+
+        if (proBackButtons && proBackButtons.length) {
+          proBackButtons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+              showProList();
+            });
+          });
+        }
 
         // VOICE (Web Speech API)
         let recognition = null;
@@ -2212,6 +2445,7 @@
               input: value,
               lang: LANG_NAMES[state.lang] || "Turkish",
               plan: state.plan,
+              email: state.email || null,
             });
             proCompetitorResult.textContent = text;
           });
@@ -2227,6 +2461,7 @@
               input: value,
               lang: LANG_NAMES[state.lang] || "Turkish",
               plan: state.plan,
+              email: state.email || null,
             });
             proAudienceResult.textContent = text;
           });
@@ -2242,6 +2477,7 @@
               input: value,
               lang: LANG_NAMES[state.lang] || "Turkish",
               plan: state.plan,
+              email: state.email || null,
             });
             proSilentResult.textContent = text;
           });
@@ -2308,4 +2544,3 @@
     </script>
   </body>
 </html>
-```0
