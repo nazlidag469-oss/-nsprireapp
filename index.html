@@ -2442,6 +2442,26 @@
             messageInput.value = "";
           });
         }
+
+        // === TARAYICI / ANDROID GERİ TUŞU İÇİN TARİH (HISTORY) HİLESİ ===
+        // Android Studio tarafına dokunmadan, web history üzerinden geri tuşunu JS'e yönlendiriyoruz.
+        if (window.history && window.history.pushState) {
+          // Uygulama açıldığında sahte bir state ekle
+          history.pushState({ screen: "root" }, "");
+
+          window.addEventListener("popstate", (e) => {
+            // Geri tuşuna basıldığında önce JS tarafı denesin
+            if (window.__inspireHandleBack && window.__inspireHandleBack()) {
+              // JS tarafı bir şey yaptıyse (true döndüyse) tekrar sahte state ekle ki
+              // bir sonraki geri yine buraya gelsin, uygulamadan çıkmasın.
+              history.pushState({ screen: "root" }, "");
+            } else {
+              // JS bir şey yapamıyorsa (artık tamamen ana ekrandaysa),
+              // burada yeniden pushState yapmıyoruz.
+              // Böylece bir sonraki geri tuşunda Activity normal şekilde kapanabilir.
+            }
+          });
+        }
       });
 
       // === GLOBAL PANEL GÖSTER FONKSİYONU (geri tuşu da kullanıyor) ===
