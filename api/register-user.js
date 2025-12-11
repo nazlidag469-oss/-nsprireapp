@@ -8,6 +8,12 @@ if (!supabaseUrl || !serviceKey) {
   console.error("Supabase env değişkenleri eksik (register-user)!");
 }
 
+// ★ PLAY TEST İÇİN ÖZEL PRO HESAP
+// Bu mail + şifre ile giriş yapan kullanıcı, her zaman PRO döner.
+// Google Play "Uygulama erişimi" ekranında da bu bilgiyi vereceksin.
+const TEST_PRO_EMAIL = "nazlidag469@gmail.com";
+const TEST_PRO_PASSWORD = "123456";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res
@@ -25,6 +31,23 @@ export default async function handler(req, res) {
     });
   }
 
+  // ★ 1) ÖNCE ÖZEL PRO TEST HESABINI KONTROL ET
+  if (email === TEST_PRO_EMAIL && password === TEST_PRO_PASSWORD) {
+    // Supabase'e bile gitmiyoruz, direkt PRO login döndürüyoruz.
+    return res.status(200).json({
+      status: "login",
+      message: "LOGIN_OK_TEST_PRO",
+      user: {
+        id: "test-pro-user",
+        email: TEST_PRO_EMAIL,
+        plan: "pro",
+        credits: 999, // İstersen 4 yap, ben bol bıraktım
+        lang,
+      },
+    });
+  }
+
+  // ★ 2) Diğer tüm kullanıcılar için normal Supabase akışı
   if (!supabaseUrl || !serviceKey) {
     return res.status(500).json({
       status: "error",
@@ -35,10 +58,10 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
-    // 1) Bu email var mı? (Password sütunu büyük P ile!)
+    // 2.1) Bu email var mı? (Password sütunu büyük P ile!)
     const { data: existing, error: selectError } = await supabase
       .from("users")
-      .select("id, email, \"Password\", plan, credits, lang")
+      .select('id, email, "Password", plan, credits, lang')
       .eq("email", email)
       .maybeSingle(); // 0 satırsa data = null
 
@@ -51,7 +74,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2) Kullanıcı yoksa → KAYIT OLUŞTUR
+    // 2.2) Kullanıcı yoksa → KAYIT OLUŞTUR
     if (!existing) {
       const { data: inserted, error: insertError } = await supabase
         .from("users")
@@ -65,7 +88,7 @@ export default async function handler(req, res) {
             lang,
           },
         ])
-        .select("id, email, \"Password\", plan, credits, lang")
+        .select('id, email, "Password", plan, credits, lang')
         .single();
 
       if (insertError) {
@@ -90,7 +113,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3) Kullanıcı VAR → şifre kontrol
+    // 2.3) Kullanıcı VAR → şifre kontrol
     const storedPassword = existing.Password; // büyük P
 
     if (storedPassword !== password) {
@@ -100,12 +123,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // 4) Login başarılı → plan/credits/lang güncelle (opsiyonel)
+    // 2.4) Login başarılı → plan/credits/lang güncelle (opsiyonel)
     const { data: updated, error: updateError } = await supabase
       .from("users")
       .update({ plan, credits, lang })
       .eq("id", existing.id)
-      .select("id, email, \"Password\", plan, credits, lang")
+      .select('id, email, "Password", plan, credits, lang')
       .single();
 
     if (updateError) {
