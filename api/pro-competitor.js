@@ -1,152 +1,124 @@
-// /api/pro-competitor.js
-import { createClient } from "@supabase/supabase-js";
+// api/pro-competitor.js
+// PRO: Rakip video analizi
+
+const { createClient } = require("@supabase/supabase-js");
+const OpenAI = require("openai");
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
 const openaiKey = process.env.OPENAI_API_KEY;
 
 const supabase =
-  supabaseUrl && serviceKey
-    ? createClient(supabaseUrl, serviceKey)
-    : null;
+  supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
 
-// Dil kodunu normalize et (tr, en, de, es, ar)
-function detectLangCode(lang) {
-  const l = (lang || "").toLowerCase();
-  if (l.startsWith("en")) return "en";
-  if (l.startsWith("es")) return "es";
-  if (l.startsWith("de")) return "de";
-  if (l.startsWith("ar")) return "ar";
-  return "tr";
-}
+const openai = openaiKey ? new OpenAI({ apiKey: openaiKey }) : null;
 
-// PRO olmayan kullanıcıya gösterilecek mesaj (çok dilli)
-function getProRequiredMessage(lang) {
-  const code = detectLangCode(lang);
-
-  switch (code) {
-    case "en":
-      return "This competitor analysis tool is only available for PRO users. Upgrade to PRO to unlock detailed breakdowns instantly.";
-    case "es":
-      return "Esta herramienta de análisis de competidores solo está disponible para usuarios PRO. Actualiza a PRO para desbloquear análisis detallados al instante.";
-    case "de":
-      return "Dieses Konkurrenzanalyse-Tool ist nur für PRO-Nutzer verfügbar. Wechsle zu PRO, um sofort detaillierte Analysen freizuschalten.";
-    case "ar":
-      return "أداة تحليل المنافسين هذه متاحة فقط لمستخدمي PRO. قم بالترقية إلى PRO للحصول على تحليلات مفصلة فورًا.";
-    case "tr":
-    default:
-      return "Bu rakip video analiz aracı sadece PRO kullanıcılar için açıktır. Detaylı analizleri anında görmek için PRO’ya geç.";
+function safeJsonBody(req) {
+  try {
+    if (typeof req.body === "string") {
+      return JSON.parse(req.body || "{}");
+    }
+    return req.body || {};
+  } catch {
+    return {};
   }
 }
 
-async function callAi(fullPrompt) {
-  if (!openaiKey) {
-    return "AI anahtarı (OPENAI_API_KEY) tanımlı değil. Lütfen Vercel Environment'a ekle.";
+async function ensureProUser(email) {
+  if (!supabase) {
+    throw new Error("Supabase not configured");
   }
 
-  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${openaiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4.1-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are InspireApp PRO, an expert at analyzing viral short videos. Answer in clear, structured language.",
-        },
-        { role: "user", content: fullPrompt },
-      ],
-    }),
+  const { data, error } = await supabase
+    .from("users")
+    .select("plan")
+    .eq("email", email)
+    .limit(1);
+
+  if (error) {
+    console.error("Supabase error (pro-competitor):", error);
+    throw new Error("SUPABASE_ERROR");
+  }
+  const user = data && data[0];
+  if (!user || user.plan !== "pro") {
+    const err = new Error("ONLY_PRO");
+    err.code = "ONLY_PRO";
+    throw err;
+  }
+}
+
+async function generateAnalysis(input, langName) {
+  // Eğer OpenAI key yoksa, en azından dummy string dön.
+  if (!openai) {
+    return (
+      `DEMO ÇIKTI (Sunucuda OPENAI_API_KEY tanımlı değil):\n\n` +
+      `Gelen rakip video açıklaması/linki:\n${input}\n\n` +
+      `Buraya gerçek yapay zekâ çıktısını ekleyebilirsin.`
+    );
+  }
+
+  const system =
+    "You are an expert short-form video strategist (TikTok, Reels, Shorts). " +
+    "Analyze why the given competitor video works, extract hooks, structure, emotions, " +
+    "and then rewrite a stronger version for the user's niche. Answer in " +
+    langName +
+    ".";
+
+  const userPrompt =
+    "Video açıklaması veya linki:\n\n" +
+    input +
+    "\n\n" +
+    "1) Videonun neden tuttuğunu maddeler hâlinde açıkla.\n" +
+    "2) Kullanılan hook ve duyguları çıkar.\n" +
+    "3) Daha güçlü 3 adet alternatif hook yaz.\n" +
+    "4) Aynı formatı kullanarak, ama birebir kopyalamadan, özgün bir senaryo yaz.";
+
+  const resp = await openai.responses.create({
+    model: "gpt-4.1-mini",
+    input: [
+      { role: "system", content: system },
+      { role: "user", content: userPrompt },
+    ],
   });
 
-  const json = await resp.json().catch(() => null);
-  const text = json?.choices?.[0]?.message?.content?.trim();
-  return text || "AI'den anlamlı bir cevap alınamadı.";
+  const out = resp.output?.[0]?.content?.[0]?.text;
+  return out || "Yapay zekâdan anlamlı bir çıktı alınamadı.";
 }
 
-function buildPromptRival(input, lang) {
-  return `
-Kullanıcı InspireApp PRO üyesi.
-
-Görev: "Rakip Video Analizi" özelliği.
-
-Rakip video / fikir girdisi: 
-${input}
-
-Lisan: ${lang}
-
-Aşağıdaki formatta ve mümkün olduğunca bu dilde cevap ver:
-
-1) Bu videonun / fikrin NEDEN tuttuğunu açıkla (algoritma, watch time, retention, psikoloji).
-2) Aynı konuyu daha güçlü hale getiren 3 alternatif HOOK (ilk 3 saniye).
-3) Kullanıcının kendi nişine göre yeniden yazılmış tam bir video fikri (hook + kısa script).
-4) %100 kopya olmayan, türev bir trend önerisi (farklı açıdan ama benzer hissiyatlı).
-5) Kısa "CTA" önerileri (takip et, kaydet, yorum yazdır).
-`.trim();
-}
-
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "METHOD_NOT_ALLOWED" });
+    res.status(405).json({ message: "METHOD_NOT_ALLOWED" });
+    return;
   }
 
-  if (!supabase) {
-    return res.status(500).json({ message: "SUPABASE_CONFIG_MISSING" });
-  }
-
-  const { email, input, lang = "tr" } = req.body || {};
+  const body = safeJsonBody(req);
+  const email = (body.email || "").trim().toLowerCase();
+  const input = (body.input || "").trim();
+  const langName = body.lang || "Turkish";
 
   if (!email || !input) {
-    return res.status(400).json({ message: "EMAIL_AND_INPUT_REQUIRED" });
+    return res.status(400).json({
+      code: "EMAIL_AND_INPUT_REQUIRED",
+      message:
+        "Lütfen önce e-posta ile giriş yap ve kutuyu boş bırakma. (Rakip video analizi)",
+    });
   }
 
-  // 1) Kullanıcıyı Supabase'den çek
-  let user;
   try {
-    const { data, error } = await supabase
-      .from("users")
-      .select("id, email, plan, lang")
-      .eq("email", email)
-      .maybeSingle();
-
-    if (error) {
-      console.error("pro-competitor Supabase hatası:", error);
-      return res.status(500).json({ message: "DB_ERROR" });
+    await ensureProUser(email);
+  } catch (err) {
+    if (err.code === "ONLY_PRO" || err.message === "ONLY_PRO") {
+      return res.status(403).json({ code: "ONLY_PRO", message: "ONLY_PRO" });
     }
-
-    user = data || null;
-  } catch (e) {
-    console.error("pro-competitor Supabase genel hata:", e);
-    return res.status(500).json({ message: "DB_ERROR" });
+    console.error("ensureProUser error (pro-competitor):", err);
+    return res.status(500).json({ message: "SERVER_ERROR" });
   }
 
-  const userLang = user?.lang || lang || "tr";
-
-  // 2) PRO değilse → 200 OK + PRO mesajı
-  if (!user || user.plan !== "pro") {
-    const proMsg = getProRequiredMessage(userLang);
-
-    return res.status(200).json({
-      message: proMsg,
-      proRequired: true,
-    });
-  }
-
-  // 3) PRO ise → AI ile gerçek analiz üret
   try {
-    const prompt = buildPromptRival(input, userLang);
-    const text = await callAi(prompt);
-
-    return res.status(200).json({
-      message: text,
-      proRequired: false,
-    });
-  } catch (e) {
-    console.error("pro-competitor AI hatası:", e);
+    const text = await generateAnalysis(input, langName);
+    return res.status(200).json({ message: text });
+  } catch (err) {
+    console.error("generateAnalysis error:", err);
     return res.status(500).json({ message: "AI_ERROR" });
   }
-}
+};
