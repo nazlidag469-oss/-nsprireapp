@@ -1077,16 +1077,26 @@ async function callIdeasAPI(prompt, platform, langCode) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt, platform, lang: langName }),
     });
+
     const text = await res.text();
+
+    // Önce JSON dene
     try {
       const data = JSON.parse(text);
       if (data?.message) return data.message;
+      if (data?.error) return data.error;
     } catch {
-      if (text) return text;
+      // JSON değilse metnin kendisini göstereceğiz
     }
-    // Sunucu / API vurgusu yerine sade hata
+
+    // Sunucudan gelen ham metni direkt göster
+    if (text) return text.trim();
+
+    // Hiçbir şey yoksa son çare
     return "Şu an yanıt üretilemedi, lütfen tekrar dene.";
-  } catch {
+  } catch (e) {
+    // Gerçek hata mesajını göster (varsa)
+    if (e && e.message) return e.message;
     return "Şu an yanıt üretilemedi, lütfen tekrar dene.";
   }
 }
@@ -1098,9 +1108,24 @@ async function callSimpleAPI(route, payload) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await res.json().catch(() => null);
-    return data?.message || "Şu an içerik üretilemedi, lütfen tekrar dene.";
-  } catch {
+
+    const text = await res.text();
+
+    // JSON ise message/error alanını kullan
+    try {
+      const data = JSON.parse(text);
+      if (data?.message) return data.message;
+      if (data?.error) return data.error;
+    } catch {
+      // JSON değilse direkt devam
+    }
+
+    // JSON parse edilemese bile sunucunun gönderdiği ham text'i göster
+    if (text) return text.trim();
+
+    return "Şu an içerik üretilemedi, lütfen tekrar dene.";
+  } catch (e) {
+    if (e && e.message) return e.message;
     return "Şu an içerik üretilemedi, lütfen tekrar dene.";
   }
 }
@@ -1559,7 +1584,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!res.ok || !data) {
           throw new Error(
-            data?.error || data?.message || "Sunucu hatası"
+            data?.error ||
+              data?.message ||
+              "Bilinmeyen bir hata oluştu"
           );
         }
       } catch (e) {
