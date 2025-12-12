@@ -1,10 +1,10 @@
 // api/pro-competitor.js
-// PRO Araç – Rakip Video Analizi
+// PRO Araç – Rakip Video Analizi (ESM uyumlu)
 // Gereken env:
 //   SUPABASE_URL
 //   SUPABASE_SERVICE_KEY
 
-const { createClient } = require("@supabase/supabase-js");
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
@@ -22,7 +22,7 @@ function isProUser(userRow) {
   return false;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Kullanıcıya teknik hata göstermeyeceğimiz genel mesaj
   const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
 
@@ -32,13 +32,13 @@ module.exports = async function handler(req, res) {
   const ONLY_PRO_TEXT =
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
 
+  // Sadece POST kabul ediyoruz, ama dışarıya teknik hata göstermiyoruz
   if (req.method !== "POST") {
-    // Teknik kod yerine temiz mesaj
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!supabase) {
-    // Eskiden teknik env mesajı gidiyordu, artık gizliyoruz
+    // Env eksikse sadece log’a yaz, kullanıcıya genel mesaj dön
     console.error(
       "PRO_COMPETITOR_SUPABASE_ENV_MISSING: SUPABASE_URL / SUPABASE_SERVICE_KEY"
     );
@@ -56,7 +56,7 @@ module.exports = async function handler(req, res) {
   const input = (body.input || "").trim();
   const lang = body.lang || "Turkish";
 
-  // Eskiden INPUT_REQUIRED dönüyordu; artık temiz mesaj
+  // Boş input için temiz mesaj
   if (!input) {
     const msg =
       lang === "tr" || lang === "Turkish"
@@ -65,7 +65,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ message: msg });
   }
 
-  // Frontend şu an email göndermiyor olabilir: o yüzden “EMAIL_REQUIRED” gibi kod göstermiyoruz.
+  // E-posta yoksa login iste
   if (!email) {
     return res.status(200).json({ message: NEED_LOGIN });
   }
@@ -146,4 +146,4 @@ module.exports = async function handler(req, res) {
   }
 
   return res.status(200).json({ message });
-};
+}
