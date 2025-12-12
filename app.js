@@ -454,10 +454,68 @@ async function callSimpleAPI(route, payload) {
 
     if (json?.message) return json.message;
     if (json?.result) return json.result;
+    if (json?.answer) return json.answer;
+    if (json?.content) return json.content;
+
     return text || "Şu an içerik üretilemedi, lütfen tekrar dene.";
   } catch {
     return "Şu an içerik üretilemedi, lütfen tekrar dene.";
   }
+}
+
+// 🔥 PRO ARAÇLARI İÇİN ÖZEL YARDIMCI
+async function callProTool(mode, input) {
+  const langCode = state.lang || "tr";
+  const langName = LANG_NAMES[langCode] || "Turkish";
+
+  let prefix;
+  switch (mode) {
+    case "competitor":
+      prefix =
+        "You are a professional short-form video growth strategist. " +
+        "Analyze the competitor channel/video below in depth and return a detailed report in " + langName +
+        ". Focus on:\n" +
+        "- Content topics, hooks, title patterns, thumbnail style\n" +
+        "- Posting frequency and best-performing ideas\n" +
+        "- Concrete, actionable suggestions for my own videos.";
+      break;
+    case "audience":
+      prefix =
+        "You are an expert audience researcher for TikTok / Reels / Shorts. " +
+        "Based on the description below, map the exact target audience in " + langName +
+        " and generate:\n" +
+        "- Demographics, pains, desires, hidden motivations\n" +
+        "- Content angles that would emotionally trigger them\n" +
+        "- At least 10 concrete video ideas.";
+      break;
+    case "silent":
+      prefix =
+        "You are a \"silent viewer\" analyst. " +
+        "Assume you secretly watched the described channel/video for a week. " +
+        "In " + langName + ", explain:\n" +
+        "- What this creator is really doing well\n" +
+        "- What feels weak or fake to viewers\n" +
+        "- What radical changes could 3x their performance.";
+      break;
+    default:
+      prefix =
+        "You are a senior social media strategist. Give high quality insights in " + langName + ".";
+  }
+
+  const emailInfo = state.email ? `Kullanıcı e-postası: ${state.email}\n` : "";
+  const proFlag = "[PRO_TOOL: " + mode + "]";
+
+  const prompt =
+    proFlag +
+    "\n" +
+    emailInfo +
+    "Dil: " + langName + "\n\n" +
+    prefix +
+    "\n\n---\nKullanıcının girişi:\n" +
+    input;
+
+  // PRO tool'lar da ideas endpoint'ini kullanıyor -> stabil cevap
+  return callIdeasAPI(prompt, "youtube", langCode);
 }
 
 async function loadTrends() {
@@ -979,7 +1037,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ PRO tools (kilit + payload FIX: email/lang/input)
+  // ✅ PRO tools (artık /api/pro-* değil, callProTool kullanıyor)
   function proPayload(input) {
     return {
       email: state.email || "",
@@ -997,7 +1055,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!value) return;
       const t = I18N[state.lang] || I18N.tr;
       proCompetitorResult.textContent = t.loadingText || "Yükleniyor...";
-      proCompetitorResult.textContent = await callSimpleAPI("pro-competitor", proPayload(value));
+      // eski: await callSimpleAPI("pro-competitor", proPayload(value));
+      proCompetitorResult.textContent = await callProTool("competitor", value);
     });
   }
 
@@ -1008,7 +1067,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!value) return;
       const t = I18N[state.lang] || I18N.tr;
       proAudienceResult.textContent = t.loadingText || "Yükleniyor...";
-      proAudienceResult.textContent = await callSimpleAPI("pro-audience", proPayload(value));
+      // eski: await callSimpleAPI("pro-audience", proPayload(value));
+      proAudienceResult.textContent = await callProTool("audience", value);
     });
   }
 
@@ -1019,7 +1079,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!value) return;
       const t = I18N[state.lang] || I18N.tr;
       proSilentResult.textContent = t.loadingText || "Yükleniyor...";
-      proSilentResult.textContent = await callSimpleAPI("pro-silent", proPayload(value));
+      // eski: await callSimpleAPI("pro-silent", proPayload(value));
+      proSilentResult.textContent = await callProTool("silent", value);
     });
   }
 
