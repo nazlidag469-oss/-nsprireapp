@@ -225,3 +225,177 @@ textarea {
     padding: 10px;
   }
 }
+
+/* =========================================================
+   ✅ EK DÜZELTMELER (HİÇBİR ŞEY SİLİNMEDİ — SADECE EKLENDİ)
+   Amaç: Sol panel + yardım paneli + PRO tam ekran düzeni
+========================================================= */
+
+/* Genel yardımcı: hidden sınıfı varsa gerçekten gizlesin */
+.hidden { display: none !important; }
+
+/* Top bar katmanını sabitle (menü/help/modallar üst üste binmesin) */
+.top-bar { z-index: 500; }
+
+/* Kamera + mikrofon + küçük ikonlar her şeyin üstünde kalsın */
+.circle-button,
+.icon-button { z-index: 900; }
+
+/* === SOL PANEL (SIDEBAR) — Tüm menü düzgün, taşma yok ===
+   Senin HTML’de id="sidebar" ve class="hidden" var.
+   Bu CSS: görünürken düzgün ve scroll’lu gösterir. */
+#sidebar {
+  position: fixed;
+  top: 58px;
+  left: 0;
+  height: calc(100vh - 58px);
+  width: 290px;
+  max-width: 86vw;
+  background: var(--glass-bg);
+  backdrop-filter: blur(22px);
+  border-right: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-strong);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px;
+  z-index: 800;
+}
+
+/* Sidebar içindeki başlık/alanlar daha düzgün */
+#sidebar h2,
+#sidebar h3,
+#sidebar .sidebar-title {
+  margin: 10px 0 8px;
+  color: #1e1b4b;
+}
+
+#sidebar .side-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.86);
+  color: var(--text-main);
+  box-shadow: 0 8px 22px rgba(124, 58, 237, 0.12);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 10px;
+}
+
+#sidebar .side-btn:active {
+  transform: scale(0.99);
+}
+
+#sidebar .side-btn.active {
+  background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(99,102,241,0.18));
+  border-color: rgba(124,58,237,0.25);
+}
+
+/* Sol panelde “Yardım” butonu alt sabit gibi dursun (taşma olmasın) */
+#sidebar .help-btn,
+#sidebar #helpToggle2 {
+  margin-top: 8px;
+}
+
+/* === YARDIM PANELİ (SAĞ) ===
+   Senin HTML’de id="helpPanel" var.
+   Bu panel: sağdan açılır, altta kapat butonu rahat. */
+#helpPanel {
+  position: fixed;
+  top: 58px;
+  right: 0;
+  height: calc(100vh - 58px);
+  width: 320px;
+  max-width: 90vw;
+  background: rgba(245, 243, 255, 0.94);
+  backdrop-filter: blur(22px);
+  border-left: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-strong);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px;
+  z-index: 850;
+}
+
+/* Yardım içindeki kapat butonu düzgün görünsün */
+#helpPanel button,
+#helpPanel .btn {
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 8px 22px rgba(124, 58, 237, 0.12);
+  cursor: pointer;
+}
+
+/* === MODAL BACKDROP ve MODAL katmanı (pro/ad) === */
+#modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  z-index: 880; /* sidebar+help üstüne gelir, ikonların altı */
+}
+
+/* Modallar (proModal/adModal) görünür olunca ekrana düzgün otursun */
+#adModal,
+#proModal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, 92vw);
+  max-height: 80vh;
+  overflow: auto;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-strong);
+  z-index: 890;
+}
+
+/* === PRO: Liste ayrı, seçilen araç “tam ekran” ===
+   HTML’de: pro menu butonları .pro-menu-btn
+   Alt formlar/sonuçlar .panel-result vb.
+   Aşağıdaki sınıflar JS ile toggle edilirse tam ekran olur. */
+
+/* PRO araç listesi (üstte) scroll olmasın, düzgün dursun */
+.pro-tools-list,
+#proToolsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Seçilen PRO aracını tam ekran yapmak için:
+   JS tarafında ilgili kutuya .pro-fullscreen sınıfı ver.
+   (Sadece CSS hazırladım, kod silmedim) */
+.pro-fullscreen {
+  position: fixed !important;
+  top: 58px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: calc(100vh - 58px) !important;
+  max-width: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  z-index: 870 !important;
+  overflow-y: auto !important;
+  padding: 16px !important;
+}
+
+/* Pro tam ekrandayken arka plan panel gibi görünmesin */
+.pro-fullscreen .panel {
+  box-shadow: none;
+}
+
+/* Mobilde üst boşluklar daha dengeli */
+@media (max-width: 768px) {
+  #sidebar { width: 86vw; }
+  #helpPanel { width: 90vw; }
+  #adModal, #proModal { width: 94vw; }
+}
