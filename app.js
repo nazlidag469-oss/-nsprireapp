@@ -16,11 +16,7 @@ const DAILY_AD_LIMIT = 400;
 // =========================
 // === NETWORK SETTINGS  ===
 // =========================
-const API_TIMEOUT_MS = 25000;
-
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
+const API_TIMEOUT_MS = 20000; // bir tık kısalttım (25s -> 20s)
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
   const controller = new AbortController();
@@ -262,7 +258,7 @@ function closeAdModal() {
 }
 
 // =========================
-// === PANEL SWITCH (FIX) ===
+– === PANEL SWITCH (FIX) ===
 // =========================
 function showPanel(name) {
   // 🔒 PRO KİLİDİ: Ücretsizse PRO panel asla açılmayacak
@@ -558,10 +554,12 @@ async function callSimpleAPI(route, payload) {
 async function callRealProEndpoint(route, input) {
   const langCode = state.lang || "tr";
   const langName = LANG_NAMES[langCode] || "Turkish";
+  // ⬇️ Burada plan ve email birlikte gidiyor
   return callSimpleAPI(route, {
     email: state.email || "",
     input,
     lang: langName,
+    plan: state.plan || "free",
   });
 }
 
@@ -965,12 +963,10 @@ document.addEventListener("DOMContentLoaded", () => {
       applySmallUIText(code);
       loadTrends();
       updatePlanAndCreditsUI();
-      if (onboardStepLang) onboardStepLang.classList.add("hidden");
-      if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
     });
   }
 
-  // Onboarding login/register
+  // Onboarding login/register  ✅ PLAN & CREDIT SİNKRON
   if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
       const email = onboardEmailInput.value.trim();
@@ -1003,7 +999,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const data = await res.json().catch(() => null);
 
-        if (res.status === 401 && data?.code === "INVALID_PASSWORD") {
+        // Şifre yanlış
+        if (res.status === 401 && data?.message === "INVALID_PASSWORD") {
           alert(
             state.lang === "tr"
               ? "Şifre yanlış. Lütfen tekrar deneyin."
@@ -1013,6 +1010,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (!res.ok || !data)
           throw new Error(data?.error || data?.message || "Sunucu hatası");
+
+        // Sunucudan gelen plan/credit/lang ile state'i güncelle
+        const u = data.user || {};
+        if (u.plan) {
+          state.plan = u.plan;
+          savePlan();
+        }
+        if (typeof u.credits !== "undefined") {
+          state.credits = u.credits;
+          saveCredits();
+        }
+        if (u.lang && LANG_NAMES[u.lang]) {
+          state.lang = u.lang;
+          localStorage.setItem(LANG_KEY, u.lang);
+          if (langSelect) langSelect.value = u.lang;
+          applySmallUIText(u.lang);
+        }
+        updatePlanAndCreditsUI();
 
         if (data.status === "login")
           alert(
