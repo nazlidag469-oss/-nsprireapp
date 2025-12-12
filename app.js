@@ -47,24 +47,46 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
 // =========================
 // === LANGUAGE TABLES    ===
 // =========================
-const LANG_NAMES = { tr: "Turkish", en: "English", ar: "Arabic", de: "German", es: "Spanish" };
+const LANG_NAMES = {
+  tr: "Turkish",
+  en: "English",
+  ar: "Arabic",
+  de: "German",
+  es: "Spanish",
+};
 const LANG_REGION = { tr: "TR", en: "US", ar: "SA", de: "DE", es: "ES" };
-const LANG_LABELS = { tr: "Türkçe", en: "English", ar: "العربية", de: "Deutsch", es: "Español" };
-const LANG_SPEECH = { tr: "tr-TR", en: "en-US", ar: "ar-SA", de: "de-DE", es: "es-ES" };
+const LANG_LABELS = {
+  tr: "Türkçe",
+  en: "English",
+  ar: "العربية",
+  de: "Deutsch",
+  es: "Español",
+};
+const LANG_SPEECH = {
+  tr: "tr-TR",
+  en: "en-US",
+  ar: "ar-SA",
+  de: "de-DE",
+  es: "es-ES",
+};
 
 // NOT: Senin gönderdiğin I18N bloğu aynen kalsın (çok uzun diye burada kısaltmıyorum).
 // Aşağıya kendi I18N objeni olduğu gibi yapıştırabilirsin.
 const I18N = window.I18N || {
   tr: {
     loadingText: "Yükleniyor...",
-    freeNoCreditsAlert: "Ücretsiz planda kredi bitti. Reklam izleyerek +1 alabilirsin.",
+    freeNoCreditsAlert:
+      "Ücretsiz planda kredi bitti. Reklam izleyerek +1 alabilirsin.",
     planFreeLabel: "Plan: Ücretsiz",
     planProLabel: "Plan: Pro (sınırsız puan)",
     creditsLabelFree: (c) => `Kalan puan: ${c}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Kalan puan: Sınırsız",
-    adDailyLimit: (limit) => `Günlük reklam limiti doldu. (Limit: ${limit})`,
-    proPriceTextTr: "InspireApp PRO – aylık 299 TL (Google Play üzerinden ücretlendirilir).",
-    proPriceTextEn: "InspireApp PRO – monthly subscription via Google Play.",
+    adDailyLimit: (limit) =>
+      `Günlük reklam limiti doldu. (Limit: ${limit})`,
+    proPriceTextTr:
+      "InspireApp PRO – aylık 299 TL (Google Play üzerinden ücretlendirilir).",
+    proPriceTextEn:
+      "InspireApp PRO – monthly subscription via Google Play.",
   },
   en: {
     loadingText: "Loading...",
@@ -73,19 +95,42 @@ const I18N = window.I18N || {
     planProLabel: "Plan: Pro (unlimited credits)",
     creditsLabelFree: (c) => `Credits: ${c}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Credits: Unlimited",
-    adDailyLimit: (limit) => `Daily ad limit reached. (Limit: ${limit})`,
-    proPriceTextTr: "InspireApp PRO – monthly subscription via Google Play.",
-    proPriceTextEn: "InspireApp PRO – monthly subscription via Google Play.",
+    adDailyLimit: (limit) =>
+      `Daily ad limit reached. (Limit: ${limit})`,
+    proPriceTextTr:
+      "InspireApp PRO – monthly subscription via Google Play.",
+    proPriceTextEn:
+      "InspireApp PRO – monthly subscription via Google Play.",
   },
 };
 
 // Small legacy UI_TEXT support (kalsın)
 const UI_TEXT = {
-  tr: { send: "Gönder", ad: "Reklam izle +1 puan", placeholder: "Mesaj yaz veya konu gir..." },
-  en: { send: "Send", ad: "Watch Ad +1 credit", placeholder: "Type a message or topic..." },
-  ar: { send: "إرسال", ad: "شاهد إعلانًا +1 نقطة", placeholder: "اكتب رسالة أو فكرة..." },
-  de: { send: "Senden", ad: "Werbung ansehen +1 Punkt", placeholder: "Nachricht oder Thema eingeben..." },
-  es: { send: "Enviar", ad: "Ver anuncio +1 crédito", placeholder: "Escribe un mensaje o tema..." },
+  tr: {
+    send: "Gönder",
+    ad: "Reklam izle +1 puan",
+    placeholder: "Mesaj yaz veya konu gir...",
+  },
+  en: {
+    send: "Send",
+    ad: "Watch Ad +1 credit",
+    placeholder: "Type a message or topic...",
+  },
+  ar: {
+    send: "إرسال",
+    ad: "شاهد إعلانًا +1 نقطة",
+    placeholder: "اكتب رسالة أو فكرة...",
+  },
+  de: {
+    send: "Senden",
+    ad: "Werbung ansehen +1 Punkt",
+    placeholder: "Nachricht oder Thema eingeben...",
+  },
+  es: {
+    send: "Enviar",
+    ad: "Ver anuncio +1 crédito",
+    placeholder: "Escribe un mensaje o tema...",
+  },
 };
 
 // =========================
@@ -181,7 +226,8 @@ function openProModal() {
 
   const t = I18N[state.lang] || I18N.tr;
   const isTr = state.lang === "tr";
-  if (proPriceText) proPriceText.textContent = isTr ? t.proPriceTextTr : t.proPriceTextEn;
+  if (proPriceText)
+    proPriceText.textContent = isTr ? t.proPriceTextTr : t.proPriceTextEn;
 
   modalBackdrop.classList.remove("hidden");
   proModal.classList.remove("hidden");
@@ -216,7 +262,7 @@ function closeAdModal() {
 }
 
 // =========================
-– === PANEL SWITCH (FIX)  ===
+// === PANEL SWITCH (FIX) ===
 // =========================
 function showPanel(name) {
   // 🔒 PRO KİLİDİ: Ücretsizse PRO panel asla açılmayacak
@@ -351,7 +397,11 @@ function addMessage(role, text) {
   conv.messages.push({ role, text });
   const idx = conv.messages.length - 1;
 
-  if (!conv.title || conv.title === "Yeni sohbet" || conv.title === "New chat") {
+  if (
+    !conv.title ||
+    conv.title === "Yeni sohbet" ||
+    conv.title === "New chat"
+  ) {
     const firstUserMsg = conv.messages.find((m) => m.role === "user");
     if (firstUserMsg?.text) conv.title = buildTitleFromText(firstUserMsg.text);
   }
@@ -504,105 +554,15 @@ async function callSimpleAPI(route, payload) {
   }
 }
 
-// 🔥 PRO ARAÇLARI İÇİN ÖZEL YARDIMCI
-async function callProTool(mode, input) {
+// 🔥 PRO ARAÇLARI İÇİN SUNUCUYA DOĞRUDAN GİDEN YARDIMCI
+async function callRealProEndpoint(route, input) {
   const langCode = state.lang || "tr";
   const langName = LANG_NAMES[langCode] || "Turkish";
-
-  // 1) Önce kendi backend endpoint’ini dene
-  let route;
-  if (mode === "competitor") route = "pro-competitor";
-  else if (mode === "audience") route = "pro-audience";
-  else if (mode === "silent") route = "pro-silent";
-  else route = "pro-generic";
-
-  const basePayload = {
+  return callSimpleAPI(route, {
     email: state.email || "",
     input,
     lang: langName,
-    plan: state.plan,
-    region: LANG_REGION[langCode] || "TR",
-    mode,
-  };
-
-  let primary = await callSimpleAPI(route, basePayload);
-
-  const BAD_TEXTS = [
-    "Sunucudan anlamlı bir cevap alınamadı",
-    "no meaningful response",
-    "INTERNAL_ERROR",
-  ];
-
-  const isBad =
-    !primary ||
-    primary.trim().length < 10 ||
-    BAD_TEXTS.some((p) =>
-      primary.toLowerCase().includes(p.toLowerCase())
-    );
-
-  if (!isBad) return primary;
-
-  // 2) Fallback: ideas endpoint’i ile güçlü prompt
-  let prefix;
-  switch (mode) {
-    case "competitor":
-      prefix =
-        "You are a professional short-form video growth strategist. " +
-        "Analyze the competitor channel/video below in depth and return a detailed report in " +
-        langName +
-        ". Focus on:\n" +
-        "- Content topics, hooks, title patterns, thumbnail style\n" +
-        "- Posting frequency and best-performing ideas\n" +
-        "- Concrete, actionable suggestions for my own videos.";
-      break;
-    case "audience":
-      prefix =
-        "You are an expert audience researcher for TikTok / Reels / Shorts. " +
-        "Based on the description below, map the exact target audience in " +
-        langName +
-        " and generate:\n" +
-        "- Demographics, pains, desires, hidden motivations\n" +
-        "- Content angles that would emotionally trigger them\n" +
-        "- At least 10 concrete video ideas.";
-      break;
-    case "silent":
-      prefix =
-        "You are a \"silent viewer\" analyst. " +
-        "Assume you secretly watched the described channel/video for a week. " +
-        "In " +
-        langName +
-        ", explain:\n" +
-        "- What this creator is really doing well\n" +
-        "- What feels weak or fake to viewers\n" +
-        "- What radical changes could 3x their performance.";
-      break;
-    default:
-      prefix =
-        "You are a senior social media strategist. Give high quality insights in " +
-        langName +
-        ".";
-  }
-
-  const emailInfo = state.email ? `Kullanıcı e-postası: ${state.email}\n` : "";
-  const proFlag = "[PRO_TOOL: " + mode + "]";
-
-  const prompt =
-    proFlag +
-    "\n" +
-    emailInfo +
-    "Dil: " +
-    langName +
-    "\n\n" +
-    prefix +
-    "\n\n---\nKullanıcının girişi:\n" +
-    input;
-
-  const fallback = await callIdeasAPI(prompt, "youtube", langCode);
-  if (fallback && fallback.trim().length > 0) return fallback;
-
-  return langCode === "tr"
-    ? "Şu an içerik üretilemedi. Lütfen biraz sonra tekrar dene."
-    : "Content could not be generated. Please try again later.";
+  });
 }
 
 async function loadTrends() {
@@ -1212,23 +1172,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ PRO tools (artık callProTool kullanıyor)
+  // ✅ PRO tools (artık direkt backend pro endpoint'leri)
   if (proCompetitorBtn && proCompetitorInput && proCompetitorResult) {
     proCompetitorBtn.addEventListener("click", async () => {
-      if (state.plan !== "pro") {
-        proCompetitorResult.textContent =
-          state.lang === "tr"
-            ? "Bu özellik sadece PRO kullanıcılar içindir."
-            : "This feature is available only for PRO users.";
-        openProModal();
-        return;
-      }
       const value = proCompetitorInput.value.trim();
       if (!value) return;
+
       const t = I18N[state.lang] || I18N.tr;
       proCompetitorResult.textContent = t.loadingText || "Yükleniyor...";
-      proCompetitorResult.textContent = await callProTool(
-        "competitor",
+
+      proCompetitorResult.textContent = await callRealProEndpoint(
+        "pro-competitor",
         value
       );
     });
@@ -1236,37 +1190,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (proAudienceBtn && proAudienceInput && proAudienceResult) {
     proAudienceBtn.addEventListener("click", async () => {
-      if (state.plan !== "pro") {
-        proAudienceResult.textContent =
-          state.lang === "tr"
-            ? "Bu özellik sadece PRO kullanıcılar içindir."
-            : "This feature is available only for PRO users.";
-        openProModal();
-        return;
-      }
       const value = proAudienceInput.value.trim();
       if (!value) return;
+
       const t = I18N[state.lang] || I18N.tr;
       proAudienceResult.textContent = t.loadingText || "Yükleniyor...";
-      proAudienceResult.textContent = await callProTool("audience", value);
+
+      proAudienceResult.textContent = await callRealProEndpoint(
+        "pro-audience",
+        value
+      );
     });
   }
 
   if (proSilentBtn && proSilentInput && proSilentResult) {
     proSilentBtn.addEventListener("click", async () => {
-      if (state.plan !== "pro") {
-        proSilentResult.textContent =
-          state.lang === "tr"
-            ? "Bu özellik sadece PRO kullanıcılar içindir."
-            : "This feature is available only for PRO users.";
-        openProModal();
-        return;
-      }
       const value = proSilentInput.value.trim();
       if (!value) return;
+
       const t = I18N[state.lang] || I18N.tr;
       proSilentResult.textContent = t.loadingText || "Yükleniyor...";
-      proSilentResult.textContent = await callProTool("silent", value);
+
+      proSilentResult.textContent = await callRealProEndpoint(
+        "pro-silent",
+        value
+      );
     });
   }
 
