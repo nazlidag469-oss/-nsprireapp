@@ -10,7 +10,6 @@ if (!supabaseUrl || !serviceKey) {
 
 // ★ PLAY TEST İÇİN ÖZEL PRO HESAP
 // Bu mail + şifre ile giriş yapan kullanıcı, her zaman PRO döner.
-// Google Play "Uygulama erişimi" ekranında da bu bilgiyi vereceksin.
 const TEST_PRO_EMAIL = "nazlidag469@gmail.com";
 const TEST_PRO_PASSWORD = "123456";
 
@@ -31,23 +30,78 @@ export default async function handler(req, res) {
     });
   }
 
-  // ★ 1) ÖNCE ÖZEL PRO TEST HESABINI KONTROL ET
+  // ------------------------------------------------
+  // 1) ÖZEL PRO TEST HESABI
+  // ------------------------------------------------
   if (email === TEST_PRO_EMAIL && password === TEST_PRO_PASSWORD) {
-    // Supabase'e bile gitmiyoruz, direkt PRO login döndürüyoruz.
-    return res.status(200).json({
-      status: "login",
-      message: "LOGIN_OK_TEST_PRO",
-      user: {
-        id: "test-pro-user",
-        email: TEST_PRO_EMAIL,
-        plan: "pro",
-        credits: 999, // İstersen 4 yap, ben bol bıraktım
-        lang,
-      },
-    });
+    if (!supabaseUrl || !serviceKey) {
+      // Env yoksa bile, en azından app'e PRO dönelim
+      return res.status(200).json({
+        status: "login",
+        message: "LOGIN_OK_TEST_PRO_NO_DB",
+        user: {
+          id: "test-pro-user",
+          email: TEST_PRO_EMAIL,
+          plan: "pro",
+          credits: 999,
+          lang,
+        },
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // Supabase'de bu kullanıcıyı PRO olarak upsert et
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .upsert(
+          {
+            email: TEST_PRO_EMAIL,
+            Password: TEST_PRO_PASSWORD,
+            plan: "pro",
+            credits: 999,
+            lang,
+          },
+          { onConflict: "email" }
+        )
+        .select('id, email, "Password", plan, credits, lang')
+        .single();
+
+      if (error) {
+        console.error("Supabase UPSERT hatası (test pro):", error);
+      }
+
+      return res.status(200).json({
+        status: "login",
+        message: "LOGIN_OK_TEST_PRO",
+        user: {
+          id: data?.id || "test-pro-user",
+          email: TEST_PRO_EMAIL,
+          plan: "pro",
+          credits: data?.credits ?? 999,
+          lang: data?.lang || lang,
+        },
+      });
+    } catch (err) {
+      console.error("Test PRO upsert genel hata:", err);
+      return res.status(200).json({
+        status: "login",
+        message: "LOGIN_OK_TEST_PRO_FALLBACK",
+        user: {
+          id: "test-pro-user",
+          email: TEST_PRO_EMAIL,
+          plan: "pro",
+          credits: 999,
+          lang,
+        },
+      });
+    }
   }
 
-  // ★ 2) Diğer tüm kullanıcılar için normal Supabase akışı
+  // ------------------------------------------------
+  // 2) DİĞER TÜM KULLANICILAR – NORMAL AKIŞ
+  // ------------------------------------------------
   if (!supabaseUrl || !serviceKey) {
     return res.status(500).json({
       status: "error",
@@ -58,12 +112,12 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
-    // 2.1) Bu email var mı? (Password sütunu büyük P ile!)
+    // 2.1) Bu email var mı?
     const { data: existing, error: selectError } = await supabase
       .from("users")
       .select('id, email, "Password", plan, credits, lang')
       .eq("email", email)
-      .maybeSingle(); // 0 satırsa data = null
+      .maybeSingle();
 
     if (selectError) {
       console.error("Supabase SELECT hatası:", selectError);
@@ -74,15 +128,14 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2.2) Kullanıcı yoksa → KAYIT OLUŞTUR
+    // 2.2) Kullanıcı yoksa → KAYIT
     if (!existing) {
       const { data: inserted, error: insertError } = await supabase
         .from("users")
         .insert([
           {
             email,
-            // Tablo sütunu büyük P: "Password"
-            Password: password,
+            Password: password, // sütun adı büyük P
             plan,
             credits,
             lang,
@@ -113,8 +166,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2.3) Kullanıcı VAR → şifre kontrol
-    const storedPassword = existing.Password; // büyük P
+    // 2.3) Kullanıcı VAR → Şifre kontrol
+    const storedPassword = existing.Password;
 
     if (storedPassword !== password) {
       return res.status(401).json({
@@ -123,10 +176,17 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2.4) Login başarılı → plan/credits/lang güncelle (opsiyonel)
+    // 2.4) Login başarılı → mevcut plan'ı KORU
+    const newPlan = existing.plan || plan || "free";
+    const newCredits =
+      existing.credits !== null && existing.credits !== undefined
+        ? existing.credits
+        : credits ?? 4;
+    const newLang = existing.lang || lang || "tr";
+
     const { data: updated, error: updateError } = await supabase
       .from("users")
-      .update({ plan, credits, lang })
+      .update({ plan: newPlan, credits: newCredits, lang: newLang })
       .eq("id", existing.id)
       .select('id, email, "Password", plan, credits, lang')
       .single();
@@ -143,9 +203,9 @@ export default async function handler(req, res) {
       user: {
         id: userRow.id,
         email: userRow.email,
-        plan: userRow.plan || plan,
-        credits: userRow.credits ?? credits,
-        lang: userRow.lang || lang,
+        plan: userRow.plan || newPlan,
+        credits: userRow.credits ?? newCredits,
+        lang: userRow.lang || newLang,
       },
     });
   } catch (err) {
