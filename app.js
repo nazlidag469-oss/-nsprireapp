@@ -11,6 +11,37 @@ const AD_DATE_KEY = "inspireapp_daily_ad_date_v1";
 const MAX_FREE_CREDITS = 4;
 const DAILY_AD_LIMIT = 400;
 
+// === NETWORK SETTINGS (MINIMAL FIX) ===
+const API_TIMEOUT_MS = 25000; // 25s: takılma olmasın
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+
+  // cache kaynaklı bekleme/yanlış cevap riskini azalt
+  const finalOptions = {
+    cache: "no-store",
+    ...options,
+    headers: {
+      "Cache-Control": "no-store",
+      Pragma: "no-cache",
+      ...(options.headers || {}),
+    },
+    signal: controller.signal,
+  };
+
+  try {
+    const res = await fetch(url, finalOptions);
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 // === LANGUAGE TABLES ===
 const LANG_NAMES = {
   tr: "Turkish",
@@ -871,9 +902,12 @@ function renderMessages() {
   container.scrollTop = container.scrollHeight;
 }
 
+// (MINIMAL FIX) addMessage artık index döndürür → sonra aynı mesaj güncellenir
 function addMessage(role, text) {
   const conv = currentConv();
   conv.messages.push({ role, text });
+  const idx = conv.messages.length - 1;
+
   if (
     !conv.title ||
     conv.title === "Yeni sohbet" ||
@@ -885,6 +919,16 @@ function addMessage(role, text) {
   }
   saveConversations();
   renderConversationList();
+  renderMessages();
+  return idx;
+}
+
+// (MINIMAL FIX) Aynı balonu güncelle: “geç geliyor” hissi gider
+function updateMessageAt(index, newText) {
+  const conv = currentConv();
+  if (!conv || !conv.messages || !conv.messages[index]) return;
+  conv.messages[index].text = newText;
+  saveConversations();
   renderMessages();
 }
 
@@ -905,9 +949,7 @@ function updatePlanAndCreditsUI() {
     creditsLabel.textContent =
       state.plan === "pro"
         ? t.creditsLabelPro
-        : (t.creditsLabelFree &&
-            t.creditsLabelFree(state.credits)) ||
-          "";
+        : (t.creditsLabelFree && t.creditsLabelFree(state.credits)) || "";
   }
   if (watchAdBtn) {
     watchAdBtn.classList.toggle("hidden", state.plan !== "free");
@@ -1075,11 +1117,12 @@ function fillLangSelect(selectEl) {
 async function callIdeasAPI(prompt, platform, langCode) {
   const langName = LANG_NAMES[langCode] || "Turkish";
   try {
-    const res = await fetch("/api/ideas", {
+    const res = await fetchWithTimeout("/api/ideas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt, platform, lang: langName }),
     });
+
     const text = await res.text();
     try {
       const data = JSON.parse(text);
@@ -1087,28 +1130,25 @@ async function callIdeasAPI(prompt, platform, langCode) {
     } catch {
       if (text) return text;
     }
-    // Sunucu / API vurgusu yerine sade hata
     return "Şu an yanıt üretilemedi, lütfen tekrar dene.";
-  } catch {
+  } catch (e) {
     return "Şu an yanıt üretilemedi, lütfen tekrar dene.";
   }
 }
 
 async function callSimpleAPI(route, payload) {
   try {
-    const res = await fetch(`/api/${route}`, {
+    const res = await fetchWithTimeout(`/api/${route}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
     const text = await res.text();
-    // Önce JSON olarak parse etmeyi dene
     try {
       const data = JSON.parse(text);
       if (data?.message) return data.message;
       if (data?.result) return data.result;
     } catch {
-      // JSON değilse, gelen düz metni aynen göster
       if (text) return text;
     }
     return "Şu an içerik üretilemedi, lütfen tekrar dene.";
@@ -1123,16 +1163,16 @@ async function loadTrends() {
   const region = (LANG_REGION[state.lang] || "US").toUpperCase();
   list.innerHTML = "<li>Yükleniyor...</li>";
   try {
-    const res = await fetch(`/api/trends?region=${region}`);
-    const data = await res.json();
+    const res = await fetchWithTimeout(`/api/trends?region=${region}`, {
+      method: "GET",
+    });
+    const data = await res.json().catch(() => null);
     if (!res.ok) {
       list.innerHTML =
-        "<li>Trendler alınırken hata: " +
-        (data.message || "") +
-        "</li>";
+        "<li>Trendler alınırken hata: " + ((data && data.message) || "") + "</li>";
       return;
     }
-    if (!data.items?.length) {
+    if (!data?.items?.length) {
       list.innerHTML = "<li>Bu hafta trend bulunamadı.</li>";
       return;
     }
@@ -1161,10 +1201,7 @@ function grantAdCredit() {
   const t = I18N[state.lang] || I18N.tr;
   const today = new Date().toISOString().slice(0, 10);
   const storedDate = localStorage.getItem(AD_DATE_KEY);
-  let storedCount = parseInt(
-    localStorage.getItem(AD_COUNT_KEY) || "0",
-    10
-  );
+  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
 
   if (storedDate !== today) storedCount = 0;
   if (storedCount >= DAILY_AD_LIMIT) {
@@ -1236,12 +1273,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const proCompetitorInput = document.getElementById("proCompetitorInput");
   const proCompetitorBtn = document.getElementById("proCompetitorBtn");
-  const proCompetitorResult =
-    document.getElementById("proCompetitorResult");
+  const proCompetitorResult = document.getElementById("proCompetitorResult");
   const proAudienceInput = document.getElementById("proAudienceInput");
   const proAudienceBtn = document.getElementById("proAudienceBtn");
-  const proAudienceResult =
-    document.getElementById("proAudienceResult");
+  const proAudienceResult = document.getElementById("proAudienceResult");
   const proSilentInput = document.getElementById("proSilentInput");
   const proSilentBtn = document.getElementById("proSilentBtn");
   const proSilentResult = document.getElementById("proSilentResult");
@@ -1254,29 +1289,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const adCancelBtn = document.getElementById("adCancelBtn");
   const adCloseIcon = document.getElementById("adCloseIcon");
   const adContinueBtn = document.getElementById("adContinueBtn");
-  const adConfirmCloseBtn =
-    document.getElementById("adConfirmCloseBtn");
+  const adConfirmCloseBtn = document.getElementById("adConfirmCloseBtn");
 
   const proModal = document.getElementById("proModal");
   const proCloseBtn = document.getElementById("proCloseBtn");
   const proPriceText = document.getElementById("proPriceText");
   const proPayBtn = document.getElementById("proPayBtn");
 
-  const onboardingOverlay =
-    document.getElementById("onboardingOverlay");
+  const onboardingOverlay = document.getElementById("onboardingOverlay");
   const onboardStepLang = document.getElementById("onboardStepLang");
-  const onboardStepEmail =
-    document.getElementById("onboardStepEmail");
-  const onboardLangSelect =
-    document.getElementById("onboardLangSelect");
-  const onboardLangSaveBtn =
-    document.getElementById("onboardLangSaveBtn");
-  const onboardEmailInput =
-    document.getElementById("onboardEmailInput");
-  const onboardPasswordInput =
-    document.getElementById("onboardPasswordInput");
-  const onboardEmailSaveBtn =
-    document.getElementById("onboardEmailSaveBtn");
+  const onboardStepEmail = document.getElementById("onboardStepEmail");
+  const onboardLangSelect = document.getElementById("onboardLangSelect");
+  const onboardLangSaveBtn = document.getElementById("onboardLangSaveBtn");
+  const onboardEmailInput = document.getElementById("onboardEmailInput");
+  const onboardPasswordInput = document.getElementById("onboardPasswordInput");
+  const onboardEmailSaveBtn = document.getElementById("onboardEmailSaveBtn");
 
   // Dil select doldur
   fillLangSelect(langSelect);
@@ -1304,8 +1331,7 @@ document.addEventListener("DOMContentLoaded", () => {
     softBackBtn.style.borderRadius = "999px";
     softBackBtn.style.border = "none";
     softBackBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-    softBackBtn.style.background =
-      "linear-gradient(135deg, #ffffff, #f3e9ff)";
+    softBackBtn.style.background = "linear-gradient(135deg, #ffffff, #f3e9ff)";
     softBackBtn.style.fontSize = "20px";
     softBackBtn.style.display = "flex";
     softBackBtn.style.alignItems = "center";
@@ -1315,14 +1341,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(softBackBtn);
 
     softBackBtn.addEventListener("click", () => {
-      // Önce JS içindeki geri mantığını çalıştır
-      if (
-        typeof window.__inspireHandleBack === "function" &&
-        window.__inspireHandleBack()
-      ) {
+      if (typeof window.__inspireHandleBack === "function" && window.__inspireHandleBack()) {
         return;
       }
-      // Eğer hiçbir şey kapanmadıysa panel geçmişine göre geri dön
       if (currentPanel && currentPanel !== "chat") {
         showPanel(previousPanel || "chat");
       }
@@ -1330,8 +1351,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showOnboardingIfNeeded() {
-    if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail)
-      return;
+    if (!onboardingOverlay || !onboardStepLang || !onboardStepEmail) return;
     const hasLang = !!localStorage.getItem(LANG_KEY);
     const hasEmail = !!localStorage.getItem(EMAIL_KEY);
     if (hasLang && hasEmail) {
@@ -1426,9 +1446,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const t = I18N[state.lang] || I18N.tr;
     const isTr = state.lang === "tr";
     if (proPriceText) {
-      proPriceText.textContent = isTr
-        ? t.proPriceTextTr
-        : t.proPriceTextEn;
+      proPriceText.textContent = isTr ? t.proPriceTextTr : t.proPriceTextEn;
     }
     modalBackdrop.classList.remove("hidden");
     proModal.classList.remove("hidden");
@@ -1441,14 +1459,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (watchAdBtn) {
     watchAdBtn.addEventListener("click", () => {
       if (state.plan !== "free") return;
-      // Android real ad
-      if (
-        window.AndroidAds &&
-        typeof window.AndroidAds.showRewardedAd === "function"
-      ) {
+      if (window.AndroidAds && typeof window.AndroidAds.showRewardedAd === "function") {
         window.AndroidAds.showRewardedAd();
       } else {
-        // Web demo
         openAdModal();
       }
     });
@@ -1517,10 +1530,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const t = I18N[state.lang] || I18N.tr;
       const isTr = state.lang === "tr";
       const priceShort = isTr ? "aylık 299 TL" : "monthly";
-      if (
-        window.AndroidBilling &&
-        window.AndroidBilling.startPurchase
-      ) {
+      if (window.AndroidBilling && window.AndroidBilling.startPurchase) {
         const sku = isTr ? "pro_monthly_tr" : "pro_monthly_intl";
         window.AndroidBilling.startPurchase(sku);
       } else {
@@ -1541,17 +1551,12 @@ document.addEventListener("DOMContentLoaded", () => {
       applySmallUIText(code);
       loadTrends();
       if (onboardStepLang) onboardStepLang.classList.add("hidden");
-      if (onboardStepEmail)
-        onboardStepEmail.classList.remove("hidden");
+      if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
     });
   }
 
   // === GİRİŞ / KAYIT – ŞİFRE YANLIŞ MESAJI DAHİL ===
-  if (
-    onboardEmailSaveBtn &&
-    onboardEmailInput &&
-    onboardPasswordInput
-  ) {
+  if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
       const email = onboardEmailInput.value.trim();
       const password = onboardPasswordInput.value.trim();
@@ -1571,14 +1576,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Ekranda hemen email gözüksün
       state.email = email;
       saveEmail();
       updateAccountEmailUI();
 
       let data = null;
       try {
-        const res = await fetch("/api/register-user", {
+        const res = await fetchWithTimeout("/api/register-user", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1592,7 +1596,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         data = await res.json().catch(() => null);
 
-        // Yanlış şifre
         if (res.status === 401 && data?.code === "INVALID_PASSWORD") {
           const msg =
             state.lang === "tr"
@@ -1609,9 +1612,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!res.ok || !data) {
-          throw new Error(
-            data?.error || data?.message || "Sunucu hatası"
-          );
+          throw new Error(data?.error || data?.message || "Sunucu hatası");
         }
       } catch (e) {
         console.error("register-user hatası:", e);
@@ -1675,8 +1676,7 @@ document.addEventListener("DOMContentLoaded", () => {
     changeEmailBtn.addEventListener("click", () => {
       if (!onboardingOverlay) return;
       if (onboardStepLang) onboardStepLang.classList.add("hidden");
-      if (onboardStepEmail)
-        onboardStepEmail.classList.remove("hidden");
+      if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
       onboardingOverlay.classList.remove("hidden");
     });
   }
@@ -1705,8 +1705,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // VOICE (Web Speech API)
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRec =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRec();
     recognition.lang = LANG_SPEECH[state.lang] || "en-US";
     recognition.interimResults = false;
@@ -1736,12 +1735,9 @@ document.addEventListener("DOMContentLoaded", () => {
       voiceBtn.textContent = "🎤…";
 
       recognition.onresult = (ev) => {
-        const text =
-          ev.results?.[0]?.[0]?.transcript || "";
+        const text = ev.results?.[0]?.[0]?.transcript || "";
         if (messageInput && text) {
-          messageInput.value = (
-            messageInput.value + " " + text
-          ).trim();
+          messageInput.value = (messageInput.value + " " + text).trim();
         }
       };
       recognition.onerror = () => {
@@ -1774,9 +1770,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!file) return;
       const info = `[DOSYA: ${file.name}]`;
       if (messageInput) {
-        messageInput.value = messageInput.value
-          ? messageInput.value + " " + info
-          : info;
+        messageInput.value = messageInput.value ? messageInput.value + " " + info : info;
       }
     });
   }
@@ -1789,8 +1783,7 @@ document.addEventListener("DOMContentLoaded", () => {
     seriesGenerate.addEventListener("click", async () => {
       const topic = seriesTopic.value.trim();
       if (!topic) return;
-      seriesResult.textContent =
-        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      seriesResult.textContent = I18N[state.lang]?.loadingText || "Yükleniyor...";
       const text = await callSimpleAPI("series", {
         topic,
         lang: LANG_NAMES[state.lang] || "Turkish",
@@ -1803,8 +1796,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hookGenerate.addEventListener("click", async () => {
       const topic = hookTopic.value.trim();
       if (!topic) return;
-      hookResult.textContent =
-        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      hookResult.textContent = I18N[state.lang]?.loadingText || "Yükleniyor...";
       const text = await callSimpleAPI("hook", {
         topic,
         lang: LANG_NAMES[state.lang] || "Turkish",
@@ -1817,8 +1809,7 @@ document.addEventListener("DOMContentLoaded", () => {
     copyGenerate.addEventListener("click", async () => {
       const topic = copyTopic.value.trim();
       if (!topic) return;
-      copyResult.textContent =
-        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      copyResult.textContent = I18N[state.lang]?.loadingText || "Yükleniyor...";
       const text = await callSimpleAPI("copy", {
         topic,
         lang: LANG_NAMES[state.lang] || "Turkish",
@@ -1836,8 +1827,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const value = proCompetitorInput.value.trim();
       if (!value) return;
-      proCompetitorResult.textContent =
-        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      proCompetitorResult.textContent = I18N[state.lang]?.loadingText || "Yükleniyor...";
       const text = await callSimpleAPI("pro-competitor", {
         input: value,
         lang: LANG_NAMES[state.lang] || "Turkish",
@@ -1855,8 +1845,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const value = proAudienceInput.value.trim();
       if (!value) return;
-      proAudienceResult.textContent =
-        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      proAudienceResult.textContent = I18N[state.lang]?.loadingText || "Yükleniyor...";
       const text = await callSimpleAPI("pro-audience", {
         input: value,
         lang: LANG_NAMES[state.lang] || "Turkish",
@@ -1874,8 +1863,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const value = proSilentInput.value.trim();
       if (!value) return;
-      proSilentResult.textContent =
-        I18N[state.lang]?.loadingText || "Yükleniyor...";
+      proSilentResult.textContent = I18N[state.lang]?.loadingText || "Yükleniyor...";
       const text = await callSimpleAPI("pro-silent", {
         input: value,
         lang: LANG_NAMES[state.lang] || "Turkish",
@@ -1886,13 +1874,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === CHAT SUBMIT ===
-  if (
-    chatForm &&
-    topicInput &&
-    platformSelect &&
-    messageInput &&
-    loadingEl
-  ) {
+  if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const t = I18N[state.lang] || I18N.tr;
@@ -1905,8 +1887,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const prompt =
         state.plan === "pro"
-          ? "[PRO_USER] Kullanıcı PRO planda. Daha detaylı, özgün, ileri seviye kısa video fikirleri üret.\n\n" +
-            basePrompt
+          ? "[PRO_USER] Kullanıcı PRO planda. Daha detaylı, özgün, ileri seviye kısa video fikirleri üret.\n\n" + basePrompt
           : basePrompt;
 
       if (state.plan === "free" && state.credits <= 0) {
@@ -1914,12 +1895,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      // USER mesajı
       addMessage("user", prompt);
+
+      // (MINIMAL FIX) Asistan balonunu anında göster → sonra aynı balonu güncelle
+      const pendingIdx = addMessage("assistant", t.loadingText || "Yükleniyor...");
+
       loadingEl.classList.remove("hidden");
 
       const reply = await callIdeasAPI(prompt, platform, state.lang);
 
-      addMessage("assistant", reply);
+      // (MINIMAL FIX) aynı balonu cevapla değiştir
+      updateMessageAt(pendingIdx, reply);
+
       loadingEl.classList.add("hidden");
 
       if (state.plan === "free") {
@@ -1949,18 +1937,15 @@ function showPanel(name) {
 }
 
 // === ANDROID GERİ TUŞU GENEL YÖNETİMİ ===
-// Android: if (window.__inspireHandleBack && window.__inspireHandleBack()) { } else { super.onBackPressed(); }
 window.__inspireHandleBack = function () {
   const $ = (id) => document.getElementById(id);
 
-  // 1) Onboarding açıksa kapat
   const onboarding = $("onboardingOverlay");
   if (onboarding && !onboarding.classList.contains("hidden")) {
     onboarding.classList.add("hidden");
     return true;
   }
 
-  // 2) PRO ödeme modali açıksa kapat
   const proModal = $("proModal");
   if (proModal && !proModal.classList.contains("hidden")) {
     proModal.classList.add("hidden");
@@ -1969,7 +1954,6 @@ window.__inspireHandleBack = function () {
     return true;
   }
 
-  // 3) Reklam modali açıksa kapat
   const adModal = $("adModal");
   if (adModal && !adModal.classList.contains("hidden")) {
     adModal.classList.add("hidden");
@@ -1978,28 +1962,24 @@ window.__inspireHandleBack = function () {
     return true;
   }
 
-  // 4) Yardım paneli açıksa kapat
   const helpPanel = $("helpPanel");
   if (helpPanel && !helpPanel.classList.contains("hidden")) {
     helpPanel.classList.add("hidden");
     return true;
   }
 
-  // 5) Sol sidebar açıksa kapat
   const sidebar = $("sidebar");
   if (sidebar && !sidebar.classList.contains("hidden")) {
     sidebar.classList.add("hidden");
     return true;
   }
 
-  // 6) Panel geçmişine göre geri git (chat dışı panellerden)
   if (currentPanel && currentPanel !== "chat") {
     const target = previousPanel || "chat";
     showPanel(target);
     return true;
   }
 
-  // 7) Artık ana ekrandayız → Android normal geri (uygulamadan çık)
   return false;
 };
 
