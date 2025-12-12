@@ -87,7 +87,7 @@ export default async function handler(req, res) {
     const { data, error } = await supabase
       .from("users")
       .select("id, email, plan, Plan, is_pro")
-      // ilike: case-insensitive eşleşme
+      // case-insensitive eşleşme
       .ilike("email", email)
       .maybeSingle();
 
