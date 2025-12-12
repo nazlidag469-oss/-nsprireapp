@@ -1,5 +1,5 @@
 // api/pro-audience.js
-// PRO Araç – Kitle İçgörü Analizi (ESM uyumlu)
+// PRO Araç – Kitle İçgörü Analizi (ESM uyumlu) — FIXED
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -20,37 +20,49 @@ function isProUser(userRow) {
 }
 
 export default async function handler(req, res) {
-  // Kullanıcıya teknik hata göstermeyeceğimiz genel mesaj
   const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
 
-  // Kullanıcıya temiz, “hata gibi görünmeyen” yönlendirmeler
   const NEED_LOGIN =
     "Bu PRO aracı için giriş yapman gerekiyor. (E-posta ile giriş yaptıktan sonra tekrar dene.)";
   const ONLY_PRO_TEXT =
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
 
-  // Sadece POST kabul ediyoruz, ama dışarıya teknik hata göstermiyoruz
+  // Sadece POST kabul
   if (req.method !== "POST") {
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
+  // Env kontrol
   if (!supabase) {
-    // Env eksikse sadece log’a yaz, kullanıcıya genel mesaj dön
     console.error(
       "PRO_AUDIENCE_SUPABASE_ENV_MISSING: SUPABASE_URL / SUPABASE_SERVICE_KEY"
     );
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
-  let body = {};
-  try {
-    body = req.body || {};
-  } catch {
-    body = {};
+  // Body parse (string gelirse JSON'a çevir)
+  let body = req.body || {};
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
   }
 
-  const email = (body.email || "").toLowerCase().trim();
-  const input = (body.input || "").trim();
+  // Email’i hem body’den hem header’dan dene
+  const headerEmailRaw =
+    req.headers["x-user-email"] ||
+    req.headers["x-email"] ||
+    req.headers["x_user_email"] ||
+    req.headers["x_email"] ||
+    "";
+
+  const email = String(body.email || headerEmailRaw || "")
+    .toLowerCase()
+    .trim();
+
+  const input = String(body.input || "").trim();
   const lang = body.lang || "Turkish";
 
   // Boş input için temiz mesaj
@@ -73,13 +85,15 @@ export default async function handler(req, res) {
     const { data, error } = await supabase
       .from("users")
       .select("id, email, plan, Plan, is_pro")
-      .eq("email", email)
+      // ilike: case-insensitive eşleşme
+      .ilike("email", email)
       .maybeSingle();
 
     if (error) {
       console.error("Supabase error (pro-audience):", error);
       return res.status(200).json({ message: GENERIC_FAIL });
     }
+
     userRow = data || null;
   } catch (e) {
     console.error("Supabase exception (pro-audience):", e);
@@ -91,6 +105,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: ONLY_PRO_TEXT });
   }
 
+  // PRO ise içerik üret
   let message = "";
 
   if (lang === "tr" || lang === "Turkish") {
