@@ -266,7 +266,9 @@ textarea {
   cursor: pointer;
 }
 
-/* === PRO PANELİ === */
+/* =========================
+   PRO PANELİ + PRO KİLİT STİLLERİ
+   ========================= */
 .pro-menu-btn {
   background: var(--purple-soft);
   color: var(--purple-dark);
@@ -318,6 +320,32 @@ textarea {
 
 .pro-fullscreen .panel {
   box-shadow: none;
+}
+
+/* 🔒 PRO olmayan kullanıcı için kilitli alan stili (isteğe göre HTML'de class verilebilir) */
+.pro-locked {
+  opacity: 0.5;
+  filter: grayscale(0.4);
+  pointer-events: none;
+}
+
+.pro-locked-info {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* Küçük PRO rozeti */
+.pro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7c3aed, #6366f1);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 /* === BACKDROP / MODAL GENEL === */
