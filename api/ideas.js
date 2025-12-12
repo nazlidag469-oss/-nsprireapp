@@ -25,10 +25,22 @@ const LANG_MAP = {
   pl: "Polish",
 };
 
-export default async function handler(req, res) {
-  // Kullanıcıya asla teknik hata göstermeyeceğimiz genel mesaj
-  const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
+// Gelen lang değerinden "tr", "en" vs. tespit et
+function detectLangKey(langRaw) {
+  if (!langRaw) return "tr";
+  const val = String(langRaw).toLowerCase();
 
+  // Zaten kısaltma geldiyse (tr, en...)
+  if (LANG_MAP[val]) return val;
+
+  // "Turkish", "English" gibi geldiyse map'le
+  for (const [code, name] of Object.entries(LANG_MAP)) {
+    if (name.toLowerCase() === val) return code;
+  }
+  return "tr";
+}
+
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ message: "Sadece POST destekleniyor." });
@@ -37,10 +49,14 @@ export default async function handler(req, res) {
   const { prompt, platform, lang, mode, format } = req.body || {};
   const topic = (prompt || "").toString().trim() || "Belirsiz konu";
 
-  const langName =
-    LANG_MAP[lang] || // "tr"
-    (lang || "").toString() || // "Turkish"
-    "Turkish";
+  const langKey = detectLangKey(lang || "tr");
+  const langName = LANG_MAP[langKey] || "Turkish";
+
+  // Kullanıcıya göstereceğimiz genel, kibar hata mesajı
+  const GENERIC_FAIL =
+    langKey === "tr"
+      ? "Şu an içerik üretilemedi. Lütfen birkaç dakika sonra tekrar dene."
+      : "Content could not be generated right now. Please try again in a few minutes.";
 
   let platformSafe = (platform || "youtube").toString().toLowerCase();
   if (!["youtube", "tiktok", "instagram"].includes(platformSafe)) {
@@ -50,7 +66,7 @@ export default async function handler(req, res) {
   // --- ENV ---
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
-    // Eskiden teknik mesaj gidiyordu. Artık kullanıcıya hep tek genel mesaj.
+    // Teknik detayı gizle, sadece kullanıcı dostu mesaj
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
@@ -164,7 +180,7 @@ export default async function handler(req, res) {
               "   • Süre önerisi (örn: 15–35 sn)\n" +
               "   • Platforma özel küçük tüyolar (YouTube Shorts / TikTok / Reels farkları)\n" +
               "4) Ek Seçenekler:\n" +
-              '   • Kullanıcıya "İstersen bu fikirlerden biri için çekim planını sahne sahne anlatayım" diye teklif et.\n' +
+              '   • Kullanıcıya \"İstersen bu fikirlerden biri için çekim planını sahne sahne anlatayım\" diye teklif et.\n' +
               "   • Eğer kullanıcı Pro ise ekstra olarak seri fikir / 30 günlük mini plan önerebileceğini hatırlat.\n\n" +
               "Boş, generic cümlelerden kaçın. Cümleler dolu ve net olsun. Gerçek bir içerik üreticisine konuşur gibi yaz.",
           },
@@ -185,19 +201,20 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      // Eskiden OpenAI hata mesajını kullanıcı görüyordu. Artık tek genel mesaj.
       console.error("OPENAI_RESPONSE_NOT_OK", data);
+      // Kullanıcıya teknik detay yok, sadece genel mesaj
       return res.status(200).json({ message: GENERIC_FAIL });
     }
 
     const text =
       data.choices?.[0]?.message?.content ||
-      "Herhangi bir içerik üretilmedi.";
+      (langKey === "tr"
+        ? "Herhangi bir içerik üretilmedi. Lütfen biraz sonra tekrar dene."
+        : "No content was generated. Please try again shortly.");
 
     return res.status(200).json({ message: text });
   } catch (e) {
     console.error("IDEAS_API_ERROR", e);
-    // Eskiden “beklenmeyen hata” gibi mesajlar gidiyordu. Artık tek genel mesaj.
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 }
