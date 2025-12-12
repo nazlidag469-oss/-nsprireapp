@@ -1,3 +1,8 @@
+/* ===============================
+   INSPIREAPP — APP.JS (FULL FIX)
+   PRO + SPEED BOOST + EMAIL GUARANTEE
+================================ */
+
 // =========================
 // === LOCAL STORAGE KEYS ===
 // =========================
@@ -16,7 +21,7 @@ const DAILY_AD_LIMIT = 400;
 // =========================
 // === NETWORK SETTINGS  ===
 // =========================
-const API_TIMEOUT_MS = 20000; // bir tık kısalttım (25s -> 20s)
+const API_TIMEOUT_MS = 15000; // ✅ hız: 20s -> 15s
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
   const controller = new AbortController();
@@ -67,7 +72,6 @@ const LANG_SPEECH = {
 };
 
 // NOT: Senin gönderdiğin I18N bloğu aynen kalsın (çok uzun diye burada kısaltmıyorum).
-// Aşağıya kendi I18N objeni olduğu gibi yapıştırabilirsin.
 const I18N = window.I18N || {
   tr: {
     loadingText: "Yükleniyor...",
@@ -77,8 +81,7 @@ const I18N = window.I18N || {
     planProLabel: "Plan: Pro (sınırsız puan)",
     creditsLabelFree: (c) => `Kalan puan: ${c}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Kalan puan: Sınırsız",
-    adDailyLimit: (limit) =>
-      `Günlük reklam limiti doldu. (Limit: ${limit})`,
+    adDailyLimit: (limit) => `Günlük reklam limiti doldu. (Limit: ${limit})`,
     proPriceTextTr:
       "InspireApp PRO – aylık 299 TL (Google Play üzerinden ücretlendirilir).",
     proPriceTextEn:
@@ -91,8 +94,7 @@ const I18N = window.I18N || {
     planProLabel: "Plan: Pro (unlimited credits)",
     creditsLabelFree: (c) => `Credits: ${c}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Credits: Unlimited",
-    adDailyLimit: (limit) =>
-      `Daily ad limit reached. (Limit: ${limit})`,
+    adDailyLimit: (limit) => `Daily ad limit reached. (Limit: ${limit})`,
     proPriceTextTr:
       "InspireApp PRO – monthly subscription via Google Play.",
     proPriceTextEn:
@@ -153,6 +155,31 @@ let softBackBtn = null;
 // =========================
 const $ = (id) => document.getElementById(id);
 
+// ✅ SPEED: debounce localStorage writes (çok hızlandırır)
+let _saveConvTimer = null;
+function scheduleSaveConversations() {
+  if (_saveConvTimer) clearTimeout(_saveConvTimer);
+  _saveConvTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.conversations));
+    } catch {}
+    _saveConvTimer = null;
+  }, 150);
+}
+
+function getEmailSafe() {
+  const e = (state.email || localStorage.getItem(EMAIL_KEY) || "").trim();
+  return e;
+}
+
+function setPlanSafe(next) {
+  if (next !== "pro" && next !== "free") return;
+  if (state.plan === next) return;
+  state.plan = next;
+  savePlan();
+  updatePlanAndCreditsUI();
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -181,21 +208,24 @@ function loadState() {
   if (l && LANG_NAMES[l]) state.lang = l;
 
   const e = localStorage.getItem(EMAIL_KEY);
-  if (e) state.email = e;
+  if (e) state.email = e.trim();
 }
 
-function saveConversations() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.conversations));
-}
 function saveCredits() {
-  localStorage.setItem(CREDITS_KEY, String(state.credits));
+  try {
+    localStorage.setItem(CREDITS_KEY, String(state.credits));
+  } catch {}
 }
 function savePlan() {
-  localStorage.setItem(PLAN_KEY, state.plan);
+  try {
+    localStorage.setItem(PLAN_KEY, state.plan);
+  } catch {}
 }
 function saveEmail() {
-  if (state.email) localStorage.setItem(EMAIL_KEY, state.email);
-  else localStorage.removeItem(EMAIL_KEY);
+  try {
+    if (state.email) localStorage.setItem(EMAIL_KEY, state.email);
+    else localStorage.removeItem(EMAIL_KEY);
+  } catch {}
 }
 
 function currentConv() {
@@ -258,15 +288,10 @@ function closeAdModal() {
 }
 
 // =========================
-– === PANEL SWITCH (FIX) ===
+// === PANEL SWITCH (FIX) ===
 // =========================
 function showPanel(name) {
-  // 🔒 PRO KİLİDİ: Ücretsizse PRO panel asla açılmayacak
-  if (name === "pro" && state.plan !== "pro") {
-    openProModal();
-    return;
-  }
-
+  // ✅ PRO panel KİLİDİ kaldırıldı: kontrol backend’de
   const panels = document.querySelectorAll("main .panel");
   if (!panels.length) return;
   if (name === currentPanel) return;
@@ -310,10 +335,12 @@ function renderConversationList() {
       });
     }
     state.currentId = state.conversations[0].id;
-    saveConversations();
+    scheduleSaveConversations();
     renderConversationList();
     renderMessages();
   }
+
+  const frag = document.createDocumentFragment();
 
   state.conversations
     .slice()
@@ -359,8 +386,10 @@ function renderConversationList() {
         item.addEventListener(ev, cancelPress)
       );
 
-      listEl.appendChild(item);
+      frag.appendChild(item);
     });
+
+  listEl.appendChild(frag);
 }
 
 function renderMessages() {
@@ -368,6 +397,8 @@ function renderMessages() {
   if (!container) return;
   const conv = currentConv();
   container.innerHTML = "";
+
+  const frag = document.createDocumentFragment();
 
   conv.messages.forEach((m) => {
     const row = document.createElement("div");
@@ -382,9 +413,10 @@ function renderMessages() {
 
     bubble.appendChild(textEl);
     row.appendChild(bubble);
-    container.appendChild(row);
+    frag.appendChild(row);
   });
 
+  container.appendChild(frag);
   container.scrollTop = container.scrollHeight;
 }
 
@@ -393,16 +425,27 @@ function addMessage(role, text) {
   conv.messages.push({ role, text });
   const idx = conv.messages.length - 1;
 
+  let titleChanged = false;
   if (
     !conv.title ||
     conv.title === "Yeni sohbet" ||
     conv.title === "New chat"
   ) {
     const firstUserMsg = conv.messages.find((m) => m.role === "user");
-    if (firstUserMsg?.text) conv.title = buildTitleFromText(firstUserMsg.text);
+    if (firstUserMsg?.text) {
+      const newTitle = buildTitleFromText(firstUserMsg.text);
+      if (newTitle && conv.title !== newTitle) {
+        conv.title = newTitle;
+        titleChanged = true;
+      }
+    }
   }
-  saveConversations();
-  renderConversationList();
+
+  scheduleSaveConversations();
+
+  // ✅ SPEED: conversation list sadece title değiştiyse yenile
+  if (titleChanged) renderConversationList();
+
   renderMessages();
   return idx;
 }
@@ -411,7 +454,7 @@ function updateMessageAt(index, newText) {
   const conv = currentConv();
   if (!conv || !conv.messages || !conv.messages[index]) return;
   conv.messages[index].text = newText;
-  saveConversations();
+  scheduleSaveConversations();
   renderMessages();
 }
 
@@ -429,6 +472,7 @@ function updatePlanAndCreditsUI() {
   if (planLabel)
     planLabel.textContent =
       state.plan === "pro" ? t.planProLabel : t.planFreeLabel;
+
   if (creditsLabel) {
     creditsLabel.textContent =
       state.plan === "pro"
@@ -437,10 +481,13 @@ function updatePlanAndCreditsUI() {
         ? t.creditsLabelFree(state.credits)
         : "";
   }
+
   if (watchAdBtn) watchAdBtn.classList.toggle("hidden", state.plan !== "free");
+
   if (planStatus)
     planStatus.textContent =
       state.plan === "pro" ? t.planProLabel : t.planFreeLabel;
+
   if (subscribeBlock)
     subscribeBlock.classList.toggle("hidden", state.plan === "pro");
 }
@@ -517,21 +564,27 @@ async function callIdeasAPI(prompt, platform, langCode) {
   }
 }
 
+// ✅ FIX: Header'a email ekleniyor (server header’dan da okuyabiliyor)
 async function callSimpleAPI(route, payload) {
   try {
+    const emailSafe = getEmailSafe();
+
     const res = await fetchWithTimeout(`/api/${route}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(emailSafe ? { "x-user-email": emailSafe } : {}),
+      },
       body: JSON.stringify(payload),
     });
 
     const text = await res.text();
 
-    // 🔒 Sunucu "PRO lazım" diyorsa: modal aç
     let json = null;
     try {
       json = JSON.parse(text);
     } catch {}
+
     if (isProRequiredResponse(res, json || text)) {
       openProModal();
       return state.lang === "tr"
@@ -550,17 +603,47 @@ async function callSimpleAPI(route, payload) {
   }
 }
 
-// 🔥 PRO ARAÇLARI İÇİN SUNUCUYA DOĞRUDAN GİDEN YARDIMCI
+// 🔥 PRO ARAÇLARI: email yoksa onboarding aç, varsa body+header ile gönder
 async function callRealProEndpoint(route, input) {
   const langCode = state.lang || "tr";
   const langName = LANG_NAMES[langCode] || "Turkish";
-  // ⬇️ Burada plan ve email birlikte gidiyor
-  return callSimpleAPI(route, {
-    email: state.email || "",
+
+  const emailSafe = getEmailSafe().toLowerCase().trim();
+
+  if (!emailSafe) {
+    const onboardingOverlay = $("onboardingOverlay");
+    const onboardStepLang = $("onboardStepLang");
+    const onboardStepEmail = $("onboardStepEmail");
+    if (onboardingOverlay) onboardingOverlay.classList.remove("hidden");
+    if (onboardStepLang) onboardStepLang.classList.add("hidden");
+    if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
+
+    return langCode === "tr"
+      ? "Bu PRO aracı için önce e-posta ile giriş yapman gerekiyor."
+      : "You need to login with email first.";
+  }
+
+  const msg = await callSimpleAPI(route, {
+    email: emailSafe,
     input,
     lang: langName,
-    plan: state.plan || "free",
   });
+
+  // ✅ Backend PRO içerik döndürdüyse: planı otomatik PRO yap
+  if (typeof msg === "string" && /(\(PRO\))|(^🎯)|(^👥)/m.test(msg)) {
+    setPlanSafe("pro");
+  }
+
+  // ❌ Backend “yalnızca PRO” dediyse: free + modal
+  if (
+    typeof msg === "string" &&
+    /yalnızca PRO üyeler|only PRO members|PRO’ya geç/i.test(msg)
+  ) {
+    setPlanSafe("free");
+    openProModal();
+  }
+
+  return msg;
 }
 
 async function loadTrends() {
@@ -611,10 +694,7 @@ function grantAdCredit() {
   const t = I18N[state.lang] || I18N.tr;
   const today = new Date().toISOString().slice(0, 10);
   const storedDate = localStorage.getItem(AD_DATE_KEY);
-  let storedCount = parseInt(
-    localStorage.getItem(AD_COUNT_KEY) || "0",
-    10
-  );
+  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
 
   if (storedDate !== today) storedCount = 0;
   if (storedCount >= DAILY_AD_LIMIT) {
@@ -641,9 +721,7 @@ window.__onRealAdReward = function () {
 
 // Android PRO plan activation
 window.__setProPlanFromAndroid = function () {
-  state.plan = "pro";
-  savePlan();
-  updatePlanAndCreditsUI();
+  setPlanSafe("pro");
   alert("🎉 PRO üyelik Google Play üzerinden aktif edildi!");
 };
 
@@ -688,7 +766,6 @@ window.__inspireHandleBack = function () {
     return true;
   }
 
-  // Chat panelindeyken bile uygulamadan çıkma
   return true;
 };
 
@@ -835,7 +912,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // Swipe ile sidebar kapatma (sadece sidebar için)
+  // Swipe ile sidebar kapatma
   let swipeStartX = null;
   document.addEventListener("touchstart", (e) => {
     if (!sidebar || sidebar.classList.contains("hidden")) return;
@@ -856,10 +933,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Help
-  const openHelp = () =>
-    helpPanel && helpPanel.classList.remove("hidden");
-  const closeHelp = () =>
-    helpPanel && helpPanel.classList.add("hidden");
+  const openHelp = () => helpPanel && helpPanel.classList.remove("hidden");
+  const closeHelp = () => helpPanel && helpPanel.classList.add("hidden");
   if (helpToggle) helpToggle.addEventListener("click", openHelp);
   if (helpToggle2) helpToggle2.addEventListener("click", openHelp);
   if (closeHelpBtn) closeHelpBtn.addEventListener("click", closeHelp);
@@ -875,7 +950,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       state.conversations.unshift(conv);
       state.currentId = conv.id;
-      saveConversations();
+      scheduleSaveConversations();
       renderConversationList();
       renderMessages();
     });
@@ -966,7 +1041,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Onboarding login/register  ✅ PLAN & CREDIT SİNKRON
+  // Onboarding login/register
   if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
     onboardEmailSaveBtn.addEventListener("click", async () => {
       const email = onboardEmailInput.value.trim();
@@ -987,7 +1062,10 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const res = await fetchWithTimeout("/api/register-user", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-email": email,
+          },
           body: JSON.stringify({
             email,
             password,
@@ -999,7 +1077,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const data = await res.json().catch(() => null);
 
-        // Şifre yanlış
         if (res.status === 401 && data?.message === "INVALID_PASSWORD") {
           alert(
             state.lang === "tr"
@@ -1011,12 +1088,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!res.ok || !data)
           throw new Error(data?.error || data?.message || "Sunucu hatası");
 
-        // Sunucudan gelen plan/credit/lang ile state'i güncelle
         const u = data.user || {};
-        if (u.plan) {
-          state.plan = u.plan;
-          savePlan();
-        }
+        if (u.plan) setPlanSafe(u.plan);
         if (typeof u.credits !== "undefined") {
           state.credits = u.credits;
           saveCredits();
@@ -1030,11 +1103,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updatePlanAndCreditsUI();
 
         if (data.status === "login")
-          alert(
-            state.lang === "tr"
-              ? "Giriş başarılı. 👌"
-              : "Login successful. 👌"
-          );
+          alert(state.lang === "tr" ? "Giriş başarılı. 👌" : "Login successful. 👌");
         else if (data.status === "registered")
           alert(
             state.lang === "tr"
@@ -1075,7 +1144,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ PANEL BUTTONS (PRO kilidi showPanel içinde)
+  // PANEL BUTTONS
   document.querySelectorAll(".side-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.panel;
@@ -1087,8 +1156,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Voice
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRec =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRec();
     recognition.lang = LANG_SPEECH[state.lang] || "en-US";
     recognition.interimResults = false;
@@ -1117,11 +1185,7 @@ document.addEventListener("DOMContentLoaded", () => {
           messageInput.value = (messageInput.value + " " + text).trim();
       };
       recognition.onerror = () =>
-        alert(
-          state.lang === "tr"
-            ? "Ses tanıma sırasında hata oldu."
-            : "Speech recognition error."
-        );
+        alert(state.lang === "tr" ? "Ses tanıma sırasında hata oldu." : "Speech recognition error.");
       recognition.onend = () => {
         voiceBtn.disabled = false;
         voiceBtn.textContent = "🎤";
@@ -1144,8 +1208,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Trends refresh
-  if (refreshTrendsBtn)
-    refreshTrendsBtn.addEventListener("click", loadTrends);
+  if (refreshTrendsBtn) refreshTrendsBtn.addEventListener("click", loadTrends);
 
   // Series / Hook / Copy
   if (seriesGenerate && seriesTopic && seriesResult) {
@@ -1187,7 +1250,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ PRO tools (artık direkt backend pro endpoint'leri)
+  // ✅ PRO tools (backend pro endpoint'leri)
   if (proCompetitorBtn && proCompetitorInput && proCompetitorResult) {
     proCompetitorBtn.addEventListener("click", async () => {
       const value = proCompetitorInput.value.trim();
@@ -1258,10 +1321,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       addMessage("user", prompt);
-      const pendingIdx = addMessage(
-        "assistant",
-        t.loadingText || "Yükleniyor..."
-      );
+      const pendingIdx = addMessage("assistant", t.loadingText || "Yükleniyor...");
       loadingEl.classList.remove("hidden");
 
       const reply = await callIdeasAPI(prompt, platform, state.lang);
@@ -1287,6 +1347,12 @@ document.addEventListener("DOMContentLoaded", () => {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
     .register("/service-worker.js")
-    .then(() => console.log("Service Worker yüklendi ✔"))
+    .then(() => {
+      // ✅ SPEED: SW güncellemesini tetikle (eski cache yavaşlatmasın)
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.update());
+      });
+      console.log("Service Worker yüklendi ✔");
+    })
     .catch((err) => console.error("SW hatası:", err));
-}
+    }
