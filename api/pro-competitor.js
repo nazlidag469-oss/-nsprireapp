@@ -17,20 +17,32 @@ if (supabaseUrl && serviceKey) {
 function isProUser(userRow) {
   if (!userRow) return false;
   if (userRow.plan === "pro") return true;
-  if (userRow.Plan === "pro") return true;        // Büyük harfli kolon için
-  if (userRow.is_pro === true) return true;       // bool alan varsa
+  if (userRow.Plan === "pro") return true; // Büyük harfli kolon için
+  if (userRow.is_pro === true) return true; // bool alan varsa
   return false;
 }
 
 module.exports = async function handler(req, res) {
+  // Kullanıcıya teknik hata göstermeyeceğimiz genel mesaj
+  const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
+
+  // Kullanıcıya temiz, “hata gibi görünmeyen” yönlendirmeler
+  const NEED_LOGIN =
+    "Bu PRO aracı için giriş yapman gerekiyor. (E-posta ile giriş yaptıktan sonra tekrar dene.)";
+  const ONLY_PRO_TEXT =
+    "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
+
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "METHOD_NOT_ALLOWED" });
+    // Teknik kod yerine temiz mesaj
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!supabase) {
-    return res.status(500).json({
-      message: "Supabase env değişkenleri eksik (SUPABASE_URL / SUPABASE_SERVICE_KEY).",
-    });
+    // Eskiden teknik env mesajı gidiyordu, artık gizliyoruz
+    console.error(
+      "PRO_COMPETITOR_SUPABASE_ENV_MISSING: SUPABASE_URL / SUPABASE_SERVICE_KEY"
+    );
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   let body = {};
@@ -44,11 +56,18 @@ module.exports = async function handler(req, res) {
   const input = (body.input || "").trim();
   const lang = body.lang || "Turkish";
 
-  if (!email) {
-    return res.status(400).json({ message: "EMAIL_REQUIRED" });
-  }
+  // Eskiden INPUT_REQUIRED dönüyordu; artık temiz mesaj
   if (!input) {
-    return res.status(400).json({ message: "INPUT_REQUIRED" });
+    const msg =
+      lang === "tr" || lang === "Turkish"
+        ? "Lütfen rakip video linki veya açıklaması yaz."
+        : "Please paste the competitor video link or description.";
+    return res.status(200).json({ message: msg });
+  }
+
+  // Frontend şu an email göndermiyor olabilir: o yüzden “EMAIL_REQUIRED” gibi kod göstermiyoruz.
+  if (!email) {
+    return res.status(200).json({ message: NEED_LOGIN });
   }
 
   // 1) Kullanıcıyı bul
@@ -62,20 +81,20 @@ module.exports = async function handler(req, res) {
 
     if (error) {
       console.error("Supabase error (pro-competitor):", error);
-      return res.status(500).json({ message: "DB_ERROR" });
+      return res.status(200).json({ message: GENERIC_FAIL });
     }
     userRow = data || null;
   } catch (e) {
     console.error("Supabase exception (pro-competitor):", e);
-    return res.status(500).json({ message: "DB_EXCEPTION" });
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   // 2) PRO kontrol
   if (!isProUser(userRow)) {
-    return res.status(403).json({ message: "ONLY_PRO" });
+    return res.status(200).json({ message: ONLY_PRO_TEXT });
   }
 
-  // 3) Basit ama akıllı bir cevap (LLM yok, test için ideal)
+  // 3) Cevap üret (LLM yok, test için ideal)
   let message = "";
 
   if (lang === "tr" || lang === "Turkish") {
