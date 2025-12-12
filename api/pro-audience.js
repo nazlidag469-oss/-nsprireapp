@@ -20,14 +20,26 @@ function isProUser(userRow) {
 }
 
 module.exports = async function handler(req, res) {
+  // Kullanıcıya teknik hata göstermeyeceğimiz genel mesaj
+  const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
+
+  // Kullanıcıya temiz, “hata gibi görünmeyen” yönlendirmeler
+  const NEED_LOGIN =
+    "Bu PRO aracı için giriş yapman gerekiyor. (E-posta ile giriş yaptıktan sonra tekrar dene.)";
+  const ONLY_PRO_TEXT =
+    "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
+
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "METHOD_NOT_ALLOWED" });
+    // Teknik kod yerine temiz mesaj
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!supabase) {
-    return res.status(500).json({
-      message: "Supabase env değişkenleri eksik (SUPABASE_URL / SUPABASE_SERVICE_KEY).",
-    });
+    // Eskiden teknik env mesajı gidiyordu, artık gizliyoruz
+    console.error(
+      "PRO_AUDIENCE_SUPABASE_ENV_MISSING: SUPABASE_URL / SUPABASE_SERVICE_KEY"
+    );
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   let body = {};
@@ -41,11 +53,18 @@ module.exports = async function handler(req, res) {
   const input = (body.input || "").trim();
   const lang = body.lang || "Turkish";
 
-  if (!email) {
-    return res.status(400).json({ message: "EMAIL_REQUIRED" });
-  }
+  // Eskiden INPUT_REQUIRED dönüyordu; artık temiz mesaj
   if (!input) {
-    return res.status(400).json({ message: "INPUT_REQUIRED" });
+    const msg =
+      lang === "tr" || lang === "Turkish"
+        ? "Lütfen hedef kitleni tek cümle ile yaz. (Örn: 18–24 yaş, öğrenci, sınav stresi...)"
+        : "Please describe your target audience in one sentence.";
+    return res.status(200).json({ message: msg });
+  }
+
+  // Frontend şu an email göndermiyor olabilir: o yüzden “EMAIL_REQUIRED” gibi kod göstermiyoruz.
+  if (!email) {
+    return res.status(200).json({ message: NEED_LOGIN });
   }
 
   let userRow = null;
@@ -58,16 +77,16 @@ module.exports = async function handler(req, res) {
 
     if (error) {
       console.error("Supabase error (pro-audience):", error);
-      return res.status(500).json({ message: "DB_ERROR" });
+      return res.status(200).json({ message: GENERIC_FAIL });
     }
     userRow = data || null;
   } catch (e) {
     console.error("Supabase exception (pro-audience):", e);
-    return res.status(500).json({ message: "DB_EXCEPTION" });
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!isProUser(userRow)) {
-    return res.status(403).json({ message: "ONLY_PRO" });
+    return res.status(200).json({ message: ONLY_PRO_TEXT });
   }
 
   let message = "";
