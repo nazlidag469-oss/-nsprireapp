@@ -1,25 +1,30 @@
-/* === PREMIUM GLOBAL DESIGN === */
+/* ===============================
+   INSPIREAPP — PREMIUM MOR + FIX
+   Kamera & Mikrofon ÇÖZÜMLÜ
+================================ */
 
 :root {
   --bg-gradient-start: #e9d5ff;
   --bg-gradient-end: #dbeafe;
+
   --glass-bg: rgba(255, 255, 255, 0.65);
   --glass-border: rgba(255, 255, 255, 0.35);
+
   --text-main: #0f172a;
   --text-muted: #64748b;
 
   --purple: #7c3aed;
+  --purple-dark: #5b21b6;
   --purple-soft: #ede9fe;
-  --blue: #2563eb;
 
   --assistant-bubble: #ffffff;
   --user-bubble: linear-gradient(135deg, #7c3aed, #4f46e5);
 
-  --shadow: 0 10px 32px rgba(15, 23, 42, 0.18);
-  --shadow-strong: 0 14px 40px rgba(15, 23, 42, 0.28);
+  --shadow: 0 10px 32px rgba(124, 58, 237, 0.25);
+  --shadow-strong: 0 14px 40px rgba(124, 58, 237, 0.35);
 }
 
-/* Global box-sizing */
+/* === RESET === */
 *,
 *::before,
 *::after {
@@ -41,35 +46,31 @@ body {
     var(--bg-gradient-start),
     var(--bg-gradient-end)
   );
-  min-height: 100vh;
   color: var(--text-main);
   overflow: hidden;
 }
 
-/* Tam ekran */
+/* === APP ROOT === */
 #app {
   min-height: 100vh;
   display: flex;
 }
 
-.hidden {
-  display: none !important;
-}
-
 /* === TOP BAR === */
 .top-bar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  inset: 0 0 auto 0;
   height: 58px;
   padding: 0 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.25),
+    rgba(99, 102, 241, 0.25)
+  );
+  backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--glass-border);
   box-shadow: var(--shadow);
   z-index: 50;
@@ -78,116 +79,49 @@ body {
 .top-title {
   font-size: 26px;
   font-weight: 900;
-  color: #000;
-  text-transform: uppercase;
   letter-spacing: 0.16em;
+  color: #1e1b4b;
 }
 
-/* ICON BUTTON */
+/* === ICON BUTTONS (KAMERA + SES) === */
+.circle-button,
 .icon-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  transition: 0.15s ease;
+  position: relative;
+  z-index: 200;                /* 🔥 EN ÜSTTE */
+  pointer-events: auto;        /* 🔥 TIKLANABİLİR */
+  background: rgba(255,255,255,0.95);
+  box-shadow: var(--shadow);
 }
 
-.icon-button:active {
-  transform: scale(0.92);
-}
-
-/* CHAT LAYOUT */
+/* === CHAT AREA === */
 .chat-area {
   margin-top: 58px;
   flex: 1;
-  padding: 12px 10px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 14px;
   max-width: 760px;
   margin-left: auto;
   margin-right: auto;
   height: calc(100vh - 58px);
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
-/* SIDEBAR */
-.sidebar {
-  position: fixed;
-  top: 58px;
-  bottom: 0;
-  left: 0;
-  width: 260px;
-  max-width: 80%;
-  padding: 14px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(18px);
-  border-right: 1px solid var(--glass-border);
-  transform: translateX(-100%);
-  transition: 0.25s ease;
-  z-index: 40;
-  overflow-y: auto;
-}
-
-.sidebar:not(.hidden) {
-  transform: translateX(0);
-}
-
-/* HELP PANEL */
-.help-panel {
-  position: fixed;
-  top: 58px;
-  bottom: 0;
-  right: 0;
-  width: 260px;
-  max-width: 80%;
-  background: #fef2f2;
-  border-left: 1px solid #fecaca;
-  box-shadow: -10px 0 30px rgba(127, 29, 29, 0.25);
-  border-top-left-radius: 16px;
-  padding: 16px;
-  transform: translateX(100%);
-  transition: 0.25s ease;
-  z-index: 40;
-  overflow-y: auto;
-}
-
-.help-panel:not(.hidden) {
-  transform: translateX(0);
-}
-
-#closeHelpBtn {
-  position: sticky;
-  bottom: 0;
-  margin-top: 20px;
-}
-
-/* PANELS */
+/* === PANELS === */
 .panel {
-  padding: 12px;
-  border-radius: 20px;
   background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border-radius: 22px;
   border: 1px solid var(--glass-border);
+  padding: 14px;
   box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
 }
 
-/* CHAT BUBBLES */
+/* === CHAT === */
 .chat-messages {
   flex: 1;
-  overflow-y: auto;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 18px;
-  border: 1px solid var(--glass-border);
-  padding: 10px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 22px;
+  padding: 14px;
+  box-shadow: var(--shadow);
 }
 
 .message-row {
@@ -199,80 +133,77 @@ body {
   justify-content: flex-end;
 }
 
+.message-row.assistant {
+  justify-content: flex-start;
+}
+
 .bubble {
-  max-width: 78%;
-  padding: 12px;
-  border-radius: 20px;
+  max-width: 80%;
+  padding: 14px 16px;
+  border-radius: 22px;
   font-size: 14px;
-  line-height: 1.45;
-  box-shadow: var(--shadow);
+  line-height: 1.6;
 }
 
 .user .bubble {
   background: var(--user-bubble);
-  color: white;
+  color: #fff;
 }
 
 .assistant .bubble {
-  background: white;
+  background: var(--assistant-bubble);
 }
 
-/* INPUT CONTROLS */
-.controls {
-  padding: 10px;
-  border-radius: 20px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+/* === INPUT ROW === */
+.chat-input-row {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* MODALS */
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  z-index: 60;
-}
-
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  display: flex;
+  gap: 10px;
   align-items: center;
-  justify-content: center;
+  position: relative;
+  z-index: 150;               /* 🔥 butonların önü açık */
 }
 
-.modal-content {
-  background: white;
-  border-radius: 18px;
-  padding: 20px;
-  width: 90%;
-  max-width: 380px;
-  box-shadow: var(--shadow-strong);
+/* === INPUTS === */
+input,
+select,
+textarea {
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.9);
 }
 
 /* === PRO PANEL === */
-.pro-layout {
-  display: flex;
-  gap: 10px;
+.pro-menu-btn {
+  background: var(--purple-soft);
+  color: var(--purple-dark);
+  border-radius: 999px;
 }
 
-.pro-menu {
-  min-width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.pro-menu-btn.active {
+  background: linear-gradient(135deg, #7c3aed, #6366f1);
+  color: #fff;
 }
 
-.pro-content {
-  flex: 1;
+/* === RESULT === */
+.panel-result {
+  background: rgba(255,255,255,0.85);
+  border-radius: 16px;
+  padding: 12px;
+  margin-top: 8px;
 }
 
-/* === YUMUŞAK GERİ BUTONU (EKRAN İÇİ BACK BUTTON) === */
+/* === BACKDROP / MODAL FIX === */
+.backdrop {
+  z-index: 60;
+  pointer-events: auto;
+}
 
+.modal {
+  z-index: 70;
+}
+
+/* === SOFT BACK BUTTON === */
 .soft-back-btn {
   position: fixed;
   bottom: 18px;
@@ -280,28 +211,17 @@ body {
   width: 46px;
   height: 46px;
   border-radius: 999px;
+  background: linear-gradient(135deg, #7c3aed, #6366f1);
+  color: #fff;
   border: none;
-  background: rgba(0, 0, 0, 0.35);
-  color: #ffffff;
   font-size: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
-  z-index: 9999;
+  box-shadow: var(--shadow-strong);
+  z-index: 120;
 }
 
-.soft-back-btn:active {
-  transform: scale(0.92);
-}
-
-/* === RESPONSIVE MOBILE === */
+/* === RESPONSIVE === */
 @media (max-width: 768px) {
-  .pro-layout {
-    flex-direction: column;
-  }
-
-  .pro-menu {
-    width: 100%;
+  .chat-area {
+    padding: 10px;
   }
 }
