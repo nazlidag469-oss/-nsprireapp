@@ -26,6 +26,9 @@ const LANG_MAP = {
 };
 
 export default async function handler(req, res) {
+  // Kullanıcıya asla teknik hata göstermeyeceğimiz genel mesaj
+  const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
+
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ message: "Sadece POST destekleniyor." });
@@ -47,9 +50,8 @@ export default async function handler(req, res) {
   // --- ENV ---
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
-    return res
-      .status(500)
-      .json({ message: "OPENAI_API_KEY tanımlı değil (server side)." });
+    // Eskiden teknik mesaj gidiyordu. Artık kullanıcıya hep tek genel mesaj.
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   const youtubeKey = process.env.YOUTUBE_API_KEY;
@@ -162,7 +164,7 @@ export default async function handler(req, res) {
               "   • Süre önerisi (örn: 15–35 sn)\n" +
               "   • Platforma özel küçük tüyolar (YouTube Shorts / TikTok / Reels farkları)\n" +
               "4) Ek Seçenekler:\n" +
-              "   • Kullanıcıya \"İstersen bu fikirlerden biri için çekim planını sahne sahne anlatayım\" diye teklif et.\n" +
+              '   • Kullanıcıya "İstersen bu fikirlerden biri için çekim planını sahne sahne anlatayım" diye teklif et.\n' +
               "   • Eğer kullanıcı Pro ise ekstra olarak seri fikir / 30 günlük mini plan önerebileceğini hatırlat.\n\n" +
               "Boş, generic cümlelerden kaçın. Cümleler dolu ve net olsun. Gerçek bir içerik üreticisine konuşur gibi yaz.",
           },
@@ -183,8 +185,9 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      const msg = data?.error?.message || "OpenAI isteğinde hata oluştu.";
-      return res.status(500).json({ message: msg });
+      // Eskiden OpenAI hata mesajını kullanıcı görüyordu. Artık tek genel mesaj.
+      console.error("OPENAI_RESPONSE_NOT_OK", data);
+      return res.status(200).json({ message: GENERIC_FAIL });
     }
 
     const text =
@@ -194,8 +197,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: text });
   } catch (e) {
     console.error("IDEAS_API_ERROR", e);
-    return res.status(500).json({
-      message: "OpenAI isteği sırasında beklenmeyen hata oluştu.",
-    });
+    // Eskiden “beklenmeyen hata” gibi mesajlar gidiyordu. Artık tek genel mesaj.
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
-  }
+}
