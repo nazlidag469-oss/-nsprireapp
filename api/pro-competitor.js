@@ -1,5 +1,5 @@
 // api/pro-competitor.js
-// PRO Araç – Rakip Video Analizi (ESM uyumlu)
+// PRO Araç – Rakip Video Analizi (ESM uyumlu) — FIXED
 // Gereken env:
 //   SUPABASE_URL
 //   SUPABASE_SERVICE_KEY
@@ -17,46 +17,57 @@ if (supabaseUrl && serviceKey) {
 function isProUser(userRow) {
   if (!userRow) return false;
   if (userRow.plan === "pro") return true;
-  if (userRow.Plan === "pro") return true; // Büyük harfli kolon için
-  if (userRow.is_pro === true) return true; // bool alan varsa
+  if (userRow.Plan === "pro") return true;
+  if (userRow.is_pro === true) return true;
   return false;
 }
 
 export default async function handler(req, res) {
-  // Kullanıcıya teknik hata göstermeyeceğimiz genel mesaj
   const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
 
-  // Kullanıcıya temiz, “hata gibi görünmeyen” yönlendirmeler
   const NEED_LOGIN =
     "Bu PRO aracı için giriş yapman gerekiyor. (E-posta ile giriş yaptıktan sonra tekrar dene.)";
   const ONLY_PRO_TEXT =
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
 
-  // Sadece POST kabul ediyoruz, ama dışarıya teknik hata göstermiyoruz
+  // Sadece POST
   if (req.method !== "POST") {
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!supabase) {
-    // Env eksikse sadece log’a yaz, kullanıcıya genel mesaj dön
     console.error(
       "PRO_COMPETITOR_SUPABASE_ENV_MISSING: SUPABASE_URL / SUPABASE_SERVICE_KEY"
     );
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
-  let body = {};
-  try {
-    body = req.body || {};
-  } catch {
-    body = {};
+  // Body parse (string gelirse JSON'a çevir)
+  let body = req.body || {};
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
   }
 
-  const email = (body.email || "").toLowerCase().trim();
-  const input = (body.input || "").trim();
+  // Email’i hem body’den hem header’dan dene
+  const headerEmailRaw =
+    req.headers["x-user-email"] ||
+    req.headers["x-email"] ||
+    req.headers["x_user_email"] ||
+    req.headers["x_email"] ||
+    "";
+
+  const email = String(body.email || headerEmailRaw || "")
+    .toLowerCase()
+    .trim();
+
+  const input = String(body.input || "").trim();
   const lang = body.lang || "Turkish";
 
-  // Boş input için temiz mesaj
+  // Boş input
   if (!input) {
     const msg =
       lang === "tr" || lang === "Turkish"
@@ -65,7 +76,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: msg });
   }
 
-  // E-posta yoksa login iste
+  // Email yoksa login iste
   if (!email) {
     return res.status(200).json({ message: NEED_LOGIN });
   }
@@ -76,13 +87,15 @@ export default async function handler(req, res) {
     const { data, error } = await supabase
       .from("users")
       .select("id, email, plan, Plan, is_pro")
-      .eq("email", email)
+      // ilike: case-insensitive eşleşme
+      .ilike("email", email)
       .maybeSingle();
 
     if (error) {
       console.error("Supabase error (pro-competitor):", error);
       return res.status(200).json({ message: GENERIC_FAIL });
     }
+
     userRow = data || null;
   } catch (e) {
     console.error("Supabase exception (pro-competitor):", e);
@@ -94,7 +107,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: ONLY_PRO_TEXT });
   }
 
-  // 3) Cevap üret (LLM yok, test için ideal)
+  // 3) Cevap üret
   let message = "";
 
   if (lang === "tr" || lang === "Turkish") {
