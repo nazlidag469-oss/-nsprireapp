@@ -1,7 +1,7 @@
 // api/pro-silent.js
-// PRO Araç – Sessiz Video İçerik Üreticisi
+// PRO Araç – Sessiz Video İçerik Üreticisi (ESM uyumlu)
 
-const { createClient } = require("@supabase/supabase-js");
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
@@ -19,7 +19,7 @@ function isProUser(userRow) {
   return false;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Kullanıcıya teknik hata göstermeyeceğimiz genel mesaj
   const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
 
@@ -30,12 +30,12 @@ module.exports = async function handler(req, res) {
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
 
   if (req.method !== "POST") {
-    // Teknik kod yerine temiz mesaj
+    // Teknik kod yerine temiz mesaj (405 vs. göstermiyoruz)
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!supabase) {
-    // Eskiden teknik env mesajı gidiyordu, artık gizliyoruz
+    // Env eksik ise sadece log’a yaz, kullanıcıya genel mesaj dön
     console.error(
       "PRO_SILENT_SUPABASE_ENV_MISSING: SUPABASE_URL / SUPABASE_SERVICE_KEY"
     );
@@ -56,7 +56,11 @@ module.exports = async function handler(req, res) {
 
   if (!input) {
     // Kullanıcıya hata kodu göstermeyelim
-    return res.status(200).json({ message: "Lütfen bir konu yaz." });
+    const msg =
+      lang === "tr" || lang === "Turkish"
+        ? "Lütfen bir konu yaz."
+        : "Please provide a topic.";
+    return res.status(200).json({ message: msg });
   }
 
   if (!email) {
@@ -150,4 +154,4 @@ module.exports = async function handler(req, res) {
   }
 
   return res.status(200).json({ message });
-};
+}
