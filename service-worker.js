@@ -1,6 +1,6 @@
 // service-worker.js
-// Her deploy'da CACHE_VERSION artır: v1 -> v2 -> v3 ...
-const CACHE_VERSION = "v3";
+// Her deploy'da CACHE_VERSION artır: v1 -> v2 -> v3 -> v4 ...
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `inspireapp-${CACHE_VERSION}`;
 
 const ASSETS_TO_CACHE = [
@@ -36,6 +36,22 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Küçük yardımcı: network-first (özellikle app.js gibi dosyalar için)
+async function networkFirst(req) {
+  try {
+    const res = await fetch(req);
+    // sadece başarılı response'u cache'le
+    if (res && res.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(req, res.clone());
+    }
+    return res;
+  } catch {
+    const cached = await caches.match(req);
+    return cached || new Response("Offline", { status: 503 });
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
@@ -54,22 +70,32 @@ self.addEventListener("fetch", (event) => {
 
   // ✅ SPA/PWA navigasyon fallback: index.html
   if (req.mode === "navigate") {
-    event.respondWith(
-      fetch(req).catch(() => caches.match("/index.html"))
-    );
+    event.respondWith(fetch(req).catch(() => caches.match("/index.html")));
     return;
   }
 
-  // ✅ Sadece kendi origin'inde cache-first uygula
+  // ✅ app.js / style.css / manifest.json = network-first (en kritik fix)
+  if (
+    url.origin === self.location.origin &&
+    (url.pathname === "/app.js" ||
+      url.pathname === "/style.css" ||
+      url.pathname === "/manifest.json")
+  ) {
+    event.respondWith(networkFirst(req));
+    return;
+  }
+
+  // ✅ Diğer kendi-origin dosyalar: cache-first
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(req).then((cached) => {
         if (cached) return cached;
 
         return fetch(req).then((res) => {
-          // Başarılı response'u cache'e koy
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          }
           return res;
         });
       })
