@@ -1,8 +1,5 @@
 // api/pro-silent.js
-// PRO Araç – Sessiz Video İçerik Üreticisi (ESM uyumlu) — HARDENED + REVIEW-SAFE
-// Env:
-//   SUPABASE_URL
-//   SUPABASE_SERVICE_KEY
+// PRO Araç – Sessiz Video İçerik Üreticisi (ESM uyumlu) — REVIEW-SAFE (200-only)
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -17,23 +14,17 @@ function normalizeEmail(v) {
   if (!s || s === "null" || s === "undefined" || s === "none") return "";
   return s;
 }
-
 function normalizePlan(v) {
   return String(v || "").trim().toLowerCase();
 }
-
 function isProUser(userRow) {
   if (!userRow) return false;
-
   const p1 = normalizePlan(userRow.plan);
   const p2 = normalizePlan(userRow.Plan);
   if (p1 === "pro" || p2 === "pro") return true;
-
   if (userRow.is_pro === true) return true;
-
   return false;
 }
-
 function getHeaderEmail(req) {
   return (
     req.headers["x-user-email"] ||
@@ -42,10 +33,6 @@ function getHeaderEmail(req) {
     req.headers["x_email"] ||
     ""
   );
-}
-
-function send(res, status, message, extra = {}) {
-  return res.status(status).json({ message, ...extra });
 }
 
 export default async function handler(req, res) {
@@ -59,27 +46,14 @@ export default async function handler(req, res) {
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
   const ONLY_PRO_EN = "This tool is for PRO members only. Upgrade to use it.";
 
-  // (Opsiyonel ama güvenli) CORS/Preflight
-  if (req.method === "OPTIONS") {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type, x-user-email, x-email"
-    );
-    return res.status(204).end();
-  }
-
-  // Sadece POST
+  // ✅ Review-safe: sadece POST bekle, diğerlerinde 200 + generic
   if (req.method !== "POST") {
-    return send(res, 405, GENERIC_FAIL);
+    return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
   }
 
   if (!supabase) {
-    console.error(
-      "PRO_SILENT_ENV_MISSING: SUPABASE_URL / SUPABASE_SERVICE_KEY"
-    );
-    return send(res, 500, GENERIC_FAIL);
+    console.error("PRO_SILENT_ENV_MISSING");
+    return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
   }
 
   // Body parse
@@ -98,23 +72,21 @@ export default async function handler(req, res) {
   const email = normalizeEmail(body.email || getHeaderEmail(req));
   const input = String(body.input || "").trim();
 
-  // input boşsa normal mesaj (200)
   if (!input) {
-    return send(
-      res,
-      200,
-      isTR ? "Lütfen bir konu yaz." : "Please provide a topic."
-    );
+    return res.status(200).json({
+      message: isTR ? "Lütfen bir konu yaz." : "Please provide a topic.",
+      code: "EMPTY_INPUT",
+    });
   }
 
-  // email yoksa 401 (frontend: login yönlendirme + pro modal akışı)
   if (!email) {
-    return send(res, 401, isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN, {
+    return res.status(200).json({
+      message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
       code: "NEED_LOGIN",
     });
   }
 
-  // Kullanıcıyı bul (duplicate email patlamasın)
+  // Kullanıcıyı bul
   let userRow = null;
   try {
     const { data, error } = await supabase
@@ -125,84 +97,37 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error("Supabase error (pro-silent):", error);
-      return send(res, 500, GENERIC_FAIL);
+      return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
     }
 
     userRow = Array.isArray(data) && data.length ? data[0] : null;
   } catch (e) {
     console.error("Supabase exception (pro-silent):", e);
-    return send(res, 500, GENERIC_FAIL);
+    return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
   }
 
-  // kullanıcı bulunamadı -> login gibi davran (401)
   if (!userRow) {
-    return send(res, 401, isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN, {
+    return res.status(200).json({
+      message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
       code: "USER_NOT_FOUND",
     });
   }
 
-  // PRO kontrol -> değilse 403
   if (!isProUser(userRow)) {
-    return send(res, 403, isTR ? ONLY_PRO_TR : ONLY_PRO_EN, {
+    return res.status(200).json({
+      message: isTR ? ONLY_PRO_TR : ONLY_PRO_EN,
       code: "PRO_REQUIRED",
     });
   }
 
-  // ✅ PRO ise içerik üret
-  let message = "";
-
-  if (isTR) {
-    message =
-      "🤫 *Sessiz Video İçerik Üreticisi (PRO)*\n\n" +
-      "KONU / NİŞ:\n" +
-      "---------------------------------\n" +
+  // ✅ PRO cevap
+  const message = isTR
+    ? "🤫 *Sessiz Video İçerik Üreticisi (PRO)*\n\n" +
+      "KONU / NİŞ:\n---------------------------------\n" +
       input +
       "\n\n" +
-      "1) Sessiz Video Tipi\n" +
-      "• Sadece yazı + arka plan görüntüleri.\n" +
-      "• Emoji/ok/highlight ile vurgu.\n" +
-      "• Ses olmadan %100 anlaşılır.\n\n" +
-      "2) Sahne Akışı (20–25 sn)\n" +
-      "• 0–2 sn  : Büyük başlık – “Bunu kimse göstermiyor: [konu]”\n" +
-      "• 2–6 sn  : Madde 1 – kısa cümle + görsel\n" +
-      "• 6–10 sn : Madde 2 – kısa cümle + görsel\n" +
-      "• 10–15 sn: Madde 3 – mini sır / sonuç\n" +
-      "• 15–25 sn: Özet + CTA (kayıt et / takip et)\n\n" +
-      "3) Metin Tarzı\n" +
-      "• Her sahnede 1 fikir, tek satır.\n" +
-      "• Önemli kelimeleri BÜYÜK yaz.\n" +
-      "• Etiket kutuları: “HATA / DOĞRU / TAKTİK”\n\n" +
-      "4) Konuna Özel 3 Fikir\n" +
-      "FİKİR 1 – “3 Adımda [konu]”\n" +
-      "• Başlık → 3 kısa adım → CTA\n\n" +
-      "FİKİR 2 – “Önce / Sonra”\n" +
-      "• ÖNCE: problem → SONRA: çözüm → 2 madde\n\n" +
-      "FİKİR 3 – “Yapma / Yap”\n" +
-      "• BUNU YAPMA → BUNU YAP → kısa sonuç\n\n" +
-      "İstersen hangi platform (TikTok/Reels/Shorts) yaz, süre ve formatı optimize edeyim.";
-  } else {
-    message =
-      "🤫 PRO – Silent Video Content Generator\n\n" +
-      "TOPIC / NICHE:\n" +
-      "---------------------------------\n" +
-      input +
-      "\n\n" +
-      "1) Silent video style\n" +
-      "• Text + background footage only.\n" +
-      "• Emojis/arrows/highlights for attention.\n" +
-      "• 100% understandable without sound.\n\n" +
-      "2) Example flow (20–25s)\n" +
-      "• 0–2s   : Big headline – “Nobody shows you this about [topic].”\n" +
-      "• 2–6s   : Point 1 – 1 short sentence + visual\n" +
-      "• 6–10s  : Point 2 – 1 short sentence + visual\n" +
-      "• 10–15s : Point 3 – small secret/insight\n" +
-      "• 15–25s : Summary + CTA (save/follow)\n\n" +
-      "3) Text style\n" +
-      "• One idea per scene.\n" +
-      "• CAPS for key words.\n" +
-      "• Labels: “MISTAKE / FIX / SECRET”\n\n" +
-      "Send your platform (TikTok/Reels/Shorts) and I’ll optimize the duration + pacing.";
-  }
+      "• 0–2 sn: Büyük başlık\n• 2–6 sn: Madde 1\n• 6–10 sn: Madde 2\n• 10–15 sn: Madde 3\n• 15–25 sn: Özet + CTA\n"
+    : "🤫 PRO – Silent Video Content Generator\n\nTOPIC:\n" + input;
 
-  return send(res, 200, message, { ok: true });
-}
+  return res.status(200).json({ message, ok: true });
+                               }
