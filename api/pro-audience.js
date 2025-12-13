@@ -1,46 +1,89 @@
 // api/pro-audience.js
-// PRO Araç – Kitle İçgörü Analizi (ESM uyumlu) — FIXED
+// PRO Araç – Kitle İçgörü Analizi (ESM uyumlu) — HARDENED + REVIEW-SAFE
+// Env:
+//   SUPABASE_URL
+//   SUPABASE_SERVICE_KEY
 
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
 
-let supabase = null;
-if (supabaseUrl && serviceKey) {
-  supabase = createClient(supabaseUrl, serviceKey);
+const supabase =
+  supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
+
+function normalizeEmail(v) {
+  const s = String(v || "").trim().toLowerCase();
+  if (!s || s === "null" || s === "undefined" || s === "none") return "";
+  return s;
+}
+
+function normalizePlan(v) {
+  return String(v || "").trim().toLowerCase();
 }
 
 function isProUser(userRow) {
   if (!userRow) return false;
-  if (userRow.plan === "pro") return true;
-  if (userRow.Plan === "pro") return true;
+
+  const p1 = normalizePlan(userRow.plan);
+  const p2 = normalizePlan(userRow.Plan);
+  if (p1 === "pro" || p2 === "pro") return true;
+
   if (userRow.is_pro === true) return true;
+
   return false;
+}
+
+function getHeaderEmail(req) {
+  return (
+    req.headers["x-user-email"] ||
+    req.headers["x-email"] ||
+    req.headers["x_user_email"] ||
+    req.headers["x_email"] ||
+    ""
+  );
+}
+
+function send(res, status, message, extra = {}) {
+  return res.status(status).json({ message, ...extra });
 }
 
 export default async function handler(req, res) {
   const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
 
-  const NEED_LOGIN =
+  const NEED_LOGIN_TR =
     "Bu PRO aracı için giriş yapman gerekiyor. (E-posta ile giriş yaptıktan sonra tekrar dene.)";
-  const ONLY_PRO_TEXT =
-    "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
+  const NEED_LOGIN_EN = "You must login with email to use this PRO tool.";
 
-  // Sadece POST kabul
+  const ONLY_PRO_TR =
+    "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
+  const ONLY_PRO_EN = "This tool is for PRO members only. Upgrade to use it.";
+
+  // (Opsiyonel ama güvenli) CORS/Preflight
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, x-user-email, x-email"
+    );
+    return res.status(204).end();
+  }
+
+  // Sadece POST
   if (req.method !== "POST") {
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return send(res, 405, GENERIC_FAIL);
   }
 
   // Env kontrol
   if (!supabase) {
     console.error(
-      "PRO_AUDIENCE_SUPABASE_ENV_MISSING: SUPABASE_URL / SUPABASE_SERVICE_KEY"
+      "PRO_AUDIENCE_ENV_MISSING: SUPABASE_URL / SUPABASE_SERVICE_KEY"
     );
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return send(res, 500, GENERIC_FAIL);
   }
 
-  // Body parse (string gelirse JSON'a çevir)
+  // Body parse
   let body = req.body || {};
   if (typeof body === "string") {
     try {
@@ -50,65 +93,68 @@ export default async function handler(req, res) {
     }
   }
 
-  // Email’i hem body’den hem header’dan dene
-  const headerEmailRaw =
-    req.headers["x-user-email"] ||
-    req.headers["x-email"] ||
-    req.headers["x_user_email"] ||
-    req.headers["x_email"] ||
-    "";
-
-  const email = String(body.email || headerEmailRaw || "")
-    .toLowerCase()
-    .trim();
-
-  const input = String(body.input || "").trim();
   const lang = body.lang || "Turkish";
+  const isTR = lang === "tr" || lang === "Turkish";
 
-  // Boş input için temiz mesaj
+  const email = normalizeEmail(body.email || getHeaderEmail(req));
+  const input = String(body.input || "").trim();
+
+  // Boş input -> temiz mesaj (200)
   if (!input) {
-    const msg =
-      lang === "tr" || lang === "Turkish"
+    return send(
+      res,
+      200,
+      isTR
         ? "Lütfen hedef kitleni tek cümle ile yaz. (Örn: 18–24 yaş, öğrenci, sınav stresi...)"
-        : "Please describe your target audience in one sentence.";
-    return res.status(200).json({ message: msg });
+        : "Please describe your target audience in one sentence."
+    );
   }
 
-  // E-posta yoksa login iste
+  // Email yoksa -> 401
   if (!email) {
-    return res.status(200).json({ message: NEED_LOGIN });
+    return send(res, 401, isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN, {
+      code: "NEED_LOGIN",
+    });
   }
 
-  // Kullanıcıyı Supabase’ten çek
+  // Kullanıcıyı çek (duplicate email patlamasın)
   let userRow = null;
   try {
     const { data, error } = await supabase
       .from("users")
       .select("id, email, plan, Plan, is_pro")
-      // ilike: case-insensitive eşleşme
       .ilike("email", email)
-      .maybeSingle();
+      .limit(1);
 
     if (error) {
       console.error("Supabase error (pro-audience):", error);
-      return res.status(200).json({ message: GENERIC_FAIL });
+      return send(res, 500, GENERIC_FAIL);
     }
 
-    userRow = data || null;
+    userRow = Array.isArray(data) && data.length ? data[0] : null;
   } catch (e) {
     console.error("Supabase exception (pro-audience):", e);
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return send(res, 500, GENERIC_FAIL);
   }
 
-  // PRO değilse
+  // Kullanıcı yok -> 401
+  if (!userRow) {
+    return send(res, 401, isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN, {
+      code: "USER_NOT_FOUND",
+    });
+  }
+
+  // PRO değil -> 403
   if (!isProUser(userRow)) {
-    return res.status(200).json({ message: ONLY_PRO_TEXT });
+    return send(res, 403, isTR ? ONLY_PRO_TR : ONLY_PRO_EN, {
+      code: "PRO_REQUIRED",
+    });
   }
 
-  // PRO ise içerik üret
+  // ✅ PRO ise içerik üret
   let message = "";
 
-  if (lang === "tr" || lang === "Turkish") {
+  if (isTR) {
     message =
       "👥 *Kitle İçgörü Analizi (PRO)*\n\n" +
       "HEDEF KİTLE TANIMI:\n" +
@@ -127,15 +173,15 @@ export default async function handler(req, res) {
       "• “Eğer sen de [derdi] yaşıyorsan, bu video tam sana göre.”\n" +
       "• “Kimsenin söylemediği [niş konu] gerçeğini göstereyim.”\n" +
       "• “Şu 3 hatayı yapıyorsan, [sonuç] gelmemesi normal.”\n\n" +
-      "4) CTA (Call to Action) Örnekleri\n" +
+      "4) CTA Örnekleri\n" +
       "• “Bu tarz videoların devamı için ‘devam’ yaz.”\n" +
       "• “Bu bilgiyi kaybetmemek için videoyu kaydet.”\n" +
       "• “Bunu görmesi gereken bir arkadaşını etiketle.”\n\n" +
-      "5) Senin İçin Mini İçerik Stratejisi\n" +
-      "• Hafta içi (Pzt–Cum): Her gün 1 hızlı ipucu (15–20 sn).\n" +
-      "• Hafta sonu: 1 story-telling video (30–45 sn) – başarı/başarısızlık hikâyesi.\n" +
-      "• Ayda 1: “Bu ay neleri denedim?” formatında özet video.\n\n" +
-      "İstersen bu kitlenin yaş aralığını, ülkesini ve kullandığı platformu daha net yaz; sana daha spesifik bir plan çıkarayım.";
+      "5) Mini İçerik Stratejisi\n" +
+      "• Pzt–Cum: her gün 1 hızlı ipucu (15–20 sn)\n" +
+      "• Hafta sonu: 1 story video (30–45 sn)\n" +
+      "• Ayda 1: “Bu ay neleri denedim?” özet video\n\n" +
+      "Yaş aralığı + ülke + platformu yazarsan daha keskin plan çıkarayım.";
   } else {
     message =
       "👥 PRO – Audience Insight Analysis\n\n" +
@@ -144,23 +190,23 @@ export default async function handler(req, res) {
       input +
       "\n\n" +
       "1) Main pains / frustrations\n" +
-      "• Time: they want quick wins and short videos.\n" +
-      "• Energy: they drop long, slow videos.\n" +
-      "• Trust: they are tired of fake promises and clickbait.\n\n" +
-      "2) Preferred content format\n" +
+      "• Time: quick wins, short videos.\n" +
+      "• Energy: they drop long/slow content.\n" +
+      "• Trust: tired of fake promises.\n\n" +
+      "2) Preferred format\n" +
       "• 15–35 second videos with one clear idea.\n" +
       "• Strong title + strong visual in the first 2–3 seconds.\n" +
-      "• Vertical format, readable subtitles, fast cuts.\n\n" +
-      "3) Hook patterns that fit them\n" +
-      "• “If you also struggle with [pain], watch this.”\n" +
-      "• “Let me show you the side of [topic] nobody talks about.”\n" +
-      "• “If you’re doing these 3 mistakes, no wonder [result] never happens.”\n\n" +
+      "• Vertical, readable subtitles, fast cuts.\n\n" +
+      "3) Hook patterns\n" +
+      "• “If you struggle with [pain], watch this.”\n" +
+      "• “Here’s what nobody tells you about [topic].”\n" +
+      "• “If you make these 3 mistakes, no wonder [result] never happens.”\n\n" +
       "4) CTA examples\n" +
-      "• “Comment ‘more’ if you want part 2.”\n" +
-      "• “Save this video so you don’t forget the steps.”\n" +
-      "• “Send this to a friend who needs to hear it.”\n\n" +
-      "You can refine age / location / main platform next time and we’ll build a deeper strategy around this audience.";
+      "• “Comment ‘more’ for part 2.”\n" +
+      "• “Save this so you don’t forget.”\n" +
+      "• “Send this to a friend who needs it.”\n\n" +
+      "Share age/location/platform next time and we’ll build a deeper strategy.";
   }
 
-  return res.status(200).json({ message });
+  return send(res, 200, message, { ok: true });
 }
