@@ -2,6 +2,7 @@
    INSPIREAPP — APP.JS (FULL FIX)
    PRO + SPEED BOOST + EMAIL GUARANTEE
    + FULL UI LANGUAGE APPLY
+   + PRO UI CODE HANDLER (NEED_LOGIN / PRO_REQUIRED)
 ================================ */
 
 // =========================
@@ -493,11 +494,7 @@ function addMessage(role, text) {
   const idx = conv.messages.length - 1;
 
   let titleChanged = false;
-  if (
-    !conv.title ||
-    conv.title === "Yeni sohbet" ||
-    conv.title === "New chat"
-  ) {
+  if (!conv.title || conv.title === "Yeni sohbet" || conv.title === "New chat") {
     const firstUserMsg = conv.messages.find((m) => m.role === "user");
     if (firstUserMsg?.text) {
       const newTitle = buildTitleFromText(firstUserMsg.text);
@@ -598,15 +595,75 @@ function fillLangSelect(selectEl) {
 }
 
 // =========================
+// === PRO UI CODE HANDLER ===
+// =========================
+// Backend JSON { code: NEED_LOGIN | USER_NOT_FOUND | PRO_REQUIRED } gönderince
+// doğru UI (onboarding / pro modal) açar.
+function handleProUiFromApi(json, routeHint = "") {
+  if (!json || typeof json !== "object") return false;
+
+  const code = String(json.code || "").trim().toUpperCase();
+
+  // NEED_LOGIN / USER_NOT_FOUND -> onboarding email aç
+  if (code === "NEED_LOGIN" || code === "USER_NOT_FOUND") {
+    const onboardingOverlay = $("onboardingOverlay");
+    const onboardStepLang = $("onboardStepLang");
+    const onboardStepEmail = $("onboardStepEmail");
+    const onboardEmailInput = $("onboardEmailInput");
+
+    if (onboardingOverlay) onboardingOverlay.classList.remove("hidden");
+    if (onboardStepLang) onboardStepLang.classList.add("hidden");
+    if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
+
+    setTimeout(() => {
+      try {
+        onboardEmailInput && onboardEmailInput.focus();
+      } catch {}
+    }, 50);
+
+    return true;
+  }
+
+  // PRO_REQUIRED -> pro modal aç (+ UI’da free etiketi kalsın)
+  if (code === "PRO_REQUIRED") {
+    setPlanSafe("free");
+    openProModal();
+    return true;
+  }
+
+  // PRO endpoint ok:true -> UI planı pro yap (etiketler doğru görünsün)
+  if (
+    json.ok === true &&
+    typeof routeHint === "string" &&
+    routeHint.startsWith("pro-")
+  ) {
+    setPlanSafe("pro");
+    return false; // mesajı göstermeye devam et
+  }
+
+  return false;
+}
+
+// =========================
 // === API FUNCTIONS       ===
 // =========================
 function isProRequiredResponse(res, textOrJson) {
-  if (res && (res.status === 401 || res.status === 403)) return true;
+  // ✅ 401 = login olabilir (PRO sayma)
+  // ✅ 403 = pro required olabilir (pro say)
+  if (res && res.status === 403) return true;
+
+  // JSON code ile yakala
+  if (textOrJson && typeof textOrJson === "object") {
+    const c = String(textOrJson.code || "").toUpperCase();
+    if (c === "PRO_REQUIRED") return true;
+    return false;
+  }
+
   const s =
     typeof textOrJson === "string"
       ? textOrJson
       : JSON.stringify(textOrJson || {});
-  return /PRO_REQUIRED|pro_required|PRO ONLY|PRO_ONLY/i.test(s);
+  return /PRO_REQUIRED|pro_required|ONLY_PRO|PRO ONLY|PRO_ONLY/i.test(s);
 }
 
 async function callIdeasAPI(prompt, platform, langCode) {
@@ -650,11 +707,30 @@ async function callSimpleAPI(route, payload) {
       json = JSON.parse(text);
     } catch {}
 
+    // ✅ EN KRİTİK: backend "code" döndüyse UI aksiyon al
+    if (json && handleProUiFromApi(json, route)) {
+      // message varsa onu göster, yoksa kısa bir şey dön
+      return (
+        json.message ||
+        (state.lang === "tr"
+          ? "Devam etmek için gerekli adım açıldı."
+          : "Required step opened.")
+      );
+    }
+
+    // ✅ Eski fallback (özellikle 403 / string pattern)
     if (isProRequiredResponse(res, json || text)) {
       openProModal();
       return state.lang === "tr"
         ? "Bu içerik PRO gerektirir. PRO’ya geçerek açabilirsin."
         : "This content requires PRO. Upgrade to unlock.";
+    }
+
+    // ✅ PRO endpoint ok:true ise planı UI’da pro yap
+    if (route && typeof route === "string" && route.startsWith("pro-")) {
+      if (json?.ok === true) setPlanSafe("pro");
+      if (String(json?.code || "").toUpperCase() === "PRO_REQUIRED")
+        setPlanSafe("free");
     }
 
     if (json?.message) return json.message;
@@ -1420,7 +1496,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       addMessage("user", prompt);
-      const pendingIdx = addMessage("assistant", t.loadingText || "Yükleniyor...");
+      const pendingIdx = addMessage(
+        "assistant",
+        t.loadingText || "Yükleniyor..."
+      );
       loadingEl.classList.remove("hidden");
 
       const reply = await callIdeasAPI(prompt, platform, state.lang);
