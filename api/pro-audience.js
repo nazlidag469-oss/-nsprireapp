@@ -1,6 +1,5 @@
 // api/pro-audience.js
-// PRO Araç – Kitle İçgörü Analizi (ESM uyumlu) — REVIEW-SAFE (200-only)
-// Env: SUPABASE_URL, SUPABASE_SERVICE_KEY
+// PRO Araç – Kitle İçgörü Analizi (ESM uyumlu)
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -47,7 +46,7 @@ export default async function handler(req, res) {
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
   const ONLY_PRO_EN = "This tool is for PRO members only. Upgrade to use it.";
 
-  // Preflight (opsiyonel, zararsız)
+  // OPTIONS (zararsız)
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -58,14 +57,14 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  // Review-safe: sadece 200 döndür
+  // Sadece POST
   if (req.method !== "POST") {
-    return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!supabase) {
     console.error("PRO_AUDIENCE_ENV_MISSING");
-    return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   // Body parse
@@ -89,14 +88,12 @@ export default async function handler(req, res) {
       message: isTR
         ? "Lütfen hedef kitleni tek cümle ile yaz. (Örn: 18–24 yaş, öğrenci, sınav stresi...)"
         : "Please describe your target audience in one sentence.",
-      code: "EMPTY_INPUT",
     });
   }
 
   if (!email) {
     return res.status(200).json({
       message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
-      code: "NEED_LOGIN",
     });
   }
 
@@ -111,57 +108,49 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error("Supabase error (pro-audience):", error);
-      return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
+      return res.status(200).json({ message: GENERIC_FAIL });
     }
 
     userRow = Array.isArray(data) && data.length ? data[0] : null;
   } catch (e) {
     console.error("Supabase exception (pro-audience):", e);
-    return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!userRow) {
     return res.status(200).json({
       message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
-      code: "USER_NOT_FOUND",
     });
   }
 
+  // 🔴 KRİTİK — PRO DEĞİLSE 403
   if (!isProUser(userRow)) {
-    return res.status(200).json({
+    return res.status(403).json({
       message: isTR ? ONLY_PRO_TR : ONLY_PRO_EN,
       code: "PRO_REQUIRED",
     });
   }
 
-  // ✅ PRO ise içerik üret
+  // ✅ PRO cevabı
   const message = isTR
     ? "👥 *Kitle İçgörü Analizi (PRO)*\n\n" +
       "HEDEF KİTLE TANIMI:\n---------------------------------\n" +
       input +
       "\n\n" +
-      "1) Bu kitlenin ana dertleri\n" +
-      "• Zaman: hızlı sonuç ister.\n" +
-      "• Enerji: uzun videoyu terk eder.\n" +
-      "• Güven: boş vaatten sıkılmıştır.\n\n" +
-      "2) Format Tercihi\n" +
-      "• 15–35 sn, tek fikir.\n" +
-      "• Büyük yazı + hızlı tempo.\n\n" +
-      "3) Hook Kalıpları\n" +
+      "1) Ana dertler\n" +
+      "• Hızlı sonuç ister\n• Uzun videoyu terk eder\n• Boş vaatten bıkmıştır\n\n" +
+      "2) Format\n" +
+      "• 15–35 sn\n• Tek fikir\n• Büyük yazı\n\n" +
+      "3) Hook\n" +
       "• “Eğer sen de [dert] yaşıyorsan…”\n" +
-      "• “Kimsenin söylemediği [konu]…”\n" +
-      "• “Bu 3 hatayı yapıyorsan…”\n\n" +
+      "• “Kimsenin söylemediği [konu]…”\n\n" +
       "4) CTA\n" +
-      "• “Devam istiyorsan ‘devam’ yaz.”\n" +
-      "• “Kaydet, sonra uygula.”\n\n" +
-      "Yaş + ülke + platform yazarsan daha net plan çıkarayım."
+      "• “Devam için yaz.”\n• “Kaydet.”\n"
     : "👥 PRO – Audience Insight Analysis\n\n" +
       "TARGET AUDIENCE:\n---------------------------------\n" +
       input +
       "\n\n" +
-      "• Pains: wants quick wins, drops long content, tired of fake promises.\n" +
-      "• Format: 15–35s, one clear idea, strong first 2–3s.\n" +
-      "• CTA: comment ‘more’, save, send to a friend.\n";
+      "• Wants quick wins\n• Drops long content\n• Needs strong first seconds\n";
 
   return res.status(200).json({ message, ok: true });
-  }
+}
