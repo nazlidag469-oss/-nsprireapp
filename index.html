@@ -7,7 +7,6 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#7c3aed" />
   <link rel="stylesheet" href="style.css" />
-
   <style>
     .hidden { display:none !important; }
   </style>
@@ -83,6 +82,10 @@
     <section id="panel-chat" class="panel">
       <h1>💬 Sohbet</h1>
 
+      <!-- ✅ (EKRANDAKİ GİBİ) ÖNCE BÜYÜK SOHBET ALANI -->
+      <div id="chatMessages" class="chat-messages"></div>
+
+      <!-- ✅ PLAN/KREDİ SATIRI -->
       <div class="mini-bar">
         <span id="planLabel" class="pill">Plan: Ücretsiz</span>
         <span id="creditsLabel" class="pill">Kalan puan: 4/4</span>
@@ -92,6 +95,7 @@
         </button>
       </div>
 
+      <!-- ✅ INPUT BLOĞU -->
       <form id="chatForm" class="chat-form">
         <div class="row">
           <input id="topicInput" class="input" placeholder="Konu (örn: moda)" />
@@ -114,7 +118,7 @@
           <button type="button" id="cameraBtn" class="icon-button">📷</button>
           <input id="cameraFileInput" type="file" accept="image/*" class="hidden" />
 
-          <input id="messageInput" class="input grow" placeholder="Mesaj yaz..." />
+          <input id="messageInput" class="input grow" placeholder="Mesaj yaz veya konu gir..." />
           <button type="submit" id="sendBtn" class="btn">
             <span id="sendBtnText">Gönder</span>
           </button>
@@ -122,8 +126,6 @@
 
         <div id="loading" class="status hidden">Yükleniyor...</div>
       </form>
-
-      <div id="chatMessages" class="chat-messages"></div>
     </section>
 
     <!-- ================= TRENDS PANEL ================= -->
@@ -166,30 +168,42 @@
     <!-- ================= PRO PANEL ================= -->
     <section id="panel-pro" class="panel hidden">
       <h1>⭐ PRO Araçları</h1>
+      <p class="muted">
+        Bu bölümdeki araçlar PRO kullanıcılar için tasarlandı.
+        Ücretsiz planda kısıtlı, PRO’da tam güç açılır.
+      </p>
 
-      <div class="pro-box">
-        <h3>Rakip Analizi</h3>
+      <!-- ✅ 3 ARAÇ ÜSTTE SIRA (SEKME) -->
+      <div class="pro-tabs">
+        <button class="pro-tab btn" data-protab="competitor">1) Rakip Video Analizi</button>
+        <button class="pro-tab btn" data-protab="audience">3) Kitle İçgörü Analizi</button>
+        <button class="pro-tab btn" data-protab="silent">5) Sessiz Video İçerik Üreticisi</button>
+      </div>
+
+      <!-- ✅ SADECE SEÇİLEN ARAÇ GÖRÜNSÜN -->
+      <div id="proTool-competitor" class="pro-tool">
+        <h3>1) Rakip Video Analizi</h3>
         <div class="row">
-          <input id="proCompetitorInput" class="input grow" placeholder="Rakip kanal / link / açıklama" />
-          <button id="proCompetitorBtn" class="btn">Analiz</button>
+          <input id="proCompetitorInput" class="input grow" placeholder="TikTok / Reels / Shorts linki veya açıklaması..." />
+          <button id="proCompetitorBtn" class="btn">Rakip videoyu analiz et (PRO)</button>
         </div>
         <pre id="proCompetitorResult" class="result"></pre>
       </div>
 
-      <div class="pro-box">
-        <h3>Hedef Kitle</h3>
+      <div id="proTool-audience" class="pro-tool hidden">
+        <h3>3) Kitle İçgörü Analizi</h3>
         <div class="row">
-          <input id="proAudienceInput" class="input grow" placeholder="Kitle tanımı" />
-          <button id="proAudienceBtn" class="btn">Çıkar</button>
+          <input id="proAudienceInput" class="input grow" placeholder="Örn: 17-24 yaş, fitness nişinde hedef kitlem var." />
+          <button id="proAudienceBtn" class="btn">Kitle içgörüsü üret (PRO)</button>
         </div>
         <pre id="proAudienceResult" class="result"></pre>
       </div>
 
-      <div class="pro-box">
-        <h3>Silent Script</h3>
+      <div id="proTool-silent" class="pro-tool hidden">
+        <h3>5) Sessiz Video İçerik Üreticisi</h3>
         <div class="row">
-          <input id="proSilentInput" class="input grow" placeholder="Video konusu" />
-          <button id="proSilentBtn" class="btn">Üret</button>
+          <input id="proSilentInput" class="input grow" placeholder="Video konusu (örn: okul öncesi eğitim)" />
+          <button id="proSilentBtn" class="btn">Sessiz içerik üret (PRO)</button>
         </div>
         <pre id="proSilentResult" class="result"></pre>
       </div>
@@ -256,8 +270,7 @@
   </div>
 </div>
 
-<!-- ✅ SADECE app.js YÜKLENECEK (HTML içindeki ekstra JS’leri SİL) -->
 <script src="./app.js"></script>
 
 </body>
-  </html>
+          </html>
