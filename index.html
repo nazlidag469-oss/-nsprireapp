@@ -14,13 +14,13 @@
 
 <body>
 
-<!-- 🔒 APP BAŞTA GİZLİ -->
-<div id="app" class="hidden">
+<!-- ✅ APP ARTIK BAŞTA GÖRÜNÜR (boş ekran olmasın). Onboarding üstten kapatır -->
+<div id="app">
 
   <!-- ÜST BAR -->
   <header class="top-bar">
     <button id="menuToggle" class="icon-button">⋯</button>
-    <div id="topTitle">INSPIREAPP</div>
+    <div id="topTitle" class="top-title">INSPIREAPP</div>
     <button id="helpToggle" class="icon-button">?</button>
   </header>
 
@@ -61,16 +61,38 @@
     </div>
   </aside>
 
-  <!-- ✅ HELP PANEL -->
+  <!-- ✅ HELP PANEL (detaylı içerik) -->
   <div id="helpPanel" class="help-panel hidden">
     <div class="help-card">
       <div class="help-head">
-        <div>Yardım</div>
+        <div><strong>Bilgi &amp; Destek</strong></div>
         <button id="closeHelpBtn" class="icon-button">✕</button>
       </div>
+
       <div class="help-body">
-        <p>Panelleri soldaki menüden seç.</p>
-        <p>Ücretsiz planda sohbet puanı biterse “Reklam izle +1 puan” ile artırabilirsin.</p>
+        <h3 style="margin: 6px 0 6px;">Uygulama</h3>
+        <p>
+          InspireApp; kısa video üreticileri için yapay zekâ destekli profesyonel fikir oluşturma,
+          akım analiz ve içerik planlama aracıdır.
+        </p>
+        <p>
+          YouTube Shorts, TikTok, Instagram Reels için özel fikir, hook, başlık, trend kopyalama
+          ve içerik akışı üretir.
+        </p>
+
+        <h3 style="margin: 14px 0 6px;">Ücretsiz Plan</h3>
+        <p>Günlük 4 puan. Sohbet puanı biterse “Reklam izle +1 puan” ile artırabilirsin.</p>
+
+        <h3 style="margin: 14px 0 6px;">PRO Plan</h3>
+        <p>
+          PRO araçlarına erişim ve sınırsız puan, “PRO’ya geç” butonuna bastığında açılan ekrandan
+          satın alma ile aktif edilir (Google Play üzerinden satın alma).
+        </p>
+
+        <h3 style="margin: 14px 0 6px;">Destek</h3>
+        <p>
+          E-posta: <strong>inspireappdestek@gmail.com</strong>
+        </p>
       </div>
     </div>
   </div>
@@ -82,7 +104,7 @@
     <section id="panel-chat" class="panel">
       <h1>💬 Sohbet</h1>
 
-      <!-- ✅ (EKRANDAKİ GİBİ) ÖNCE BÜYÜK SOHBET ALANI -->
+      <!-- ✅ ÖNCE BÜYÜK SOHBET ALANI -->
       <div id="chatMessages" class="chat-messages"></div>
 
       <!-- ✅ PLAN/KREDİ SATIRI -->
@@ -273,4 +295,4 @@
 <script src="./app.js"></script>
 
 </body>
-          </html>
+  </html>
