@@ -1,6 +1,7 @@
 /* ===============================
    INSPIREAPP — PREMIUM MOR (HTML UYUMLU)
    Sidebar + Help + Panels + PRO tabs + Chat layout
+   FIX: okunabilirlik + taşma/wordbreak + yardım panel tipografi
 ================================ */
 
 :root{
@@ -29,6 +30,7 @@
 
 *{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; height:100%; }
+
 body{
   font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   background:linear-gradient(135deg,var(--bg-gradient-start),var(--bg-gradient-end));
@@ -38,6 +40,11 @@ body{
 /* helpers */
 .hidden{ display:none !important; }
 .muted{ color:var(--text-muted); font-size:13px; }
+
+/* ✅ AKIŞKAN OKUNUR METİN: pre/textarea sonuçlarda font sabit kalmasın */
+pre, .result, .bubble-text{
+  font-family:inherit;
+}
 
 /* APP */
 #app{ min-height:100vh; width:100%; }
@@ -67,6 +74,7 @@ body{
   background:rgba(255,255,255,.75);
   font-size:18px;
   cursor:pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* MAIN CONTENT */
@@ -74,7 +82,7 @@ body{
   margin-top:var(--topbar-h);
   height:calc(100vh - var(--topbar-h));
   overflow-y:auto;
-  padding:14px 14px 22px;
+  padding:14px 14px 28px; /* ✅ alt boşluk (mobilde butonlar üstüne binmesin) */
 }
 
 /* PANELS (common glass card) */
@@ -197,6 +205,8 @@ body{
   max-width:82%;
   padding:14px 16px;
   border-radius:22px;
+  word-break:break-word;           /* ✅ taşma yok */
+  overflow-wrap:anywhere;          /* ✅ uzun link/kelime kır */
 }
 .bubble-text{
   margin:0;
@@ -236,6 +246,8 @@ body{
   background:rgba(255,255,255,.68);
   white-space:pre-wrap;
   overflow:auto;
+  word-break:break-word;           /* ✅ taşma yok */
+  overflow-wrap:anywhere;
 }
 
 /* SIDEBAR */
@@ -307,7 +319,19 @@ body{
   border-bottom:1px solid rgba(0,0,0,.06);
   font-weight:900;
 }
-.help-body{ padding:12px; color:rgba(0,0,0,.70); }
+.help-body{
+  padding:12px;
+  color:rgba(0,0,0,.74);
+  line-height:1.6;         /* ✅ okunur */
+  font-size:14px;          /* ✅ okunur */
+}
+.help-body h3{
+  margin:8px 0 6px;
+  font-size:18px;
+  font-weight:900;
+  color:#111827;
+}
+.help-body p{ margin:0 0 10px; }
 
 /* MODALS */
 .modal-backdrop{
@@ -402,8 +426,9 @@ body{
 /* mobile */
 @media (max-width:768px){
   .panel{ padding:12px; }
+  .panel h1{ font-size:26px; }  /* ✅ mobilde taşmasın */
   .bubble{ max-width:92%; }
   #panel-chat{ min-height:auto; }
   .sidebar{ left:8px; right:auto; }
   .help-panel{ right:8px; left:auto; }
-   }
+                        }
