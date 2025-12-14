@@ -87,8 +87,7 @@ const I18N = window.I18N || {
     adDailyLimit: (limit) => `Günlük reklam limiti doldu. (Limit: ${limit})`,
     proPriceTextTr:
       "InspireApp PRO – aylık 299 TL (Google Play üzerinden ücretlendirilir).",
-    proPriceTextEn:
-      "InspireApp PRO – monthly subscription via Google Play.",
+    proPriceTextEn: "InspireApp PRO – monthly subscription via Google Play.",
     adPlayingText: "Reklam izleniyor… Bitince sonuç gelecek.",
   },
   en: {
@@ -99,10 +98,8 @@ const I18N = window.I18N || {
     creditsLabelFree: (c) => `Credits: ${c}/${MAX_FREE_CREDITS}`,
     creditsLabelPro: "Credits: Unlimited",
     adDailyLimit: (limit) => `Daily ad limit reached. (Limit: ${limit})`,
-    proPriceTextTr:
-      "InspireApp PRO – monthly subscription via Google Play.",
-    proPriceTextEn:
-      "InspireApp PRO – monthly subscription via Google Play.",
+    proPriceTextTr: "InspireApp PRO – monthly subscription via Google Play.",
+    proPriceTextEn: "InspireApp PRO – monthly subscription via Google Play.",
     adPlayingText: "Ad is playing… Result will appear after it ends.",
   },
 };
@@ -358,16 +355,59 @@ function closeAdModal() {
 // =========================
 // === PANEL SWITCH (FIX) ===
 // =========================
-function showPanel(name) {
-  const panels = document.querySelectorAll("main .panel");
+// ✅ main şartını kaldırdım + "panel-xxx" ve "xxx" ikisini de kabul eder
+function _allPanels() {
+  return Array.from(document.querySelectorAll(".panel"));
+}
+function _normalizePanelName(name) {
+  const s = String(name || "").trim();
+  if (!s) return "chat";
+  return s.startsWith("panel-") ? s.replace(/^panel-/, "") : s;
+}
+function _resolvePanelEl(name) {
+  const s = String(name || "").trim();
+  if (!s) return null;
+
+  // "panel-xxx" direkt id olabilir
+  if (s.startsWith("panel-")) {
+    const byId = document.getElementById(s);
+    if (byId) return byId;
+    const byNorm = document.getElementById("panel-" + _normalizePanelName(s));
+    if (byNorm) return byNorm;
+  }
+
+  // normal: "chat" -> "panel-chat"
+  const id = "panel-" + _normalizePanelName(s);
+  const byId2 = document.getElementById(id);
+  if (byId2) return byId2;
+
+  // fallback: id içinde arama
+  const low = _normalizePanelName(s).toLowerCase();
+  const panels = _allPanels();
+  return (
+    panels.find((p) => (p.id || "").toLowerCase() === low) ||
+    panels.find((p) => (p.id || "").toLowerCase().includes(low)) ||
+    null
+  );
+}
+
+function showPanel(name, force = false) {
+  const panels = _allPanels();
   if (!panels.length) return;
-  if (name === currentPanel) return;
+
+  const normalized = _normalizePanelName(name);
+
+  if (!force && normalized === currentPanel) {
+    // yine de panel yoksa/fazla gizliyse toparla
+    const currentEl = _resolvePanelEl(normalized);
+    if (currentEl && !currentEl.classList.contains("hidden")) return;
+  }
 
   previousPanel = currentPanel;
-  currentPanel = name;
+  currentPanel = normalized;
 
   panels.forEach((sec) => sec.classList.add("hidden"));
-  const active = document.getElementById("panel-" + name);
+  const active = _resolvePanelEl(name) || _resolvePanelEl(normalized) || panels[0];
   if (active) active.classList.remove("hidden");
 }
 
@@ -575,7 +615,8 @@ function applySmallUIText(code) {
   const messageInput = $("messageInput");
   if (sendBtn) sendBtn.textContent = t.send;
   if (watchAdBtn) watchAdBtn.textContent = t.ad;
-  if (messageInput && !messageInput.value) messageInput.placeholder = t.placeholder;
+  if (messageInput && !messageInput.value)
+    messageInput.placeholder = t.placeholder;
 }
 
 function fillLangSelect(selectEl) {
@@ -666,11 +707,16 @@ function startRewardAd(purpose, action) {
 // =========================
 function grantAdCredit() {
   // ✅ 1) Reklam "üretim" için izlendiyse: krediyi ELLEME, sadece işi çalıştır
-  if (__rewardPurpose === "generate" && typeof __pendingRewardAction === "function") {
+  if (
+    __rewardPurpose === "generate" &&
+    typeof __pendingRewardAction === "function"
+  ) {
     const fn = __pendingRewardAction;
     __pendingRewardAction = null;
     __rewardPurpose = null;
-    try { fn(); } catch {}
+    try {
+      fn();
+    } catch {}
     return;
   }
 
@@ -766,7 +812,7 @@ window.__inspireHandleBack = function () {
 
   if (currentPanel && currentPanel !== "chat") {
     const target = previousPanel || "chat";
-    showPanel(target);
+    showPanel(target, true);
     return true;
   }
 
@@ -915,7 +961,9 @@ async function loadTrends() {
     const data = await res.json().catch(() => null);
     if (!res.ok) {
       list.innerHTML =
-        "<li>Trendler alınırken hata: " + ((data && data.message) || "") + "</li>";
+        "<li>Trendler alınırken hata: " +
+        ((data && data.message) || "") +
+        "</li>";
       return;
     }
     if (!data?.items?.length) {
@@ -935,7 +983,8 @@ async function loadTrends() {
       list.appendChild(li);
     });
   } catch {
-    list.innerHTML = "<li>Trendler alınırken beklenmeyen bir hata oluştu.</li>";
+    list.innerHTML =
+      "<li>Trendler alınırken beklenmeyen bir hata oluştu.</li>";
   }
 }
 
@@ -1031,6 +1080,9 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTrends();
   applyAllTranslations();
 
+  // ✅ ilk açılışta paneller kesin doğru gösterilsin
+  showPanel("chat", true);
+
   // -------------------------
   // ✅ Robust element helpers (Trend Kopya Makinesi bozulmasın diye)
   // -------------------------
@@ -1053,6 +1105,43 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btn.dataset) btn.dataset.bound = "1";
     btn.addEventListener("click", fn);
     return true;
+  }
+  function findInputNear(btn) {
+    const panel = btn?.closest?.(".panel");
+    if (!panel) return null;
+    // textarea öncelik, yoksa text input
+    return (
+      panel.querySelector("textarea") ||
+      panel.querySelector("input[type='text']") ||
+      panel.querySelector("input:not([type])") ||
+      null
+    );
+  }
+  function ensureResultBox(btn, existing) {
+    if (existing) return existing;
+    const panel = btn?.closest?.(".panel");
+    if (!panel) return null;
+    // panel içinde bir çıktı alanı bulmaya çalış
+    const found =
+      panel.querySelector("#copyResult") ||
+      panel.querySelector("#trendCopyResult") ||
+      panel.querySelector("#trendKopyaResult") ||
+      panel.querySelector("[data-result]") ||
+      panel.querySelector("pre.result") ||
+      panel.querySelector("pre") ||
+      null;
+    if (found) return found;
+
+    // hiç yoksa yarat
+    const pre = document.createElement("pre");
+    pre.style.whiteSpace = "pre-wrap";
+    pre.style.marginTop = "10px";
+    pre.style.padding = "10px";
+    pre.style.borderRadius = "12px";
+    pre.style.background = "rgba(255,255,255,0.65)";
+    pre.style.border = "1px solid rgba(0,0,0,0.08)";
+    panel.appendChild(pre);
+    return pre;
   }
 
   if (!softBackBtn) {
@@ -1083,7 +1172,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.__inspireHandleBack()
       )
         return;
-      if (currentPanel !== "chat") showPanel(previousPanel || "chat");
+      if (currentPanel !== "chat") showPanel(previousPanel || "chat", true);
     });
   }
 
@@ -1112,7 +1201,9 @@ document.addEventListener("DOMContentLoaded", () => {
   showOnboardingIfNeeded();
 
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener("click", () => sidebar.classList.toggle("hidden"));
+    menuToggle.addEventListener("click", () =>
+      sidebar.classList.toggle("hidden")
+    );
   }
 
   // swipe to close sidebar
@@ -1193,7 +1284,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (adStepMain) adStepMain.classList.remove("hidden");
     });
   }
-  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", closeAdModal);
+  if (adConfirmCloseBtn)
+    adConfirmCloseBtn.addEventListener("click", closeAdModal);
 
   if (proCloseBtn) proCloseBtn.addEventListener("click", closeProModal);
 
@@ -1298,7 +1390,9 @@ document.addEventListener("DOMContentLoaded", () => {
         applyAllTranslations();
 
         if (data.status === "login")
-          alert(state.lang === "tr" ? "Giriş başarılı. 👌" : "Login successful. 👌");
+          alert(
+            state.lang === "tr" ? "Giriş başarılı. 👌" : "Login successful. 👌"
+          );
         else if (data.status === "registered")
           alert(
             state.lang === "tr"
@@ -1343,10 +1437,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // ✅ side panel tıklamaları: data-panel "chat" veya "panel-chat" ikisi de çalışır
   document.querySelectorAll(".side-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const target = btn.dataset.panel;
-      showPanel(target);
+      const target = btn.dataset.panel || btn.getAttribute("data-panel") || "chat";
+      showPanel(target, true);
       if (sidebar) sidebar.classList.add("hidden");
     });
   });
@@ -1453,44 +1548,75 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ✅ COPY / TREND KOPYA: (ID uyuşmazlığı olsa bile çalışır)
-  const copyGenerateBtn = copyGenerate || elAny(
-    "trendCopyGenerate",
-    "trendCopyBtn",
-    "trendKopyaBtn",
-    "trendCopyGenerateBtn"
-  );
-  const copyTopicEl = copyTopic || elAny(
-    "trendCopyTopic",
-    "trendKopyaTopic",
-    "trendCopyInput",
-    "trendKopyaInput"
-  );
-  const copyResultEl = copyResult || elAny(
-    "trendCopyResult",
-    "trendKopyaResult",
-    "trendCopyOutput",
-    "trendKopyaOutput"
-  );
+  const copyGenerateBtn =
+    copyGenerate ||
+    elAny(
+      "trendCopyGenerate",
+      "trendCopyBtn",
+      "trendKopyaBtn",
+      "trendCopyGenerateBtn",
+      "trendCopyCreate",
+      "trendCopyCreateBtn",
+      "copyCreateBtn"
+    );
 
-  if (copyGenerateBtn && copyTopicEl && copyResultEl) {
+  const copyTopicEl =
+    copyTopic ||
+    elAny(
+      "trendCopyTopic",
+      "trendKopyaTopic",
+      "trendCopyInput",
+      "trendKopyaInput",
+      "trendCopyText",
+      "trendKopyaText",
+      "copyTopicInput",
+      "copyText"
+    );
+
+  const copyResultEl =
+    copyResult ||
+    elAny(
+      "trendCopyResult",
+      "trendKopyaResult",
+      "trendCopyOutput",
+      "trendKopyaOutput",
+      "copyOutput",
+      "copyAnswer"
+    );
+
+  if (copyGenerateBtn) {
     bindOnce(copyGenerateBtn, async () => {
-      const topic = readVal(copyTopicEl);
       const t = I18N[state.lang] || I18N.tr;
 
+      // 1) önce id ile bulduğumuz input
+      let topic = readVal(copyTopicEl);
+
+      // 2) boşsa: butonun panelinde ilk textarea/input’u al
       if (!topic) {
-        copyResultEl.textContent =
-          state.lang === "tr"
-            ? "Lütfen bir trend / fikir yaz."
-            : "Please enter a trend / idea.";
+        const near = findInputNear(copyGenerateBtn);
+        topic = readVal(near);
+      }
+
+      // result kutusu garanti
+      const out = ensureResultBox(copyGenerateBtn, copyResultEl);
+
+      if (!topic) {
+        if (out) {
+          out.textContent =
+            state.lang === "tr"
+              ? "Lütfen bir trend / fikir yaz."
+              : "Please enter a trend / idea.";
+        }
         return;
       }
 
       const runCopy = async () => {
-        copyResultEl.textContent = t.loadingText || "Yükleniyor...";
-        copyResultEl.textContent = await callSimpleAPI("copy", {
+        if (out) out.textContent = t.loadingText || "Yükleniyor...";
+        const resText = await callSimpleAPI("copy", {
           topic,
           lang: LANG_NAMES[state.lang] || "Turkish",
         });
+        if (out) out.textContent = resText;
       };
 
       if (state.plan === "pro") {
@@ -1498,15 +1624,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      copyResultEl.textContent =
-        t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
+      if (out)
+        out.textContent =
+          t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
       startRewardAd("generate", runCopy);
-    });
-  } else {
-    console.warn("COPY UI bulunamadı:", {
-      copyGenerateBtn: !!copyGenerateBtn,
-      copyTopicEl: !!copyTopicEl,
-      copyResultEl: !!copyResultEl,
     });
   }
 
