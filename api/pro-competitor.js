@@ -1,6 +1,5 @@
 // api/pro-competitor.js
-// PRO Araç – Rakip Video Analizi (ESM uyumlu) — REVIEW-SAFE (200-only)
-// Env: SUPABASE_URL, SUPABASE_SERVICE_KEY
+// PRO Araç – Rakip Video Analizi (ESM uyumlu)
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -47,7 +46,7 @@ export default async function handler(req, res) {
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
   const ONLY_PRO_EN = "This tool is for PRO members only. Upgrade to use it.";
 
-  // Preflight (opsiyonel, zararsız)
+  // OPTIONS (zararsız)
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -58,14 +57,14 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  // Review-safe: sadece 200 döndür
+  // Sadece POST
   if (req.method !== "POST") {
-    return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!supabase) {
     console.error("PRO_COMPETITOR_ENV_MISSING");
-    return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   // Body parse
@@ -89,14 +88,12 @@ export default async function handler(req, res) {
       message: isTR
         ? "Lütfen rakip video linki veya açıklaması yaz."
         : "Please paste the competitor video link or description.",
-      code: "EMPTY_INPUT",
     });
   }
 
   if (!email) {
     return res.status(200).json({
       message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
-      code: "NEED_LOGIN",
     });
   }
 
@@ -111,55 +108,46 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error("Supabase error (pro-competitor):", error);
-      return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
+      return res.status(200).json({ message: GENERIC_FAIL });
     }
 
     userRow = Array.isArray(data) && data.length ? data[0] : null;
   } catch (e) {
     console.error("Supabase exception (pro-competitor):", e);
-    return res.status(200).json({ message: GENERIC_FAIL, code: "GENERIC" });
+    return res.status(200).json({ message: GENERIC_FAIL });
   }
 
   if (!userRow) {
     return res.status(200).json({
       message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
-      code: "USER_NOT_FOUND",
     });
   }
 
+  // 🔴 KRİTİK NOKTA — PRO DEĞİLSE 403
   if (!isProUser(userRow)) {
-    return res.status(200).json({
+    return res.status(403).json({
       message: isTR ? ONLY_PRO_TR : ONLY_PRO_EN,
       code: "PRO_REQUIRED",
     });
   }
 
-  // ✅ PRO mesajı
+  // ✅ PRO cevabı
   const message = isTR
     ? "🎯 *Rakip Video Analizi (PRO)*\n\n" +
       "GÖNDERİLEN VİDEO / AÇIKLAMA:\n---------------------------------\n" +
       input +
       "\n\n" +
-      "1) Neden İzleniyor / Tuttu?\n" +
-      "• Başlangıçta net bir merak veya problem var.\n" +
-      "• Tempo yüksek, boşluk az.\n" +
-      "• Akış: hook → problem → mini sır/çözüm → CTA.\n\n" +
-      "2) Hook’u Güçlendirme\n" +
-      "• İlk 2 saniyede büyük vaadi söyle.\n" +
-      "• Daha iddialı ilk cümle kullan.\n" +
-      "• Caption’ı sesle senkron yap.\n\n" +
+      "1) Neden İzleniyor?\n" +
+      "• Güçlü hook\n• Hızlı tempo\n• Net yapı\n\n" +
+      "2) Nasıl Daha İyi Yapılır?\n" +
+      "• İlk 2 saniyede büyük vaat\n• Daha agresif giriş\n• Caption senkronu\n\n" +
       "3) Şablon\n" +
-      "• (0–3 sn) “Bugün sana kimsenin anlatmadığı: [konu]”\n" +
-      "• (3–15 sn) 2–3 madde: problem → mini çözüm\n" +
-      "• (15–30 sn) “Devam istiyorsan ‘devam’ yaz.”\n\n" +
-      "İstersen metni yapıştır, sana özel senaryo + kopya çıkarayım."
+      "• Hook → Problem → Mini çözüm → CTA\n"
     : "🎯 PRO – Competitor Video Analysis\n\n" +
       "INPUT:\n---------------------------------\n" +
       input +
       "\n\n" +
-      "• Why it works: strong hook, fast tempo, clear structure.\n" +
-      "• Improve: promise in first 2s, stronger first sentence, synced captions.\n" +
-      "• Template: hook → pain → quick fix → CTA.\n";
+      "• Strong hook\n• Fast pacing\n• Clear structure\n";
 
   return res.status(200).json({ message, ok: true });
-        }
+      }
