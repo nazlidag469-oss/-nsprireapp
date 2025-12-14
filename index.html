@@ -9,138 +9,7 @@
   <link rel="stylesheet" href="style.css" />
 
   <style>
-    /* ✅ Minimum garanti stiller (style.css olsa bile çalışsın) */
-    .hidden { display: none !important; }
-
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-    .top-bar{
-      position: sticky; top: 0;
-      display:flex; align-items:center; justify-content:space-between;
-      padding: 14px 14px;
-      background: rgba(255,255,255,0.55);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(0,0,0,0.06);
-    }
-    .icon-button{
-      width: 42px; height: 42px;
-      border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.12);
-      background: rgba(255,255,255,0.65);
-      font-size: 18px;
-    }
-    #topTitle{ font-weight: 800; letter-spacing: 6px; font-size: 24px; }
-
-    .content{
-      min-height: calc(100vh - 72px);
-      padding: 22px 18px 40px;
-      background: linear-gradient(180deg, #d8b4fe 0%, #e9d5ff 30%, #dbeafe 100%);
-    }
-    .panel{
-      max-width: 720px;
-      margin: 0 auto;
-      background: rgba(255,255,255,0.45);
-      border: 1px solid rgba(0,0,0,0.08);
-      border-radius: 18px;
-      padding: 18px 16px;
-      backdrop-filter: blur(10px);
-    }
-    .panel h1{ margin: 0 0 8px; font-size: 34px; }
-    .panel p{ margin: 0 0 14px; font-size: 20px; color: rgba(0,0,0,0.65); line-height: 1.35; }
-
-    .row{ display:flex; gap:12px; align-items:flex-end; flex-wrap: wrap; }
-    textarea{
-      width: min(520px, 100%);
-      min-height: 76px;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.20);
-      background: rgba(255,255,255,0.80);
-      font-size: 18px;
-      outline: none;
-      resize: vertical;
-    }
-    .btn{
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.20);
-      background: rgba(255,255,255,0.80);
-      font-size: 18px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .status{
-      margin-top: 10px;
-      font-size: 18px;
-      color: rgba(0,0,0,0.75);
-      min-height: 26px;
-    }
-    .result{
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.65);
-      white-space: pre-wrap;
-      font-size: 16px;
-      line-height: 1.45;
-    }
-
-    /* ✅ Mini plan/kredi satırı */
-    .mini-bar{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap: wrap;
-      margin: 6px 0 12px;
-      font-size: 16px;
-      color: rgba(0,0,0,0.75);
-    }
-    .pill{
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,0.12);
-      background: rgba(255,255,255,0.60);
-    }
-
-    /* ONBOARDING */
-    .onboarding-overlay{
-      position: fixed; inset: 0;
-      display:flex;
-      align-items:center; justify-content:center;
-      background: rgba(0,0,0,0.30);
-      z-index: 9999;
-    }
-    .onboarding-card{
-      width: min(420px, calc(100vw - 32px));
-      background: rgba(255,255,255,0.85);
-      border: 1px solid rgba(0,0,0,0.12);
-      border-radius: 18px;
-      padding: 16px;
-      backdrop-filter: blur(10px);
-    }
-    .onboarding-card h2{ margin: 0 0 10px; }
-    .onboarding-card select,
-    .onboarding-card input{
-      width: 100%;
-      padding: 12px;
-      margin: 0 0 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(0,0,0,0.18);
-      background: rgba(255,255,255,0.95);
-      font-size: 16px;
-      outline: none;
-    }
-    .onboarding-card button{
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(0,0,0,0.18);
-      background: #7c3aed;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .hidden { display:none !important; }
   </style>
 </head>
 
@@ -156,392 +25,239 @@
     <button id="helpToggle" class="icon-button">?</button>
   </header>
 
+  <!-- ✅ SIDEBAR -->
+  <aside id="sidebar" class="sidebar hidden">
+    <div class="sidebar-section">
+      <h3>Hesap &amp; Sohbetler</h3>
+
+      <div class="account-box">
+        <div class="muted">Kullanıcı</div>
+        <div class="muted">E-posta</div>
+        <div id="accountEmail" class="account-email">Kayıtlı değil</div>
+        <button id="changeEmailBtn" class="btn small">E-postayı değiştir</button>
+
+        <div class="muted" style="margin-top:10px;">Durum</div>
+        <div id="planStatus">Plan: Ücretsiz</div>
+        <div id="subscribeBlock">
+          <button id="subscribeBtn" class="btn">PRO’ya geç</button>
+        </div>
+      </div>
+
+      <h3 style="margin-top:14px;">Sohbetler</h3>
+      <button id="newChatBtn" class="btn">+ Yeni sohbet</button>
+      <div id="conversationList" class="conversation-list"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Paneller</h3>
+
+      <button class="side-btn btn" data-panel="chat">💬 Sohbet</button>
+      <button class="side-btn btn" data-panel="trends">🔥 Trend Akımı</button>
+      <button class="side-btn btn" data-panel="series">📅 30 Günlük Seri</button>
+      <button class="side-btn btn" data-panel="hook">⚡ Hook Laboratuvarı</button>
+      <button class="side-btn btn" data-panel="copy">🎬 Trend Kopya Makinesi</button>
+      <button class="side-btn btn" data-panel="pro">⭐ PRO Araçları</button>
+
+      <button id="helpToggle2" class="btn" style="margin-top:14px;">❓ Yardım</button>
+    </div>
+  </aside>
+
+  <!-- ✅ HELP PANEL -->
+  <div id="helpPanel" class="help-panel hidden">
+    <div class="help-card">
+      <div class="help-head">
+        <div>Yardım</div>
+        <button id="closeHelpBtn" class="icon-button">✕</button>
+      </div>
+      <div class="help-body">
+        <p>Panelleri soldaki menüden seç.</p>
+        <p>Ücretsiz planda sohbet puanı biterse “Reklam izle +1 puan” ile artırabilirsin.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- ✅ ANA İÇERİK -->
   <main class="content">
-    <section class="panel">
-      <h1>🎬 Trend Kopya Makinesi</h1>
-      <p>Beğendiğin bir trend / video fikrini yaz; InspireApp bunu senin nişine göre yeniden yazar.</p>
 
-      <!-- ✅ KREDİ / REKLAM BAR -->
+    <!-- ================= CHAT PANEL ================= -->
+    <section id="panel-chat" class="panel">
+      <h1>💬 Sohbet</h1>
+
       <div class="mini-bar">
-        <span id="creditsPill" class="pill">Kalan puan: 4</span>
-        <button id="watchAdBtn" class="btn">Reklam izle +1 puan</button>
+        <span id="planLabel" class="pill">Plan: Ücretsiz</span>
+        <span id="creditsLabel" class="pill">Kalan puan: 4/4</span>
+
+        <button id="watchAdBtn" class="btn">
+          <span id="watchAdBtnText">Reklam izle +1 puan</span>
+        </button>
       </div>
 
-      <div class="row">
-        <textarea id="trendInput" placeholder="Örn: okul bitti"></textarea>
-        <button id="trendGenerateBtn" class="btn">Trend kopyasını oluştur</button>
-      </div>
+      <form id="chatForm" class="chat-form">
+        <div class="row">
+          <input id="topicInput" class="input" placeholder="Konu (örn: moda)" />
+          <select id="platformSelect" class="select">
+            <option value="tiktok">TikTok</option>
+            <option value="youtube_shorts">YouTube Shorts</option>
+            <option value="instagram_reels">Instagram Reels</option>
+          </select>
+          <select id="langSelect" class="select">
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+            <option value="de">Deutsch</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
 
-      <div id="trendStatus" class="status"></div>
-      <div id="trendResult" class="result hidden"></div>
+        <div class="row">
+          <button type="button" id="voiceBtn" class="icon-button">🎤</button>
+          <button type="button" id="cameraBtn" class="icon-button">📷</button>
+          <input id="cameraFileInput" type="file" accept="image/*" class="hidden" />
+
+          <input id="messageInput" class="input grow" placeholder="Mesaj yaz..." />
+          <button type="submit" id="sendBtn" class="btn">
+            <span id="sendBtnText">Gönder</span>
+          </button>
+        </div>
+
+        <div id="loading" class="status hidden">Yükleniyor...</div>
+      </form>
+
+      <div id="chatMessages" class="chat-messages"></div>
     </section>
+
+    <!-- ================= TRENDS PANEL ================= -->
+    <section id="panel-trends" class="panel hidden">
+      <h1>🔥 Trend Akımı</h1>
+      <button id="refreshTrendsBtn" class="btn">Trendleri yenile</button>
+      <ul id="trendsList" class="trends-list"></ul>
+    </section>
+
+    <!-- ================= SERIES PANEL ================= -->
+    <section id="panel-series" class="panel hidden">
+      <h1>📅 30 Günlük Seri</h1>
+      <div class="row">
+        <input id="seriesTopic" class="input grow" placeholder="Konu yaz (örn: fitness)" />
+        <button id="seriesGenerate" class="btn">Seri oluştur</button>
+      </div>
+      <pre id="seriesResult" class="result"></pre>
+    </section>
+
+    <!-- ================= HOOK PANEL ================= -->
+    <section id="panel-hook" class="panel hidden">
+      <h1>⚡ Hook Laboratuvarı</h1>
+      <div class="row">
+        <input id="hookTopic" class="input grow" placeholder="Hook konusu (örn: okul bitti)" />
+        <button id="hookGenerate" class="btn">Hook üret</button>
+      </div>
+      <pre id="hookResult" class="result"></pre>
+    </section>
+
+    <!-- ================= COPY PANEL ================= -->
+    <section id="panel-copy" class="panel hidden">
+      <h1>🎬 Trend Kopya Makinesi</h1>
+      <div class="row">
+        <textarea id="copyTopic" class="textarea" placeholder="Örn: okul bitti"></textarea>
+        <button id="copyGenerate" class="btn">Trend kopyasını oluştur</button>
+      </div>
+      <pre id="copyResult" class="result"></pre>
+    </section>
+
+    <!-- ================= PRO PANEL ================= -->
+    <section id="panel-pro" class="panel hidden">
+      <h1>⭐ PRO Araçları</h1>
+
+      <div class="pro-box">
+        <h3>Rakip Analizi</h3>
+        <div class="row">
+          <input id="proCompetitorInput" class="input grow" placeholder="Rakip kanal / link / açıklama" />
+          <button id="proCompetitorBtn" class="btn">Analiz</button>
+        </div>
+        <pre id="proCompetitorResult" class="result"></pre>
+      </div>
+
+      <div class="pro-box">
+        <h3>Hedef Kitle</h3>
+        <div class="row">
+          <input id="proAudienceInput" class="input grow" placeholder="Kitle tanımı" />
+          <button id="proAudienceBtn" class="btn">Çıkar</button>
+        </div>
+        <pre id="proAudienceResult" class="result"></pre>
+      </div>
+
+      <div class="pro-box">
+        <h3>Silent Script</h3>
+        <div class="row">
+          <input id="proSilentInput" class="input grow" placeholder="Video konusu" />
+          <button id="proSilentBtn" class="btn">Üret</button>
+        </div>
+        <pre id="proSilentResult" class="result"></pre>
+      </div>
+    </section>
+
   </main>
+
+  <!-- ================= MODALS ================= -->
+  <div id="modalBackdrop" class="modal-backdrop hidden"></div>
+
+  <div id="proModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>PRO</div>
+        <button id="proCloseBtn" class="icon-button">✕</button>
+      </div>
+      <div id="proPriceText" class="modal-body"></div>
+      <button id="proPayBtn" class="btn">Satın al</button>
+    </div>
+  </div>
+
+  <div id="adModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>Reklam</div>
+        <button id="adCloseIcon" class="icon-button">✕</button>
+      </div>
+
+      <div id="adStepMain">
+        <div class="modal-body">Reklam izleniyor…</div>
+        <div class="row">
+          <button id="adCancelBtn" class="btn">Vazgeç</button>
+          <button id="adWatchedBtn" class="btn">İzledim</button>
+        </div>
+      </div>
+
+      <div id="adStepConfirm" class="hidden">
+        <div class="modal-body">Reklamı kapatmak istiyor musun?</div>
+        <div class="row">
+          <button id="adContinueBtn" class="btn">Devam</button>
+          <button id="adConfirmCloseBtn" class="btn">Kapat</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>
 
 <!-- ================= ONBOARDING ================= -->
 <div id="onboardingOverlay" class="onboarding-overlay hidden">
   <div class="onboarding-card">
-
-    <!-- STEP 1: DİL -->
     <div id="onboardStepLang">
       <h2>Dil seçin</h2>
-      <select id="onboardLangSelect">
-        <option value="tr">Türkçe</option>
-        <option value="en">English</option>
-      </select>
+      <select id="onboardLangSelect"></select>
       <button id="onboardLangSaveBtn">Devam</button>
     </div>
 
-    <!-- STEP 2: EMAIL -->
     <div id="onboardStepEmail" class="hidden">
       <h2>E-posta ve şifre</h2>
       <input id="onboardEmailInput" type="email" placeholder="mail@example.com" />
       <input id="onboardPasswordInput" type="password" placeholder="Şifre (min 6)" />
       <button id="onboardEmailSaveBtn">Sohbete başla</button>
     </div>
-
   </div>
 </div>
 
-<script>
-/* =========================
-   === STORAGE KEYS       ===
-   ========================= */
-const EMAIL_KEY   = "inspireapp_email_v1";
-const LANG_KEY    = "inspireapp_lang_v1";
-const CREDITS_KEY = "inspireapp_credits_v1";
-
-const AD_COUNT_KEY = "inspireapp_daily_ad_count_v1";
-const AD_DATE_KEY  = "inspireapp_daily_ad_date_v1";
-
-const MAX_FREE_CREDITS = 4;
-const DAILY_AD_LIMIT   = 400;
-
-/* =========================
-   === STATE              ===
-   ========================= */
-const state = {
-  credits: MAX_FREE_CREDITS
-};
-
-function loadCredits() {
-  const c = parseInt(localStorage.getItem(CREDITS_KEY) || "", 10);
-  state.credits = Number.isFinite(c) ? c : MAX_FREE_CREDITS;
-}
-function saveCredits() {
-  localStorage.setItem(CREDITS_KEY, String(state.credits));
-}
-function updateCreditsUI() {
-  const el = document.getElementById("creditsPill");
-  if (el) el.textContent = (getLang()==="en" ? "Credits: " : "Kalan puan: ") + state.credits;
-}
-
-/* =========================
-   === NETWORK SETTINGS   ===
-   ========================= */
-const API_TIMEOUT_MS = 20000;
-
-async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
-    return res;
-  } finally {
-    clearTimeout(id);
-  }
-}
-
-/* =========================
-   === I18N (MIN)         ===
-   ========================= */
-const STR = {
-  tr: {
-    needText: "Lütfen bir trend / fikir yaz.",
-    adWatching: "Reklam izleniyor... Bitince sonuç gelecek.",
-    generating: "Üretiliyor...",
-    done: "Hazır.",
-    fail: "Üretim başarısız. Tekrar dene.",
-    offline: "Şu an offline/endpoint yok. Geçici yerel sonuç üretildi.",
-    adLimit: (n) => `Günlük reklam limiti doldu. (Limit: ${n})`,
-    creditAdded: "+1 puan eklendi."
-  },
-  en: {
-    needText: "Please type a trend / idea.",
-    adWatching: "Ad is playing... Result will arrive when it finishes.",
-    generating: "Generating...",
-    done: "Done.",
-    fail: "Generation failed. Try again.",
-    offline: "Offline/no endpoint. Temporary local result generated.",
-    adLimit: (n) => `Daily ad limit reached. (Limit: ${n})`,
-    creditAdded: "+1 credit added."
-  }
-};
-
-function getLang() {
-  return localStorage.getItem(LANG_KEY) || "tr";
-}
-function t(key) {
-  const lang = getLang();
-  return (STR[lang] && STR[lang][key]) ? STR[lang][key] : STR.tr[key];
-}
-
-/* =========================
-   === REWARDED AD GATE   ===
-   =========================
-   - purpose: "credit"   => +1 puan
-   - purpose: "generate" => krediyi ELLEME, işi çalıştır
-*/
-let __rewardPurpose = null;
-let __pendingRewardAction = null;
-
-function startRewardAd(purpose, actionFn) {
-  __rewardPurpose = purpose;
-  __pendingRewardAction = (typeof actionFn === "function") ? actionFn : null;
-
-  // ✅ Android SDK varsa (senin WebView tarafın)
-  if (window.AndroidAds && typeof window.AndroidAds.showRewardedAd === "function") {
-    window.AndroidAds.showRewardedAd();
-    return;
-  }
-
-  // ✅ Eğer sen window.showRewardedAd yazdıysan
-  if (typeof window.showRewardedAd === "function") {
-    Promise.race([
-      window.showRewardedAd(),
-      new Promise(resolve => setTimeout(resolve, 8000))
-    ]).then(() => handleRewardedAdFinished());
-    return;
-  }
-
-  // ✅ SDK yoksa takılmasın (test)
-  setTimeout(() => handleRewardedAdFinished(), 800);
-}
-
-function canGrantAdToday() {
-  const today = new Date().toISOString().slice(0, 10);
-  const storedDate = localStorage.getItem(AD_DATE_KEY);
-  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
-
-  if (storedDate !== today) storedCount = 0;
-
-  if (storedCount >= DAILY_AD_LIMIT) return { ok:false, count: storedCount };
-
-  storedCount += 1;
-  localStorage.setItem(AD_DATE_KEY, today);
-  localStorage.setItem(AD_COUNT_KEY, String(storedCount));
-
-  return { ok:true, count: storedCount };
-}
-
-function grantReward() {
-  // ✅ generate: kredi ELLEME, işi çalıştır
-  if (__rewardPurpose === "generate" && typeof __pendingRewardAction === "function") {
-    const fn = __pendingRewardAction;
-    __rewardPurpose = null;
-    __pendingRewardAction = null;
-    try { fn(); } catch {}
-    return;
-  }
-
-  // ✅ credit: +1 puan
-  if (__rewardPurpose === "credit") {
-    __rewardPurpose = null;
-    __pendingRewardAction = null;
-
-    const limit = canGrantAdToday();
-    if (!limit.ok) {
-      alert(t("adLimit")(DAILY_AD_LIMIT));
-      return;
-    }
-
-    state.credits += 1;
-    saveCredits();
-    updateCreditsUI();
-    alert(t("creditAdded"));
-    return;
-  }
-
-  // başka amaç yoksa hiçbir şey yapma
-}
-
-function handleRewardedAdFinished() {
-  grantReward();
-}
-
-/* ✅ ANDROID CALLBACK ALIAS: Android hangi ismi çağırırsa çağırsın çalışsın */
-window.onRewardedAdCompleted = function () { handleRewardedAdFinished(); };
-window.onRewardedAdRewarded  = function () { handleRewardedAdFinished(); };
-window.onRewardEarned        = function () { handleRewardedAdFinished(); };
-window.__onRewardedAdCompletedFromAndroid = function () { handleRewardedAdFinished(); };
-window.__onRealAdReward = function () { handleRewardedAdFinished(); };
-
-/* =========================
-   === APP INIT           ===
-   ========================= */
-window.initApp = function initApp() {
-  loadCredits();
-  updateCreditsUI();
-
-  const input  = document.getElementById("trendInput");
-  const btn    = document.getElementById("trendGenerateBtn");
-  const status = document.getElementById("trendStatus");
-  const result = document.getElementById("trendResult");
-  const watchAdBtn = document.getElementById("watchAdBtn");
-
-  // ✅ Reklam izle +1 puan
-  if (watchAdBtn) {
-    watchAdBtn.onclick = () => {
-      startRewardAd("credit");
-    };
-  }
-
-  // ✅ Trend üret: Free -> reklam -> üret (kredi düşmez)
-  btn.onclick = async () => {
-    const text = (input.value || "").trim();
-    if (!text) {
-      status.textContent = t("needText");
-      result.classList.add("hidden");
-      return;
-    }
-
-    btn.disabled = true;
-    status.textContent = t("adWatching");
-    result.classList.add("hidden");
-    result.textContent = "";
-
-    const runGenerate = async () => {
-      try {
-        status.textContent = t("generating");
-
-        let outText = "";
-        let usedOffline = false;
-
-        try {
-          const res = await fetchWithTimeout("/api/trend-copy", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ trend: text, lang: getLang() })
-          });
-
-          if (!res.ok) throw new Error("bad_status");
-          const data = await res.json();
-          outText = (data && (data.result || data.text || data.output)) ? (data.result || data.text || data.output) : "";
-          if (!outText) throw new Error("empty");
-        } catch (e) {
-          usedOffline = true;
-          outText = localFallbackTrendCopy(text, getLang());
-        }
-
-        result.textContent = outText + (usedOffline ? ("\n\n(" + t("offline") + ")") : "");
-        result.classList.remove("hidden");
-        status.textContent = t("done");
-      } catch (e) {
-        status.textContent = t("fail");
-        result.classList.add("hidden");
-      } finally {
-        btn.disabled = false;
-      }
-    };
-
-    // Reklam -> generate (kredi yok)
-    startRewardAd("generate", runGenerate);
-  };
-
-  // Menü/Help placeholder
-  const menuToggle = document.getElementById("menuToggle");
-  const helpToggle = document.getElementById("helpToggle");
-  if (menuToggle) menuToggle.onclick = () => {};
-  if (helpToggle) helpToggle.onclick = () => {};
-};
-
-/* ✅ Offline fallback (boş dönmesin diye) */
-function localFallbackTrendCopy(trend, lang) {
-  if (lang === "en") {
-    return [
-      `Trend: "${trend}"`,
-      ``,
-      `1) Hook: “I thought it would be easy… it wasn’t.”`,
-      `2) Script: (0-2s) show the moment → (2-7s) twist → (7-12s) quick tips → (12-15s) punchline.`,
-      `3) Text overlays: “POV: ${trend}”, “Wait for it…”, “This changed everything”`,
-      `4) CTA: “Comment your version”`,
-      `5) 5 Variations: funny / emotional / tutorial / reaction / storytime`
-    ].join("\n");
-  }
-
-  return [
-    `Trend: "${trend}"`,
-    ``,
-    `1) Hook: “Kolay sandım… değilmiş.”`,
-    `2) Akış: (0-2sn) olay anı → (2-7sn) ters köşe → (7-12sn) hızlı ipuçları → (12-15sn) final.`,
-    `3) Yazı önerileri: “POV: ${trend}”, “Bekle…”, “Bunu kimse söylemiyor”`,
-    `4) CTA: “Sen olsan ne yapardın?”`,
-    `5) 5 Varyasyon: komik / duygusal / öğretici / tepki / hikaye`
-  ].join("\n");
-}
-
-/* ================= ONBOARDING LOGIC ================= */
-const app = document.getElementById("app");
-const onboarding = document.getElementById("onboardingOverlay");
-
-const stepLang = document.getElementById("onboardStepLang");
-const stepEmail = document.getElementById("onboardStepEmail");
-
-const langBtn = document.getElementById("onboardLangSaveBtn");
-const emailBtn = document.getElementById("onboardEmailSaveBtn");
-
-function startApp() {
-  onboarding.classList.add("hidden");
-  app.classList.remove("hidden");
-
-  if (typeof window.initApp === "function") {
-    window.initApp();
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const savedEmail = localStorage.getItem(EMAIL_KEY);
-
-  if (savedEmail) {
-    startApp();
-  } else {
-    onboarding.classList.remove("hidden");
-    app.classList.add("hidden");
-    stepLang.classList.remove("hidden");
-    stepEmail.classList.add("hidden");
-  }
-});
-
-langBtn.onclick = () => {
-  const lang = document.getElementById("onboardLangSelect").value;
-  localStorage.setItem(LANG_KEY, lang);
-
-  stepLang.classList.add("hidden");
-  stepEmail.classList.remove("hidden");
-};
-
-emailBtn.onclick = () => {
-  const email = document.getElementById("onboardEmailInput").value.trim();
-  const pass  = document.getElementById("onboardPasswordInput").value.trim();
-
-  if (!email || pass.length < 6) {
-    alert(getLang() === "en" ? "Email and password required" : "E-posta ve şifre zorunlu");
-    return;
-  }
-
-  localStorage.setItem(EMAIL_KEY, email);
-  startApp();
-};
-</script>
-
-<!-- SERVICE WORKER (✅ relative path) -->
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./service-worker.js");
-}
-</script>
+<!-- ✅ SADECE app.js YÜKLENECEK (HTML içindeki ekstra JS’leri SİL) -->
+<script src="./app.js"></script>
 
 </body>
-</html>
+  </html>
