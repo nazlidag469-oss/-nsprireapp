@@ -342,10 +342,13 @@ function openAdModal() {
   adModal.classList.remove("hidden");
 }
 
-function closeAdModal() {
+// ✅ FIX: closeAdModal artık isterse ödül state'ini silmeden kapatabilir
+function closeAdModal(keepRewardState = false) {
   // ✅ kullanıcı reklamı kapatırsa: pending action iptal
-  __pendingRewardAction = null;
-  __rewardPurpose = null;
+  if (!keepRewardState) {
+    __pendingRewardAction = null;
+    __rewardPurpose = null;
+  }
 
   const modalBackdrop = $("modalBackdrop");
   const adModal = $("adModal");
@@ -666,7 +669,10 @@ function startRewardAd(purpose, action) {
 // =========================
 function grantAdCredit() {
   // ✅ 1) Reklam "üretim" için izlendiyse: krediyi ELLEME, sadece işi çalıştır
-  if (__rewardPurpose === "generate" && typeof __pendingRewardAction === "function") {
+  if (
+    __rewardPurpose === "generate" &&
+    typeof __pendingRewardAction === "function"
+  ) {
     const fn = __pendingRewardAction;
     __pendingRewardAction = null;
     __rewardPurpose = null;
@@ -709,13 +715,22 @@ function grantAdCredit() {
 }
 
 function handleRewardedAdFinished() {
-  // modal açık ise kapat
+  // ✅ FIX: modal kapatılırken reward state SİLİNMEYECEK (yoksa kredi/iş çalışmıyordu)
   try {
     const adModal = $("adModal");
-    if (adModal && !adModal.classList.contains("hidden")) closeAdModal();
+    if (adModal && !adModal.classList.contains("hidden")) closeAdModal(true);
   } catch {}
+
   // ödülü uygula (credit veya generate)
-  grantAdCredit();
+  try {
+    grantAdCredit();
+  } catch {}
+
+  // ✅ FIX: UI her durumda güncellensin (özellikle Android callback sonrası)
+  try {
+    updatePlanAndCreditsUI();
+    applyAllTranslations();
+  } catch {}
 }
 
 // Android-side aliases (Android reklam bittiğinde bunlardan biri çağrılmalı)
@@ -948,6 +963,10 @@ async function loadTrends() {
 // === DOM READY          ===
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
+  // ✅ FIX: HTML'de #app hidden ise aç (butonlar "basmıyor" gibi görünmesin)
+  const appRoot = $("app");
+  if (appRoot) appRoot.classList.remove("hidden");
+
   loadState();
 
   const emailNow = getEmailSafe();
@@ -1137,7 +1156,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", (e) => {
       if (e.target !== modalBackdrop) return;
-      closeAdModal();
+      closeAdModal(); // kullanıcı kapatırsa iptal
       closeProModal();
     });
   }
@@ -1150,7 +1169,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (adCancelBtn) adCancelBtn.addEventListener("click", closeAdModal);
+  if (adCancelBtn) adCancelBtn.addEventListener("click", () => closeAdModal());
 
   // ✅ Web/test modunda "İzledim" -> ödülü uygula (credit/generate)
   if (adWatchedBtn)
@@ -1171,7 +1190,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   if (adConfirmCloseBtn)
-    adConfirmCloseBtn.addEventListener("click", closeAdModal);
+    adConfirmCloseBtn.addEventListener("click", () => closeAdModal());
 
   if (proCloseBtn) proCloseBtn.addEventListener("click", closeProModal);
 
@@ -1276,7 +1295,11 @@ document.addEventListener("DOMContentLoaded", () => {
         applyAllTranslations();
 
         if (data.status === "login")
-          alert(state.lang === "tr" ? "Giriş başarılı. 👌" : "Login successful. 👌");
+          alert(
+            state.lang === "tr"
+              ? "Giriş başarılı. 👌"
+              : "Login successful. 👌"
+          );
         else if (data.status === "registered")
           alert(
             state.lang === "tr"
@@ -1332,7 +1355,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Voice
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRec =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRec();
     recognition.lang = LANG_SPEECH[state.lang] || "en-US";
     recognition.interimResults = false;
@@ -1424,7 +1448,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      hookResult.textContent = t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
+      hookResult.textContent =
+        t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
       startRewardAd("generate", runHook);
     });
   }
@@ -1449,7 +1474,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      copyResult.textContent = t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
+      copyResult.textContent =
+        t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
       startRewardAd("generate", runCopy);
     });
   }
