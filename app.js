@@ -204,6 +204,7 @@ function loadState() {
   } catch {
     state.conversations = [];
   }
+
   if (!state.conversations.length) {
     state.conversations.push({
       id: Date.now().toString(),
@@ -342,13 +343,10 @@ function openAdModal() {
   adModal.classList.remove("hidden");
 }
 
-// ✅ FIX: closeAdModal artık isterse ödül state'ini silmeden kapatabilir
-function closeAdModal(keepRewardState = false) {
+function closeAdModal() {
   // ✅ kullanıcı reklamı kapatırsa: pending action iptal
-  if (!keepRewardState) {
-    __pendingRewardAction = null;
-    __rewardPurpose = null;
-  }
+  __pendingRewardAction = null;
+  __rewardPurpose = null;
 
   const modalBackdrop = $("modalBackdrop");
   const adModal = $("adModal");
@@ -577,8 +575,7 @@ function applySmallUIText(code) {
   const messageInput = $("messageInput");
   if (sendBtn) sendBtn.textContent = t.send;
   if (watchAdBtn) watchAdBtn.textContent = t.ad;
-  if (messageInput && !messageInput.value)
-    messageInput.placeholder = t.placeholder;
+  if (messageInput && !messageInput.value) messageInput.placeholder = t.placeholder;
 }
 
 function fillLangSelect(selectEl) {
@@ -669,16 +666,11 @@ function startRewardAd(purpose, action) {
 // =========================
 function grantAdCredit() {
   // ✅ 1) Reklam "üretim" için izlendiyse: krediyi ELLEME, sadece işi çalıştır
-  if (
-    __rewardPurpose === "generate" &&
-    typeof __pendingRewardAction === "function"
-  ) {
+  if (__rewardPurpose === "generate" && typeof __pendingRewardAction === "function") {
     const fn = __pendingRewardAction;
     __pendingRewardAction = null;
     __rewardPurpose = null;
-    try {
-      fn();
-    } catch {}
+    try { fn(); } catch {}
     return;
   }
 
@@ -715,22 +707,13 @@ function grantAdCredit() {
 }
 
 function handleRewardedAdFinished() {
-  // ✅ FIX: modal kapatılırken reward state SİLİNMEYECEK (yoksa kredi/iş çalışmıyordu)
+  // modal açık ise kapat
   try {
     const adModal = $("adModal");
-    if (adModal && !adModal.classList.contains("hidden")) closeAdModal(true);
+    if (adModal && !adModal.classList.contains("hidden")) closeAdModal();
   } catch {}
-
   // ödülü uygula (credit veya generate)
-  try {
-    grantAdCredit();
-  } catch {}
-
-  // ✅ FIX: UI her durumda güncellensin (özellikle Android callback sonrası)
-  try {
-    updatePlanAndCreditsUI();
-    applyAllTranslations();
-  } catch {}
+  grantAdCredit();
 }
 
 // Android-side aliases (Android reklam bittiğinde bunlardan biri çağrılmalı)
@@ -932,9 +915,7 @@ async function loadTrends() {
     const data = await res.json().catch(() => null);
     if (!res.ok) {
       list.innerHTML =
-        "<li>Trendler alınırken hata: " +
-        ((data && data.message) || "") +
-        "</li>";
+        "<li>Trendler alınırken hata: " + ((data && data.message) || "") + "</li>";
       return;
     }
     if (!data?.items?.length) {
@@ -954,8 +935,7 @@ async function loadTrends() {
       list.appendChild(li);
     });
   } catch {
-    list.innerHTML =
-      "<li>Trendler alınırken beklenmeyen bir hata oluştu.</li>";
+    list.innerHTML = "<li>Trendler alınırken beklenmeyen bir hata oluştu.</li>";
   }
 }
 
@@ -963,10 +943,6 @@ async function loadTrends() {
 // === DOM READY          ===
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
-  // ✅ FIX: HTML'de #app hidden ise aç (butonlar "basmıyor" gibi görünmesin)
-  const appRoot = $("app");
-  if (appRoot) appRoot.classList.remove("hidden");
-
   loadState();
 
   const emailNow = getEmailSafe();
@@ -1001,9 +977,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const seriesGenerate = $("seriesGenerate");
   const seriesTopic = $("seriesTopic");
   const seriesResult = $("seriesResult");
+
+  // HOOK (normal id)
   const hookGenerate = $("hookGenerate");
   const hookTopic = $("hookTopic");
   const hookResult = $("hookResult");
+
+  // COPY (normal id)
   const copyGenerate = $("copyGenerate");
   const copyTopic = $("copyTopic");
   const copyResult = $("copyResult");
@@ -1011,9 +991,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const proCompetitorInput = $("proCompetitorInput");
   const proCompetitorBtn = $("proCompetitorBtn");
   const proCompetitorResult = $("proCompetitorResult");
+
   const proAudienceInput = $("proAudienceInput");
   const proAudienceBtn = $("proAudienceBtn");
   const proAudienceResult = $("proAudienceResult");
+
   const proSilentInput = $("proSilentInput");
   const proSilentBtn = $("proSilentBtn");
   const proSilentResult = $("proSilentResult");
@@ -1049,6 +1031,30 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTrends();
   applyAllTranslations();
 
+  // -------------------------
+  // ✅ Robust element helpers (Trend Kopya Makinesi bozulmasın diye)
+  // -------------------------
+  function elAny(...ids) {
+    for (const id of ids) {
+      const el = $(id);
+      if (el) return el;
+    }
+    return null;
+  }
+  function readVal(el) {
+    if (!el) return "";
+    if (typeof el.value === "string") return el.value.trim();
+    if (typeof el.textContent === "string") return el.textContent.trim();
+    return "";
+  }
+  function bindOnce(btn, fn) {
+    if (!btn) return false;
+    if (btn.dataset && btn.dataset.bound === "1") return true;
+    if (btn.dataset) btn.dataset.bound = "1";
+    btn.addEventListener("click", fn);
+    return true;
+  }
+
   if (!softBackBtn) {
     softBackBtn = document.createElement("button");
     softBackBtn.id = "softBackBtn";
@@ -1062,8 +1068,7 @@ document.addEventListener("DOMContentLoaded", () => {
     softBackBtn.style.borderRadius = "999px";
     softBackBtn.style.border = "none";
     softBackBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-    softBackBtn.style.background =
-      "linear-gradient(135deg, #ffffff, #f3e9ff)";
+    softBackBtn.style.background = "linear-gradient(135deg, #ffffff, #f3e9ff)";
     softBackBtn.style.fontSize = "20px";
     softBackBtn.style.display = "flex";
     softBackBtn.style.alignItems = "center";
@@ -1107,11 +1112,10 @@ document.addEventListener("DOMContentLoaded", () => {
   showOnboardingIfNeeded();
 
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener("click", () =>
-      sidebar.classList.toggle("hidden")
-    );
+    menuToggle.addEventListener("click", () => sidebar.classList.toggle("hidden"));
   }
 
+  // swipe to close sidebar
   let swipeStartX = null;
   document.addEventListener("touchstart", (e) => {
     if (!sidebar || sidebar.classList.contains("hidden")) return;
@@ -1156,7 +1160,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (modalBackdrop) {
     modalBackdrop.addEventListener("click", (e) => {
       if (e.target !== modalBackdrop) return;
-      closeAdModal(); // kullanıcı kapatırsa iptal
+      closeAdModal();
       closeProModal();
     });
   }
@@ -1169,7 +1173,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (adCancelBtn) adCancelBtn.addEventListener("click", () => closeAdModal());
+  if (adCancelBtn) adCancelBtn.addEventListener("click", closeAdModal);
 
   // ✅ Web/test modunda "İzledim" -> ödülü uygula (credit/generate)
   if (adWatchedBtn)
@@ -1189,8 +1193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (adStepMain) adStepMain.classList.remove("hidden");
     });
   }
-  if (adConfirmCloseBtn)
-    adConfirmCloseBtn.addEventListener("click", () => closeAdModal());
+  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", closeAdModal);
 
   if (proCloseBtn) proCloseBtn.addEventListener("click", closeProModal);
 
@@ -1295,11 +1298,7 @@ document.addEventListener("DOMContentLoaded", () => {
         applyAllTranslations();
 
         if (data.status === "login")
-          alert(
-            state.lang === "tr"
-              ? "Giriş başarılı. 👌"
-              : "Login successful. 👌"
-          );
+          alert(state.lang === "tr" ? "Giriş başarılı. 👌" : "Login successful. 👌");
         else if (data.status === "registered")
           alert(
             state.lang === "tr"
@@ -1355,8 +1354,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Voice
   let recognition = null;
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRec =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRec();
     recognition.lang = LANG_SPEECH[state.lang] || "en-US";
     recognition.interimResults = false;
@@ -1454,16 +1452,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ COPY: FREE -> reklam -> cevap (kredi YOK)
-  if (copyGenerate && copyTopic && copyResult) {
-    copyGenerate.addEventListener("click", async () => {
-      const topic = copyTopic.value.trim();
-      if (!topic) return;
+  // ✅ COPY / TREND KOPYA: (ID uyuşmazlığı olsa bile çalışır)
+  const copyGenerateBtn = copyGenerate || elAny(
+    "trendCopyGenerate",
+    "trendCopyBtn",
+    "trendKopyaBtn",
+    "trendCopyGenerateBtn"
+  );
+  const copyTopicEl = copyTopic || elAny(
+    "trendCopyTopic",
+    "trendKopyaTopic",
+    "trendCopyInput",
+    "trendKopyaInput"
+  );
+  const copyResultEl = copyResult || elAny(
+    "trendCopyResult",
+    "trendKopyaResult",
+    "trendCopyOutput",
+    "trendKopyaOutput"
+  );
+
+  if (copyGenerateBtn && copyTopicEl && copyResultEl) {
+    bindOnce(copyGenerateBtn, async () => {
+      const topic = readVal(copyTopicEl);
       const t = I18N[state.lang] || I18N.tr;
 
+      if (!topic) {
+        copyResultEl.textContent =
+          state.lang === "tr"
+            ? "Lütfen bir trend / fikir yaz."
+            : "Please enter a trend / idea.";
+        return;
+      }
+
       const runCopy = async () => {
-        copyResult.textContent = t.loadingText || "Yükleniyor...";
-        copyResult.textContent = await callSimpleAPI("copy", {
+        copyResultEl.textContent = t.loadingText || "Yükleniyor...";
+        copyResultEl.textContent = await callSimpleAPI("copy", {
           topic,
           lang: LANG_NAMES[state.lang] || "Turkish",
         });
@@ -1474,9 +1498,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      copyResult.textContent =
+      copyResultEl.textContent =
         t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
       startRewardAd("generate", runCopy);
+    });
+  } else {
+    console.warn("COPY UI bulunamadı:", {
+      copyGenerateBtn: !!copyGenerateBtn,
+      copyTopicEl: !!copyTopicEl,
+      copyResultEl: !!copyResultEl,
     });
   }
 
@@ -1551,10 +1581,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       addMessage("user", prompt);
-      const pendingIdx = addMessage(
-        "assistant",
-        t.loadingText || "Yükleniyor..."
-      );
+      const pendingIdx = addMessage("assistant", t.loadingText || "Yükleniyor...");
       loadingEl.classList.remove("hidden");
 
       const reply = await callIdeasAPI(prompt, platform, state.lang);
@@ -1588,4 +1615,4 @@ if ("serviceWorker" in navigator) {
       console.log("Service Worker yüklendi ✔");
     })
     .catch((err) => console.error("SW hatası:", err));
-}
+     }
