@@ -85,6 +85,23 @@
       line-height: 1.45;
     }
 
+    /* ✅ Mini plan/kredi satırı */
+    .mini-bar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap: wrap;
+      margin: 6px 0 12px;
+      font-size: 16px;
+      color: rgba(0,0,0,0.75);
+    }
+    .pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.60);
+    }
+
     /* ONBOARDING */
     .onboarding-overlay{
       position: fixed; inset: 0;
@@ -145,6 +162,12 @@
       <h1>🎬 Trend Kopya Makinesi</h1>
       <p>Beğendiğin bir trend / video fikrini yaz; InspireApp bunu senin nişine göre yeniden yazar.</p>
 
+      <!-- ✅ KREDİ / REKLAM BAR -->
+      <div class="mini-bar">
+        <span id="creditsPill" class="pill">Kalan puan: 4</span>
+        <button id="watchAdBtn" class="btn">Reklam izle +1 puan</button>
+      </div>
+
       <div class="row">
         <textarea id="trendInput" placeholder="Örn: okul bitti"></textarea>
         <button id="trendGenerateBtn" class="btn">Trend kopyasını oluştur</button>
@@ -184,10 +207,36 @@
 
 <script>
 /* =========================
-   === STORAGE KEYS (MIN) ===
+   === STORAGE KEYS       ===
    ========================= */
-const EMAIL_KEY = "inspireapp_email_v1";
-const LANG_KEY  = "inspireapp_lang_v1";
+const EMAIL_KEY   = "inspireapp_email_v1";
+const LANG_KEY    = "inspireapp_lang_v1";
+const CREDITS_KEY = "inspireapp_credits_v1";
+
+const AD_COUNT_KEY = "inspireapp_daily_ad_count_v1";
+const AD_DATE_KEY  = "inspireapp_daily_ad_date_v1";
+
+const MAX_FREE_CREDITS = 4;
+const DAILY_AD_LIMIT   = 400;
+
+/* =========================
+   === STATE              ===
+   ========================= */
+const state = {
+  credits: MAX_FREE_CREDITS
+};
+
+function loadCredits() {
+  const c = parseInt(localStorage.getItem(CREDITS_KEY) || "", 10);
+  state.credits = Number.isFinite(c) ? c : MAX_FREE_CREDITS;
+}
+function saveCredits() {
+  localStorage.setItem(CREDITS_KEY, String(state.credits));
+}
+function updateCreditsUI() {
+  const el = document.getElementById("creditsPill");
+  if (el) el.textContent = (getLang()==="en" ? "Credits: " : "Kalan puan: ") + state.credits;
+}
 
 /* =========================
    === NETWORK SETTINGS   ===
@@ -215,7 +264,9 @@ const STR = {
     generating: "Üretiliyor...",
     done: "Hazır.",
     fail: "Üretim başarısız. Tekrar dene.",
-    offline: "Şu an offline/endpoint yok. Geçici yerel sonuç üretildi."
+    offline: "Şu an offline/endpoint yok. Geçici yerel sonuç üretildi.",
+    adLimit: (n) => `Günlük reklam limiti doldu. (Limit: ${n})`,
+    creditAdded: "+1 puan eklendi."
   },
   en: {
     needText: "Please type a trend / idea.",
@@ -223,7 +274,9 @@ const STR = {
     generating: "Generating...",
     done: "Done.",
     fail: "Generation failed. Try again.",
-    offline: "Offline/no endpoint. Temporary local result generated."
+    offline: "Offline/no endpoint. Temporary local result generated.",
+    adLimit: (n) => `Daily ad limit reached. (Limit: ${n})`,
+    creditAdded: "+1 credit added."
   }
 };
 
@@ -236,38 +289,116 @@ function t(key) {
 }
 
 /* =========================
-   === REWARD AD GATE     ===
+   === REWARDED AD GATE   ===
    =========================
-   ✅ Takılmayı bitiren garanti:
-   - Eğer gerçek reklam SDK varsa: window.showRewardedAd()
-   - Yoksa: 800ms sonra otomatik geçer
+   - purpose: "credit"   => +1 puan
+   - purpose: "generate" => krediyi ELLEME, işi çalıştır
 */
-async function waitForRewardedAd() {
-  // Gerçek reklam fonksiyonun varsa bunu kullan:
-  // window.showRewardedAd = () => new Promise(resolve => { ... resolve() ... });
+let __rewardPurpose = null;
+let __pendingRewardAction = null;
 
-  if (typeof window.showRewardedAd === "function") {
-    // Ayrıca burada da takılmasın diye timeout:
-    return await Promise.race([
-      window.showRewardedAd(),
-      new Promise(resolve => setTimeout(resolve, 8000))
-    ]);
+function startRewardAd(purpose, actionFn) {
+  __rewardPurpose = purpose;
+  __pendingRewardAction = (typeof actionFn === "function") ? actionFn : null;
+
+  // ✅ Android SDK varsa (senin WebView tarafın)
+  if (window.AndroidAds && typeof window.AndroidAds.showRewardedAd === "function") {
+    window.AndroidAds.showRewardedAd();
+    return;
   }
 
-  // SDK yoksa takılma — otomatik geç
-  await new Promise(resolve => setTimeout(resolve, 800));
+  // ✅ Eğer sen window.showRewardedAd yazdıysan
+  if (typeof window.showRewardedAd === "function") {
+    Promise.race([
+      window.showRewardedAd(),
+      new Promise(resolve => setTimeout(resolve, 8000))
+    ]).then(() => handleRewardedAdFinished());
+    return;
+  }
+
+  // ✅ SDK yoksa takılmasın (test)
+  setTimeout(() => handleRewardedAdFinished(), 800);
 }
 
+function canGrantAdToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  const storedDate = localStorage.getItem(AD_DATE_KEY);
+  let storedCount = parseInt(localStorage.getItem(AD_COUNT_KEY) || "0", 10);
+
+  if (storedDate !== today) storedCount = 0;
+
+  if (storedCount >= DAILY_AD_LIMIT) return { ok:false, count: storedCount };
+
+  storedCount += 1;
+  localStorage.setItem(AD_DATE_KEY, today);
+  localStorage.setItem(AD_COUNT_KEY, String(storedCount));
+
+  return { ok:true, count: storedCount };
+}
+
+function grantReward() {
+  // ✅ generate: kredi ELLEME, işi çalıştır
+  if (__rewardPurpose === "generate" && typeof __pendingRewardAction === "function") {
+    const fn = __pendingRewardAction;
+    __rewardPurpose = null;
+    __pendingRewardAction = null;
+    try { fn(); } catch {}
+    return;
+  }
+
+  // ✅ credit: +1 puan
+  if (__rewardPurpose === "credit") {
+    __rewardPurpose = null;
+    __pendingRewardAction = null;
+
+    const limit = canGrantAdToday();
+    if (!limit.ok) {
+      alert(t("adLimit")(DAILY_AD_LIMIT));
+      return;
+    }
+
+    state.credits += 1;
+    saveCredits();
+    updateCreditsUI();
+    alert(t("creditAdded"));
+    return;
+  }
+
+  // başka amaç yoksa hiçbir şey yapma
+}
+
+function handleRewardedAdFinished() {
+  grantReward();
+}
+
+/* ✅ ANDROID CALLBACK ALIAS: Android hangi ismi çağırırsa çağırsın çalışsın */
+window.onRewardedAdCompleted = function () { handleRewardedAdFinished(); };
+window.onRewardedAdRewarded  = function () { handleRewardedAdFinished(); };
+window.onRewardEarned        = function () { handleRewardedAdFinished(); };
+window.__onRewardedAdCompletedFromAndroid = function () { handleRewardedAdFinished(); };
+window.__onRealAdReward = function () { handleRewardedAdFinished(); };
+
 /* =========================
-   === APP INIT (KRİTİK)  ===
+   === APP INIT           ===
    ========================= */
 window.initApp = function initApp() {
+  loadCredits();
+  updateCreditsUI();
+
   const input  = document.getElementById("trendInput");
   const btn    = document.getElementById("trendGenerateBtn");
   const status = document.getElementById("trendStatus");
   const result = document.getElementById("trendResult");
+  const watchAdBtn = document.getElementById("watchAdBtn");
 
-  // güvenli bağla (çift bind olmasın)
+  // ✅ Reklam izle +1 puan
+  if (watchAdBtn) {
+    watchAdBtn.onclick = () => {
+      startRewardAd("credit");
+    };
+  }
+
+  // ✅ Trend üret: Free -> reklam -> üret (kredi düşmez)
   btn.onclick = async () => {
     const text = (input.value || "").trim();
     if (!text) {
@@ -281,43 +412,42 @@ window.initApp = function initApp() {
     result.classList.add("hidden");
     result.textContent = "";
 
-    try {
-      await waitForRewardedAd();
-
-      status.textContent = t("generating");
-
-      // ✅ Eğer backend varsa burayı kendi endpointine bağla:
-      // Örnek endpoint: /api/trend-copy
-      // Body: { trend: "...", lang: "tr" }
-      let outText = "";
-      let usedOffline = false;
-
+    const runGenerate = async () => {
       try {
-        const res = await fetchWithTimeout("/api/trend-copy", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ trend: text, lang: getLang() })
-        });
+        status.textContent = t("generating");
 
-        if (!res.ok) throw new Error("bad_status");
-        const data = await res.json();
-        outText = (data && (data.result || data.text || data.output)) ? (data.result || data.text || data.output) : "";
-        if (!outText) throw new Error("empty");
+        let outText = "";
+        let usedOffline = false;
+
+        try {
+          const res = await fetchWithTimeout("/api/trend-copy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ trend: text, lang: getLang() })
+          });
+
+          if (!res.ok) throw new Error("bad_status");
+          const data = await res.json();
+          outText = (data && (data.result || data.text || data.output)) ? (data.result || data.text || data.output) : "";
+          if (!outText) throw new Error("empty");
+        } catch (e) {
+          usedOffline = true;
+          outText = localFallbackTrendCopy(text, getLang());
+        }
+
+        result.textContent = outText + (usedOffline ? ("\n\n(" + t("offline") + ")") : "");
+        result.classList.remove("hidden");
+        status.textContent = t("done");
       } catch (e) {
-        // ✅ endpoint yoksa bile kullanıcı boş kalmasın (takılmayı bitirir)
-        usedOffline = true;
-        outText = localFallbackTrendCopy(text, getLang());
+        status.textContent = t("fail");
+        result.classList.add("hidden");
+      } finally {
+        btn.disabled = false;
       }
+    };
 
-      result.textContent = outText + (usedOffline ? ("\n\n(" + t("offline") + ")") : "");
-      result.classList.remove("hidden");
-      status.textContent = t("done");
-    } catch (e) {
-      status.textContent = t("fail");
-      result.classList.add("hidden");
-    } finally {
-      btn.disabled = false;
-    }
+    // Reklam -> generate (kredi yok)
+    startRewardAd("generate", runGenerate);
   };
 
   // Menü/Help placeholder
@@ -377,7 +507,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (savedEmail) {
     startApp();
   } else {
-    // onboarding aç
     onboarding.classList.remove("hidden");
     app.classList.add("hidden");
     stepLang.classList.remove("hidden");
