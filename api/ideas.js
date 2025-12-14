@@ -25,15 +25,21 @@ const LANG_MAP = {
   pl: "Polish",
 };
 
+// ✅ CORS helper (Android WebView / file:// için kritik)
+function setCors(res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-user-email");
+  res.setHeader("Access-Control-Max-Age", "86400");
+}
+
 // Gelen lang değerinden "tr", "en" vs. tespit et
 function detectLangKey(langRaw) {
   if (!langRaw) return "tr";
   const val = String(langRaw).toLowerCase();
 
-  // Zaten kısaltma geldiyse (tr, en...)
   if (LANG_MAP[val]) return val;
 
-  // "Turkish", "English" gibi geldiyse map'le
   for (const [code, name] of Object.entries(LANG_MAP)) {
     if (name.toLowerCase() === val) return code;
   }
@@ -41,8 +47,20 @@ function detectLangKey(langRaw) {
 }
 
 export default async function handler(req, res) {
+  setCors(res);
+
+  // ✅ Preflight (CORS) isteği
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
+  // ✅ GET gelirse 405 yerine nazik cevap (log kirliliğini azaltır)
+  if (req.method === "GET") {
+    return res.status(200).json({ message: "Bu endpoint POST ile çalışır. (App içinden otomatik gönderilir.)" });
+  }
+
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+    res.setHeader("Allow", "POST, OPTIONS, GET");
     return res.status(405).json({ message: "Sadece POST destekleniyor." });
   }
 
@@ -52,21 +70,17 @@ export default async function handler(req, res) {
   const langKey = detectLangKey(lang || "tr");
   const langName = LANG_MAP[langKey] || "Turkish";
 
-  // Kullanıcıya göstereceğimiz genel, kibar hata mesajı
   const GENERIC_FAIL =
     langKey === "tr"
       ? "Şu an içerik üretilemedi. Lütfen birkaç dakika sonra tekrar dene."
       : "Content could not be generated right now. Please try again in a few minutes.";
 
   let platformSafe = (platform || "youtube").toString().toLowerCase();
-  if (!["youtube", "tiktok", "instagram"].includes(platformSafe)) {
-    platformSafe = "youtube";
-  }
+  if (!["youtube", "tiktok", "instagram"].includes(platformSafe)) platformSafe = "youtube";
 
-  // --- ENV ---
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
-    // Teknik detayı gizle, sadece kullanıcı dostu mesaj
+    // ✅ Key yoksa bile 200 dönüyorsun (senin tercihin). Sorun “kırmızı” olmaz.
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
@@ -75,7 +89,6 @@ export default async function handler(req, res) {
 
   let extraContext = "";
 
-  // --- YouTube bağlamı (isteğe bağlı) ---
   if (youtubeKey) {
     try {
       const url =
@@ -89,28 +102,20 @@ export default async function handler(req, res) {
 
       const r = await fetch(url);
       const d = await r.json();
-      const titles =
-        d.items?.map((v) => v.snippet?.title).filter(Boolean) || [];
+      const titles = d.items?.map((v) => v.snippet?.title).filter(Boolean) || [];
 
       if (titles.length) {
-        extraContext +=
-          "\nYouTube'da benzer video başlıkları:\n- " +
-          titles.slice(0, 5).join("\n- ") +
-          "\n";
+        extraContext += "\nYouTube'da benzer video başlıkları:\n- " + titles.slice(0, 5).join("\n- ") + "\n";
       }
     } catch (e) {
       console.error("YOUTUBE_CONTEXT_ERROR", e);
-      // YouTube hatası olursa sessiz geç
     }
   }
 
-  // --- TikTok / Instagram RapidAPI bağlamı (isteğe bağlı, varsa) ---
   if (rapidKey && (platformSafe === "tiktok" || platformSafe === "instagram")) {
     try {
       let url = "";
-      let headers = {
-        "x-rapidapi-key": rapidKey,
-      };
+      let headers = { "x-rapidapi-key": rapidKey };
       let method = "GET";
       let body = undefined;
 
@@ -120,7 +125,7 @@ export default async function handler(req, res) {
           encodeURIComponent(topic) +
           "&cursor=0&search_id=0";
         headers["x-rapidapi-host"] = "tiktok-api23.p.rapidapi.com";
-      } else if (platformSafe === "instagram") {
+      } else {
         url = "https://instagram120.p.rapidapi.com/api/instagram/posts";
         headers["x-rapidapi-host"] = "instagram120.p.rapidapi.com";
         headers["Content-Type"] = "application/json";
@@ -139,11 +144,9 @@ export default async function handler(req, res) {
         "\n";
     } catch (e) {
       console.error("RAPIDAPI_CONTEXT_ERROR", e);
-      // RapidAPI hatası olursa da sessiz geç
     }
   }
 
-  // --- OpenAI ile asistan cevabı ---
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -180,7 +183,7 @@ export default async function handler(req, res) {
               "   • Süre önerisi (örn: 15–35 sn)\n" +
               "   • Platforma özel küçük tüyolar (YouTube Shorts / TikTok / Reels farkları)\n" +
               "4) Ek Seçenekler:\n" +
-              '   • Kullanıcıya \"İstersen bu fikirlerden biri için çekim planını sahne sahne anlatayım\" diye teklif et.\n' +
+              '   • Kullanıcıya "İstersen bu fikirlerden biri için çekim planını sahne sahne anlatayım" diye teklif et.\n' +
               "   • Eğer kullanıcı Pro ise ekstra olarak seri fikir / 30 günlük mini plan önerebileceğini hatırlat.\n\n" +
               "Boş, generic cümlelerden kaçın. Cümleler dolu ve net olsun. Gerçek bir içerik üreticisine konuşur gibi yaz.",
           },
@@ -202,7 +205,6 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       console.error("OPENAI_RESPONSE_NOT_OK", data);
-      // Kullanıcıya teknik detay yok, sadece genel mesaj
       return res.status(200).json({ message: GENERIC_FAIL });
     }
 
