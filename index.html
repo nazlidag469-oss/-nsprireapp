@@ -7,6 +7,124 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#7c3aed" />
   <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* ✅ Minimum garanti stiller (style.css olsa bile çalışsın) */
+    .hidden { display: none !important; }
+
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    .top-bar{
+      position: sticky; top: 0;
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 14px 14px;
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .icon-button{
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.65);
+      font-size: 18px;
+    }
+    #topTitle{ font-weight: 800; letter-spacing: 6px; font-size: 24px; }
+
+    .content{
+      min-height: calc(100vh - 72px);
+      padding: 22px 18px 40px;
+      background: linear-gradient(180deg, #d8b4fe 0%, #e9d5ff 30%, #dbeafe 100%);
+    }
+    .panel{
+      max-width: 720px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.45);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 18px;
+      padding: 18px 16px;
+      backdrop-filter: blur(10px);
+    }
+    .panel h1{ margin: 0 0 8px; font-size: 34px; }
+    .panel p{ margin: 0 0 14px; font-size: 20px; color: rgba(0,0,0,0.65); line-height: 1.35; }
+
+    .row{ display:flex; gap:12px; align-items:flex-end; flex-wrap: wrap; }
+    textarea{
+      width: min(520px, 100%);
+      min-height: 76px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.20);
+      background: rgba(255,255,255,0.80);
+      font-size: 18px;
+      outline: none;
+      resize: vertical;
+    }
+    .btn{
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.20);
+      background: rgba(255,255,255,0.80);
+      font-size: 18px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .status{
+      margin-top: 10px;
+      font-size: 18px;
+      color: rgba(0,0,0,0.75);
+      min-height: 26px;
+    }
+    .result{
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.65);
+      white-space: pre-wrap;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    /* ONBOARDING */
+    .onboarding-overlay{
+      position: fixed; inset: 0;
+      display:flex;
+      align-items:center; justify-content:center;
+      background: rgba(0,0,0,0.30);
+      z-index: 9999;
+    }
+    .onboarding-card{
+      width: min(420px, calc(100vw - 32px));
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 18px;
+      padding: 16px;
+      backdrop-filter: blur(10px);
+    }
+    .onboarding-card h2{ margin: 0 0 10px; }
+    .onboarding-card select,
+    .onboarding-card input{
+      width: 100%;
+      padding: 12px;
+      margin: 0 0 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.18);
+      background: rgba(255,255,255,0.95);
+      font-size: 16px;
+      outline: none;
+    }
+    .onboarding-card button{
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.18);
+      background: #7c3aed;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
@@ -21,14 +139,26 @@
     <button id="helpToggle" class="icon-button">?</button>
   </header>
 
-  <!-- === ANA İÇERİK (SENİN GÖNDERDİĞİN KOD DEĞİŞMEDİ) === -->
-  <!-- ⚠️ BURASI AYNI – SİLMEDİM – KISALTMADIM -->
-  <!-- (Sohbet, paneller, reklam, pro, her şey aynen duruyor) -->
+  <!-- ✅ ANA İÇERİK -->
+  <main class="content">
+    <section class="panel">
+      <h1>🎬 Trend Kopya Makinesi</h1>
+      <p>Beğendiğin bir trend / video fikrini yaz; InspireApp bunu senin nişine göre yeniden yazar.</p>
+
+      <div class="row">
+        <textarea id="trendInput" placeholder="Örn: okul bitti"></textarea>
+        <button id="trendGenerateBtn" class="btn">Trend kopyasını oluştur</button>
+      </div>
+
+      <div id="trendStatus" class="status"></div>
+      <div id="trendResult" class="result hidden"></div>
+    </section>
+  </main>
 
 </div>
 
 <!-- ================= ONBOARDING ================= -->
-<div id="onboardingOverlay" class="onboarding-overlay">
+<div id="onboardingOverlay" class="onboarding-overlay hidden">
   <div class="onboarding-card">
 
     <!-- STEP 1: DİL -->
@@ -53,8 +183,176 @@
 </div>
 
 <script>
-/* ================= ONBOARDING LOGIC ================= */
+/* =========================
+   === STORAGE KEYS (MIN) ===
+   ========================= */
+const EMAIL_KEY = "inspireapp_email_v1";
+const LANG_KEY  = "inspireapp_lang_v1";
 
+/* =========================
+   === NETWORK SETTINGS   ===
+   ========================= */
+const API_TIMEOUT_MS = 20000;
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+/* =========================
+   === I18N (MIN)         ===
+   ========================= */
+const STR = {
+  tr: {
+    needText: "Lütfen bir trend / fikir yaz.",
+    adWatching: "Reklam izleniyor... Bitince sonuç gelecek.",
+    generating: "Üretiliyor...",
+    done: "Hazır.",
+    fail: "Üretim başarısız. Tekrar dene.",
+    offline: "Şu an offline/endpoint yok. Geçici yerel sonuç üretildi."
+  },
+  en: {
+    needText: "Please type a trend / idea.",
+    adWatching: "Ad is playing... Result will arrive when it finishes.",
+    generating: "Generating...",
+    done: "Done.",
+    fail: "Generation failed. Try again.",
+    offline: "Offline/no endpoint. Temporary local result generated."
+  }
+};
+
+function getLang() {
+  return localStorage.getItem(LANG_KEY) || "tr";
+}
+function t(key) {
+  const lang = getLang();
+  return (STR[lang] && STR[lang][key]) ? STR[lang][key] : STR.tr[key];
+}
+
+/* =========================
+   === REWARD AD GATE     ===
+   =========================
+   ✅ Takılmayı bitiren garanti:
+   - Eğer gerçek reklam SDK varsa: window.showRewardedAd()
+   - Yoksa: 800ms sonra otomatik geçer
+*/
+async function waitForRewardedAd() {
+  // Gerçek reklam fonksiyonun varsa bunu kullan:
+  // window.showRewardedAd = () => new Promise(resolve => { ... resolve() ... });
+
+  if (typeof window.showRewardedAd === "function") {
+    // Ayrıca burada da takılmasın diye timeout:
+    return await Promise.race([
+      window.showRewardedAd(),
+      new Promise(resolve => setTimeout(resolve, 8000))
+    ]);
+  }
+
+  // SDK yoksa takılma — otomatik geç
+  await new Promise(resolve => setTimeout(resolve, 800));
+}
+
+/* =========================
+   === APP INIT (KRİTİK)  ===
+   ========================= */
+window.initApp = function initApp() {
+  const input  = document.getElementById("trendInput");
+  const btn    = document.getElementById("trendGenerateBtn");
+  const status = document.getElementById("trendStatus");
+  const result = document.getElementById("trendResult");
+
+  // güvenli bağla (çift bind olmasın)
+  btn.onclick = async () => {
+    const text = (input.value || "").trim();
+    if (!text) {
+      status.textContent = t("needText");
+      result.classList.add("hidden");
+      return;
+    }
+
+    btn.disabled = true;
+    status.textContent = t("adWatching");
+    result.classList.add("hidden");
+    result.textContent = "";
+
+    try {
+      await waitForRewardedAd();
+
+      status.textContent = t("generating");
+
+      // ✅ Eğer backend varsa burayı kendi endpointine bağla:
+      // Örnek endpoint: /api/trend-copy
+      // Body: { trend: "...", lang: "tr" }
+      let outText = "";
+      let usedOffline = false;
+
+      try {
+        const res = await fetchWithTimeout("/api/trend-copy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trend: text, lang: getLang() })
+        });
+
+        if (!res.ok) throw new Error("bad_status");
+        const data = await res.json();
+        outText = (data && (data.result || data.text || data.output)) ? (data.result || data.text || data.output) : "";
+        if (!outText) throw new Error("empty");
+      } catch (e) {
+        // ✅ endpoint yoksa bile kullanıcı boş kalmasın (takılmayı bitirir)
+        usedOffline = true;
+        outText = localFallbackTrendCopy(text, getLang());
+      }
+
+      result.textContent = outText + (usedOffline ? ("\n\n(" + t("offline") + ")") : "");
+      result.classList.remove("hidden");
+      status.textContent = t("done");
+    } catch (e) {
+      status.textContent = t("fail");
+      result.classList.add("hidden");
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  // Menü/Help placeholder
+  const menuToggle = document.getElementById("menuToggle");
+  const helpToggle = document.getElementById("helpToggle");
+  if (menuToggle) menuToggle.onclick = () => {};
+  if (helpToggle) helpToggle.onclick = () => {};
+};
+
+/* ✅ Offline fallback (boş dönmesin diye) */
+function localFallbackTrendCopy(trend, lang) {
+  if (lang === "en") {
+    return [
+      `Trend: "${trend}"`,
+      ``,
+      `1) Hook: “I thought it would be easy… it wasn’t.”`,
+      `2) Script: (0-2s) show the moment → (2-7s) twist → (7-12s) quick tips → (12-15s) punchline.`,
+      `3) Text overlays: “POV: ${trend}”, “Wait for it…”, “This changed everything”`,
+      `4) CTA: “Comment your version”`,
+      `5) 5 Variations: funny / emotional / tutorial / reaction / storytime`
+    ].join("\n");
+  }
+
+  return [
+    `Trend: "${trend}"`,
+    ``,
+    `1) Hook: “Kolay sandım… değilmiş.”`,
+    `2) Akış: (0-2sn) olay anı → (2-7sn) ters köşe → (7-12sn) hızlı ipuçları → (12-15sn) final.`,
+    `3) Yazı önerileri: “POV: ${trend}”, “Bekle…”, “Bunu kimse söylemiyor”`,
+    `4) CTA: “Sen olsan ne yapardın?”`,
+    `5) 5 Varyasyon: komik / duygusal / öğretici / tepki / hikaye`
+  ].join("\n");
+}
+
+/* ================= ONBOARDING LOGIC ================= */
 const app = document.getElementById("app");
 const onboarding = document.getElementById("onboardingOverlay");
 
@@ -64,32 +362,55 @@ const stepEmail = document.getElementById("onboardStepEmail");
 const langBtn = document.getElementById("onboardLangSaveBtn");
 const emailBtn = document.getElementById("onboardEmailSaveBtn");
 
+function startApp() {
+  onboarding.classList.add("hidden");
+  app.classList.remove("hidden");
+
+  if (typeof window.initApp === "function") {
+    window.initApp();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const savedEmail = localStorage.getItem(EMAIL_KEY);
+
+  if (savedEmail) {
+    startApp();
+  } else {
+    // onboarding aç
+    onboarding.classList.remove("hidden");
+    app.classList.add("hidden");
+    stepLang.classList.remove("hidden");
+    stepEmail.classList.add("hidden");
+  }
+});
+
 langBtn.onclick = () => {
+  const lang = document.getElementById("onboardLangSelect").value;
+  localStorage.setItem(LANG_KEY, lang);
+
   stepLang.classList.add("hidden");
   stepEmail.classList.remove("hidden");
 };
 
 emailBtn.onclick = () => {
   const email = document.getElementById("onboardEmailInput").value.trim();
-  const pass = document.getElementById("onboardPasswordInput").value.trim();
+  const pass  = document.getElementById("onboardPasswordInput").value.trim();
 
   if (!email || pass.length < 6) {
-    alert("E-posta ve şifre zorunlu");
+    alert(getLang() === "en" ? "Email and password required" : "E-posta ve şifre zorunlu");
     return;
   }
 
-  localStorage.setItem("inspireapp_email_v1", email);
-
-  // 🔓 ONBOARDING BİTTİ → APP AÇ
-  onboarding.classList.add("hidden");
-  app.classList.remove("hidden");
+  localStorage.setItem(EMAIL_KEY, email);
+  startApp();
 };
 </script>
 
-<!-- SERVICE WORKER -->
+<!-- SERVICE WORKER (✅ relative path) -->
 <script>
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
+  navigator.serviceWorker.register("./service-worker.js");
 }
 </script>
 
