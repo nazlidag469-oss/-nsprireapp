@@ -56,7 +56,9 @@ export default async function handler(req, res) {
 
   // ✅ GET gelirse 405 yerine nazik cevap (log kirliliğini azaltır)
   if (req.method === "GET") {
-    return res.status(200).json({ message: "Bu endpoint POST ile çalışır. (App içinden otomatik gönderilir.)" });
+    return res
+      .status(200)
+      .json({ message: "Bu endpoint POST ile çalışır. (App içinden otomatik gönderilir.)" });
   }
 
   if (req.method !== "POST") {
@@ -112,6 +114,8 @@ export default async function handler(req, res) {
     }
   }
 
+  // ✅✅✅ FIX: RapidAPI bazen boş/JSON olmayan cevap döndürür -> r.json() patlatır.
+  // Sadece bu bölüm değişti.
   if (rapidKey && (platformSafe === "tiktok" || platformSafe === "instagram")) {
     try {
       let url = "";
@@ -134,7 +138,26 @@ export default async function handler(req, res) {
       }
 
       const r = await fetch(url, { method, headers, body });
-      const d = await r.json();
+
+      // ✅ JSON yerine önce text al
+      const raw = await r.text();
+      let d = null;
+
+      if (raw && raw.trim()) {
+        try {
+          d = JSON.parse(raw);
+        } catch (e) {
+          // JSON değilse: küçük bir parça sakla
+          d = { _non_json: raw.slice(0, 300), status: r.status };
+        }
+      } else {
+        // tamamen boş döslam döndüyse
+        d = { _empty: true, status: r.status };
+      }
+
+      if (!r.ok) {
+        console.error("RAPIDAPI_NOT_OK", r.status, raw?.slice(0, 200));
+      }
 
       extraContext +=
         "\n" +
@@ -219,4 +242,4 @@ export default async function handler(req, res) {
     console.error("IDEAS_API_ERROR", e);
     return res.status(200).json({ message: GENERIC_FAIL });
   }
-}
+  }
