@@ -1,5 +1,4 @@
 // pages/api/ideas.js
-// Kısa video içerik koçu – YouTube / TikTok / Instagram verileriyle desteklenmiş fikir üretimi
 
 const LANG_MAP = {
   tr: "Turkish",
@@ -25,7 +24,7 @@ const LANG_MAP = {
   pl: "Polish",
 };
 
-// ✅ CORS helper (Android WebView / file:// için kritik)
+// CORS helper
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
@@ -33,11 +32,9 @@ function setCors(res) {
   res.setHeader("Access-Control-Max-Age", "86400");
 }
 
-// Gelen lang değerinden "tr", "en" vs. tespit et
 function detectLangKey(langRaw) {
   if (!langRaw) return "tr";
   const val = String(langRaw).toLowerCase();
-
   if (LANG_MAP[val]) return val;
 
   for (const [code, name] of Object.entries(LANG_MAP)) {
@@ -46,19 +43,37 @@ function detectLangKey(langRaw) {
   return "tr";
 }
 
+// ✅ JSON bazen boş/yarım dönebilir → güvenli parse
+async function safeJson(response) {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+// ✅ Kısa timeout’lu fetch (YouTube/RapidAPI geciktirmesin)
+async function fetchWithTimeout(url, options = {}, timeoutMs = 2500) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 export default async function handler(req, res) {
   setCors(res);
 
-  // ✅ Preflight (CORS) isteği
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
+  if (req.method === "OPTIONS") return res.status(204).end();
 
-  // ✅ GET gelirse 405 yerine nazik cevap (log kirliliğini azaltır)
   if (req.method === "GET") {
     return res
       .status(200)
-      .json({ message: "Bu endpoint POST ile çalışır. (App içinden otomatik gönderilir.)" });
+      .json({ message: "Bu endpoint POST ile çalışır." });
   }
 
   if (req.method !== "POST") {
@@ -78,44 +93,48 @@ export default async function handler(req, res) {
       : "Content could not be generated right now. Please try again in a few minutes.";
 
   let platformSafe = (platform || "youtube").toString().toLowerCase();
-  if (!["youtube", "tiktok", "instagram"].includes(platformSafe)) platformSafe = "youtube";
+  if (!["youtube", "tiktok", "instagram"].includes(platformSafe)) {
+    platformSafe = "youtube";
+  }
 
   const openaiKey = process.env.OPENAI_API_KEY;
-  if (!openaiKey) {
-    // ✅ Key yoksa bile 200 dönüyorsun (senin tercihin). Sorun “kırmızı” olmaz.
-    return res.status(200).json({ message: GENERIC_FAIL });
-  }
+  if (!openaiKey) return res.status(200).json({ message: GENERIC_FAIL });
 
   const youtubeKey = process.env.YOUTUBE_API_KEY;
   const rapidKey = process.env.RAPIDAPI_KEY;
 
   let extraContext = "";
 
+  // ✅ YouTube (maks 2.5s) — olmazsa geç
   if (youtubeKey) {
     try {
       const url =
         "https://www.googleapis.com/youtube/v3/search?part=snippet" +
-        "&maxResults=5" +
+        "&maxResults=3" +
         "&q=" +
         encodeURIComponent(topic) +
         "&type=video" +
         "&key=" +
         youtubeKey;
 
-      const r = await fetch(url);
-      const d = await r.json();
-      const titles = d.items?.map((v) => v.snippet?.title).filter(Boolean) || [];
+      const r = await fetchWithTimeout(url, {}, 2500);
+      const d = r ? await safeJson(r) : null;
+
+      const titles =
+        d?.items?.map((v) => v.snippet?.title).filter(Boolean) || [];
 
       if (titles.length) {
-        extraContext += "\nYouTube'da benzer video başlıkları:\n- " + titles.slice(0, 5).join("\n- ") + "\n";
+        extraContext +=
+          "\nYouTube'da benzer video başlıkları:\n- " +
+          titles.slice(0, 3).join("\n- ") +
+          "\n";
       }
     } catch (e) {
       console.error("YOUTUBE_CONTEXT_ERROR", e);
     }
   }
 
-  // ✅✅✅ FIX: RapidAPI bazen boş/JSON olmayan cevap döndürür -> r.json() patlatır.
-  // Sadece bu bölüm değişti.
+  // ✅ RapidAPI (maks 2.5s) — boş JSON gelirse patlamasın
   if (rapidKey && (platformSafe === "tiktok" || platformSafe === "instagram")) {
     try {
       let url = "";
@@ -137,39 +156,23 @@ export default async function handler(req, res) {
         body = JSON.stringify({ username: topic, maxId: "" });
       }
 
-      const r = await fetch(url, { method, headers, body });
+      const r = await fetchWithTimeout(url, { method, headers, body }, 2500);
+      const d = r ? await safeJson(r) : null;
 
-      // ✅ JSON yerine önce text al
-      const raw = await r.text();
-      let d = null;
-
-      if (raw && raw.trim()) {
-        try {
-          d = JSON.parse(raw);
-        } catch (e) {
-          // JSON değilse: küçük bir parça sakla
-          d = { _non_json: raw.slice(0, 300), status: r.status };
-        }
-      } else {
-        // tamamen boş döslam döndüyse
-        d = { _empty: true, status: r.status };
+      if (d) {
+        extraContext +=
+          "\n" +
+          platformSafe.toUpperCase() +
+          " tarafında örnek API verisi (kısaltılmış):\n" +
+          JSON.stringify(d).slice(0, 500) +
+          "\n";
       }
-
-      if (!r.ok) {
-        console.error("RAPIDAPI_NOT_OK", r.status, raw?.slice(0, 200));
-      }
-
-      extraContext +=
-        "\n" +
-        platformSafe.toUpperCase() +
-        " tarafında örnek API verisi (kısaltılmış):\n" +
-        JSON.stringify(d || {}).slice(0, 800) +
-        "\n";
     } catch (e) {
       console.error("RAPIDAPI_CONTEXT_ERROR", e);
     }
   }
 
+  // ✅ OpenAI
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -184,31 +187,10 @@ export default async function handler(req, res) {
             role: "system",
             content:
               "Sen kısa video üreticileri için çalışan profesyonel bir içerik koçusun. " +
-              "Kullanıcıya yukarıdan bakan değil, yanında yürüyen bir ekip arkadaşı gibi konuşursun. " +
-              "Cevabı her zaman **" +
+              "Cevabı her zaman " +
               langName +
-              "** dilinde ver. " +
-              "Format: dikey 9:16 (Reels / TikTok / Shorts). " +
-              "Amacın: kullanıcının tek başına uygulayabileceği, net ve uygulanabilir fikirler üretmek.\n\n" +
-              "Cevaplarını şu yapıda ver (ama başlıkları da cevabın diline göre çevir):\n" +
-              "1) Kısa Özet (1–2 cümle, videonun ana fikri)\n" +
-              "2) 3 Seçenekli Konsept:\n" +
-              "   - Soft / Güvenli\n" +
-              "   - Orta / Dengeli\n" +
-              "   - Agresif / Cesur\n" +
-              "   Her konsept için:\n" +
-              "   • 1 cümle genel açıklama\n" +
-              "   • 5–7 maddelik sahne kırılımı (HOOK + gelişme + kapanış)\n" +
-              "3) Teknik Rehber:\n" +
-              "   • Kamera açısı (telefonla nasıl tutulsun, tripod vs.)\n" +
-              "   • Işık ayarı (evde, dışarıda, gece/gündüz)\n" +
-              "   • Ses (mikrofon, ortam sesi, müzik)\n" +
-              "   • Süre önerisi (örn: 15–35 sn)\n" +
-              "   • Platforma özel küçük tüyolar (YouTube Shorts / TikTok / Reels farkları)\n" +
-              "4) Ek Seçenekler:\n" +
-              '   • Kullanıcıya "İstersen bu fikirlerden biri için çekim planını sahne sahne anlatayım" diye teklif et.\n' +
-              "   • Eğer kullanıcı Pro ise ekstra olarak seri fikir / 30 günlük mini plan önerebileceğini hatırlat.\n\n" +
-              "Boş, generic cümlelerden kaçın. Cümleler dolu ve net olsun. Gerçek bir içerik üreticisine konuşur gibi yaz.",
+              " dilinde ver. Dikey 9:16 formatına göre yaz. " +
+              "Boş cümle yok, net ve uygulanabilir yaz.",
           },
           {
             role: "user",
@@ -220,7 +202,7 @@ export default async function handler(req, res) {
               `Ek bağlam:\n${extraContext}`,
           },
         ],
-        max_tokens: 900,
+        max_tokens: 450, // ✅ hız için düşürdük
       }),
     });
 
@@ -232,7 +214,7 @@ export default async function handler(req, res) {
     }
 
     const text =
-      data.choices?.[0]?.message?.content ||
+      data?.choices?.[0]?.message?.content ||
       (langKey === "tr"
         ? "Herhangi bir içerik üretilmedi. Lütfen biraz sonra tekrar dene."
         : "No content was generated. Please try again shortly.");
@@ -242,4 +224,4 @@ export default async function handler(req, res) {
     console.error("IDEAS_API_ERROR", e);
     return res.status(200).json({ message: GENERIC_FAIL });
   }
-  }
+        }
