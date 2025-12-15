@@ -19,9 +19,8 @@ function normalizePlan(v) {
 }
 function isProUser(userRow) {
   if (!userRow) return false;
-  const p1 = normalizePlan(userRow.plan);
-  const p2 = normalizePlan(userRow.Plan);
-  if (p1 === "pro" || p2 === "pro") return true;
+  const p1 = normalizePlan(userRow.plan); // ✅ sadece plan
+  if (p1 === "pro") return true;
   if (userRow.is_pro === true) return true;
   return false;
 }
@@ -89,7 +88,7 @@ export default async function handler(req, res) {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("id, email, plan, Plan, is_pro")
+      .select("id, email, plan, is_pro") // ✅ Plan kaldırıldı
       .ilike("email", email)
       .limit(1);
 
@@ -132,4 +131,4 @@ export default async function handler(req, res) {
     : "🤫 PRO – Silent Video Content Generator\n\nTOPIC:\n" + input;
 
   return res.status(200).json({ message, ok: true });
-                               }
+  }
