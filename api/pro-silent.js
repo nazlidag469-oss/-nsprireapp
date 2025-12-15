@@ -19,10 +19,7 @@ function normalizePlan(v) {
 }
 function isProUser(userRow) {
   if (!userRow) return false;
-  const p1 = normalizePlan(userRow.plan); // ✅ sadece plan
-  if (p1 === "pro") return true;
-  if (userRow.is_pro === true) return true;
-  return false;
+  return normalizePlan(userRow.plan) === "pro"; // ✅ sadece plan
 }
 function getHeaderEmail(req) {
   return (
@@ -45,7 +42,6 @@ export default async function handler(req, res) {
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
   const ONLY_PRO_EN = "This tool is for PRO members only. Upgrade to use it.";
 
-  // Sadece POST kabul edilir
   if (req.method !== "POST") {
     return res.status(200).json({ message: GENERIC_FAIL });
   }
@@ -55,7 +51,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
-  // Body parse
   let body = req.body || {};
   if (typeof body === "string") {
     try {
@@ -83,12 +78,11 @@ export default async function handler(req, res) {
     });
   }
 
-  // Kullanıcıyı bul
   let userRow = null;
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("id, email, plan, is_pro") // ✅ Plan kaldırıldı
+      .select("id, email, plan") // ✅ is_pro kaldırıldı
       .ilike("email", email)
       .limit(1);
 
@@ -109,7 +103,6 @@ export default async function handler(req, res) {
     });
   }
 
-  // 🔴 KRİTİK NOKTA — PRO DEĞİLSE 403
   if (!isProUser(userRow)) {
     return res.status(403).json({
       message: isTR ? ONLY_PRO_TR : ONLY_PRO_EN,
@@ -117,7 +110,6 @@ export default async function handler(req, res) {
     });
   }
 
-  // ✅ PRO cevap
   const message = isTR
     ? "🤫 *Sessiz Video İçerik Üreticisi (PRO)*\n\n" +
       "KONU / NİŞ:\n---------------------------------\n" +
@@ -131,4 +123,4 @@ export default async function handler(req, res) {
     : "🤫 PRO – Silent Video Content Generator\n\nTOPIC:\n" + input;
 
   return res.status(200).json({ message, ok: true });
-  }
+}
