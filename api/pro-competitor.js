@@ -19,10 +19,7 @@ function normalizePlan(v) {
 }
 function isProUser(userRow) {
   if (!userRow) return false;
-  const p1 = normalizePlan(userRow.plan); // ✅ sadece plan
-  if (p1 === "pro") return true;
-  if (userRow.is_pro === true) return true;
-  return false;
+  return normalizePlan(userRow.plan) === "pro"; // ✅ sadece plan
 }
 function getHeaderEmail(req) {
   return (
@@ -101,7 +98,7 @@ export default async function handler(req, res) {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("id, email, plan, is_pro") // ✅ Plan kaldırıldı
+      .select("id, email, plan") // ✅ is_pro kaldırıldı
       .ilike("email", email)
       .limit(1);
 
@@ -122,7 +119,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // 🔴 KRİTİK NOKTA — PRO DEĞİLSE 403
+  // 🔴 PRO değilse 403
   if (!isProUser(userRow)) {
     return res.status(403).json({
       message: isTR ? ONLY_PRO_TR : ONLY_PRO_EN,
@@ -149,4 +146,4 @@ export default async function handler(req, res) {
       "• Strong hook\n• Fast pacing\n• Clear structure\n";
 
   return res.status(200).json({ message, ok: true });
-      }
+}
