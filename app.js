@@ -1,6 +1,7 @@
 /* ===============================
    INSPIREAPP — APP.JS (FULL FIX)
    (API base fix + PRO gating + Chat fix + Markdown cleanup + PRO tabs)
+   + ✅ ANTI-CRASH STABILITY PATCH (black screen prevention)
 ================================ */
 
 // =========================
@@ -19,13 +20,22 @@ const MAX_FREE_CREDITS = 4;
 const DAILY_AD_LIMIT = 400;
 
 // =========================
+// ✅ STABILITY LIMITS (ANTI-CRASH)
+// =========================
+const STABILITY_LIMITS = {
+  MAX_CONVERSATIONS: 30,          // en fazla kaç sohbet saklanacak
+  MAX_MESSAGES_PER_CONV: 80,      // sohbet başı en fazla kaç mesaj saklanacak
+  RENDER_LAST_MESSAGES: 60,       // ekranda sadece son kaç mesaj render edilecek
+  MAX_TEXT_LEN_USER: 8000,        // kullanıcı metni max
+  MAX_TEXT_LEN_ASSISTANT: 12000,  // asistan metni max
+  MAX_TOTAL_STORAGE_CHARS: 900000 // çok şişerse otomatik prune (yaklaşık)
+};
+
+// =========================
 // === API BASE (KÖK FIX) ===
 // =========================
-// ✅ Vercel deploy URL (senin verdiğin)
 const DEPLOY_BASE = "https://nsprireapp-snzx.vercel.app";
 
-// ✅ file:// / android webview gibi ortamlarda /api çalışmaz.
-// Bu yüzden API URL'i otomatik doğru base'e bağlanır.
 function apiUrl(path) {
   const p = String(path || "");
   const cleanPath = p.startsWith("/") ? p : "/" + p;
@@ -33,12 +43,10 @@ function apiUrl(path) {
   try {
     const proto = window.location.protocol;
     if (proto === "http:" || proto === "https:") {
-      // aynı origin (vercel) -> relative zaten çalışır ama biz netleştiriyoruz
       return new URL(cleanPath, window.location.origin).toString();
     }
   } catch {}
 
-  // file:// vb -> DEPLOY_BASE'e git
   return DEPLOY_BASE.replace(/\/+$/, "") + cleanPath;
 }
 
@@ -131,6 +139,193 @@ let previousPanel = null;
 let softBackBtn = null;
 
 // =========================
+// === ANTI-CRASH HELPERS ===
+// =========================
+function clampTextByRole(role, text) {
+  let s = String(text ?? "");
+  const maxLen = role === "assistant" ? STABILITY_LIMITS.MAX_TEXT_LEN_ASSISTANT : STABILITY_LIMITS.MAX_TEXT_LEN_USER;
+  if (s.length > maxLen) {
+    s = s.slice(0, maxLen) + "\n…";
+  }
+  return s;
+}
+
+function normalizeConversationsForStorage(conversations) {
+  let convs = Array.isArray(conversations) ? conversations : [];
+
+  // sadece düzgün objeler
+  convs = convs
+    .filter((c) => c && typeof c === "object")
+    .map((c) => {
+      const id = String(c.id || Date.now());
+      const title = String(c.title || "");
+      const createdAt = typeof c.createdAt === "number" ? c.createdAt : Date.now();
+      const messagesRaw = Array.isArray(c.messages) ? c.messages : [];
+      const messages = messagesRaw
+        .filter((m) => m && typeof m === "object")
+        .map((m) => ({
+          role: m.role === "assistant" ? "assistant" : "user",
+          text: clampTextByRole(m.role, m.text),
+        }))
+        .slice(-STABILITY_LIMITS.MAX_MESSAGES_PER_CONV);
+
+      return { id, title, createdAt, messages };
+    });
+
+  // newest-first sakla ve sınırla
+  convs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  convs = convs.slice(0, STABILITY_LIMITS.MAX_CONVERSATIONS);
+
+  // currentId bozulmasın diye id var mı kontrol edilecek loadState içinde
+  return convs;
+}
+
+function approxStorageSize(conversations) {
+  try {
+    return JSON.stringify(conversations).length;
+  } catch {
+    return 0;
+  }
+}
+
+function safeLocalStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    // QuotaExceeded => prune edip tekrar dene
+    try {
+      state.conversations = normalizeConversationsForStorage(state.conversations);
+      // daha agresif prune
+      state.conversations.forEach((c) => {
+        c.messages = (c.messages || []).slice(-Math.max(20, Math.floor(STABILITY_LIMITS.MAX_MESSAGES_PER_CONV / 2)));
+      });
+      const v2 = JSON.stringify(state.conversations);
+      localStorage.setItem(STORAGE_KEY, v2);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function ensureStateIsSafe() {
+  state.conversations = normalizeConversationsForStorage(state.conversations);
+
+  // aşırı şişmeyi engelle
+  const size = approxStorageSize(state.conversations);
+  if (size > STABILITY_LIMITS.MAX_TOTAL_STORAGE_CHARS) {
+    // agresif prune: mesajları yarıya indir
+    state.conversations.forEach((c) => {
+      c.messages = (c.messages || []).slice(-Math.max(20, Math.floor(STABILITY_LIMITS.MAX_MESSAGES_PER_CONV / 2)));
+    });
+    state.conversations = normalizeConversationsForStorage(state.conversations);
+  }
+
+  // currentId yoksa ilkine dön
+  if (!state.conversations.length) {
+    state.conversations.push({
+      id: Date.now().toString(),
+      title: "Yeni sohbet",
+      messages: [],
+      createdAt: Date.now(),
+    });
+  }
+  const exists = state.conversations.some((c) => c.id === state.currentId);
+  if (!exists) state.currentId = state.conversations[0].id;
+}
+
+// ✅ Crash overlay (siyah ekran yerine)
+function showCrashOverlay(reason) {
+  try {
+    const old = document.getElementById("__crashOverlay");
+    if (old) old.remove();
+
+    const wrap = document.createElement("div");
+    wrap.id = "__crashOverlay";
+    wrap.style.position = "fixed";
+    wrap.style.inset = "0";
+    wrap.style.zIndex = "999999";
+    wrap.style.background = "#0b0b10";
+    wrap.style.color = "#fff";
+    wrap.style.padding = "20px";
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.gap = "12px";
+    wrap.style.fontFamily = "system-ui, -apple-system, Segoe UI, Roboto, Arial";
+
+    const h = document.createElement("div");
+    h.style.fontSize = "18px";
+    h.style.fontWeight = "700";
+    h.textContent = "InspireApp kurtarma modu";
+
+    const p = document.createElement("div");
+    p.style.opacity = "0.9";
+    p.style.whiteSpace = "pre-wrap";
+    p.textContent =
+      "Uygulama bir hataya düştü. Bu ekranda takılı kalmaz.\n\n" +
+      "Seçenekler:\n" +
+      "1) Güvenli yeniden başlat (sohbetleri kısaltır)\n" +
+      "2) Sıfırla (localStorage temizlenir)\n\n" +
+      (reason ? "Hata: " + String(reason).slice(0, 300) : "");
+
+    const btnRow = document.createElement("div");
+    btnRow.style.display = "flex";
+    btnRow.style.gap = "10px";
+    btnRow.style.flexWrap = "wrap";
+
+    const b1 = document.createElement("button");
+    b1.textContent = "Güvenli yeniden başlat";
+    b1.style.padding = "12px 14px";
+    b1.style.borderRadius = "10px";
+    b1.style.border = "0";
+    b1.style.cursor = "pointer";
+    b1.onclick = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        let convs = [];
+        try { convs = JSON.parse(raw || "[]"); } catch {}
+        convs = normalizeConversationsForStorage(convs);
+        // agresif prune
+        convs.forEach((c) => (c.messages = (c.messages || []).slice(-30)));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(convs));
+      } catch {}
+      location.reload();
+    };
+
+    const b2 = document.createElement("button");
+    b2.textContent = "Sıfırla";
+    b2.style.padding = "12px 14px";
+    b2.style.borderRadius = "10px";
+    b2.style.border = "0";
+    b2.style.cursor = "pointer";
+    b2.onclick = () => {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {}
+      location.reload();
+    };
+
+    btnRow.appendChild(b1);
+    btnRow.appendChild(b2);
+
+    wrap.appendChild(h);
+    wrap.appendChild(p);
+    wrap.appendChild(btnRow);
+
+    document.body.appendChild(wrap);
+  } catch {}
+}
+
+// Global error catch
+window.addEventListener("error", (ev) => {
+  showCrashOverlay(ev?.message || "error");
+});
+window.addEventListener("unhandledrejection", (ev) => {
+  showCrashOverlay(ev?.reason ? (ev.reason.message || String(ev.reason)) : "unhandledrejection");
+});
+
+// =========================
 // === HELPERS            ===
 // =========================
 const $ = (id) => document.getElementById(id);
@@ -143,28 +338,16 @@ function sanitizeEmail(raw) {
   return e;
 }
 
-// ✅ Yazı stili: AI’dan gelen ** gibi markdown işaretlerini temizle
 function cleanText(raw) {
   let s = String(raw ?? "");
-
-  // code fences: ```...``` -> sadece içeriği kalsın
   s = s.replace(/```([\s\S]*?)```/g, (_, inner) => String(inner || "").trim());
-
-  // inline code `
   s = s.replace(/`+/g, "");
-
-  // bold/italic markers
   s = s.replace(/\*\*(.*?)\*\*/g, "$1");
   s = s.replace(/__(.*?)__/g, "$1");
   s = s.replace(/\*(.*?)\*/g, "$1");
   s = s.replace(/_(.*?)_/g, "$1");
-
-  // headings # ###
   s = s.replace(/^#{1,6}\s+/gm, "");
-
-  // markdown link [text](url) -> text
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
-
   return s.trim();
 }
 
@@ -173,10 +356,12 @@ function scheduleSaveConversations() {
   if (_saveConvTimer) clearTimeout(_saveConvTimer);
   _saveConvTimer = setTimeout(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.conversations));
+      ensureStateIsSafe();
+      const json = JSON.stringify(state.conversations);
+      safeLocalStorageSet(STORAGE_KEY, json);
     } catch {}
     _saveConvTimer = null;
-  }, 150);
+  }, 200);
 }
 
 function getEmailSafe() {
@@ -195,9 +380,20 @@ function setPlanSafe(next) {
 }
 
 function loadState() {
+  // ✅ güvenli load + normalize
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) state.conversations = JSON.parse(raw);
+    if (raw) {
+      let parsed = [];
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        parsed = [];
+      }
+      state.conversations = normalizeConversationsForStorage(parsed);
+    } else {
+      state.conversations = [];
+    }
   } catch {
     state.conversations = [];
   }
@@ -210,6 +406,7 @@ function loadState() {
       createdAt: Date.now(),
     });
   }
+
   state.currentId = state.conversations[0].id;
 
   const p = localStorage.getItem(PLAN_KEY);
@@ -224,6 +421,8 @@ function loadState() {
 
   const e = sanitizeEmail(localStorage.getItem(EMAIL_KEY));
   if (e) state.email = e.trim();
+
+  ensureStateIsSafe();
 }
 
 function saveCredits() { try { localStorage.setItem(CREDITS_KEY, String(state.credits)); } catch {} }
@@ -477,11 +676,16 @@ function renderMessages() {
   const container = $("chatMessages");
   if (!container) return;
   const conv = currentConv();
-  container.innerHTML = "";
+  if (!conv) return;
 
+  container.innerHTML = "";
   const frag = document.createDocumentFragment();
 
-  conv.messages.forEach((m) => {
+  // ✅ DOM şişmesin: sadece son N mesajı göster
+  const msgs = Array.isArray(conv.messages) ? conv.messages : [];
+  const showMsgs = msgs.slice(-STABILITY_LIMITS.RENDER_LAST_MESSAGES);
+
+  showMsgs.forEach((m) => {
     const row = document.createElement("div");
     row.className = "message-row " + m.role;
 
@@ -490,7 +694,8 @@ function renderMessages() {
 
     const textEl = document.createElement("pre");
     textEl.className = "bubble-text";
-    textEl.textContent = m.role === "assistant" ? cleanText(m.text) : String(m.text || "");
+    const safeText = m.role === "assistant" ? cleanText(m.text) : String(m.text || "");
+    textEl.textContent = safeText;
 
     bubble.appendChild(textEl);
     row.appendChild(bubble);
@@ -498,12 +703,24 @@ function renderMessages() {
   });
 
   container.appendChild(frag);
-  container.scrollTop = container.scrollHeight;
+
+  // scroll güvenli
+  requestAnimationFrame(() => {
+    try { container.scrollTop = container.scrollHeight; } catch {}
+  });
 }
 
 function addMessage(role, text) {
   const conv = currentConv();
-  conv.messages.push({ role, text });
+  if (!conv) return -1;
+
+  const safeText = clampTextByRole(role, text);
+  conv.messages.push({ role, text: safeText });
+
+  // ✅ sohbet başına mesaj limiti
+  if (conv.messages.length > STABILITY_LIMITS.MAX_MESSAGES_PER_CONV) {
+    conv.messages = conv.messages.slice(-STABILITY_LIMITS.MAX_MESSAGES_PER_CONV);
+  }
 
   let titleChanged = false;
   if (!conv.title || conv.title === "Yeni sohbet" || conv.title === "New chat") {
@@ -526,7 +743,7 @@ function addMessage(role, text) {
 function updateMessageAt(index, newText) {
   const conv = currentConv();
   if (!conv || !conv.messages || !conv.messages[index]) return;
-  conv.messages[index].text = newText;
+  conv.messages[index].text = clampTextByRole("assistant", newText);
   scheduleSaveConversations();
   renderMessages();
 }
@@ -775,7 +992,6 @@ async function callSimpleAPI(route, payload) {
     let json = null;
     try { json = JSON.parse(text); } catch {}
 
-    // PRO/LOGIN yönlendirmesi gerekiyorsa
     if (json && typeof json === "object") {
       const code = String(json.code || "").toUpperCase();
       if (code === "NEED_LOGIN" || code === "USER_NOT_FOUND") {
@@ -820,7 +1036,6 @@ async function callSimpleAPI(route, payload) {
 async function callRealProEndpoint(route, input) {
   const t = I18N[state.lang] || I18N.tr;
 
-  // ✅ İSTEDİĞİN NET KURAL: PRO değilse “PRO değilsiniz” de.
   if (state.plan !== "pro") {
     openProModal();
     return cleanText(t.proNotYou || "PRO değilsiniz. PRO’ya geçerek açabilirsiniz.");
@@ -888,549 +1103,559 @@ async function loadTrends() {
 // === DOM READY          ===
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
-  loadState();
+  try {
+    loadState();
 
-  // ✅ kritik görünürlük
-  if (hasLangAndEmail()) {
-    setOnboardingVisible(false);
-    setAppVisible(true);
-  } else {
-    setOnboardingVisible(true);
-    setAppVisible(false);
-  }
-
-  const emailNow = getEmailSafe();
-  if (emailNow && !state.email) {
-    state.email = emailNow;
-    saveEmail();
-  }
-
-  const sidebar = $("sidebar");
-  const helpPanel = $("helpPanel");
-  const menuToggle = $("menuToggle");
-  const helpToggle = $("helpToggle");
-  const helpToggle2 = $("helpToggle2");
-  const closeHelpBtn = $("closeHelpBtn");
-
-  const chatForm = $("chatForm");
-  const topicInput = $("topicInput");
-  const platformSelect = $("platformSelect");
-  const langSelect = $("langSelect");
-  const messageInput = $("messageInput");
-  const loadingEl = $("loading");
-  const newChatBtn = $("newChatBtn");
-  const watchAdBtn = $("watchAdBtn");
-  const subscribeBtn = $("subscribeBtn");
-  const changeEmailBtn = $("changeEmailBtn");
-
-  const voiceBtn = $("voiceBtn");
-  const cameraBtn = $("cameraBtn");
-  const cameraFileInput = $("cameraFileInput");
-
-  const refreshTrendsBtn = $("refreshTrendsBtn");
-  const seriesGenerate = $("seriesGenerate");
-  const seriesTopic = $("seriesTopic");
-  const seriesResult = $("seriesResult");
-
-  const hookGenerate = $("hookGenerate");
-  const hookTopic = $("hookTopic");
-  const hookResult = $("hookResult");
-
-  const copyGenerate = $("copyGenerate");
-  const copyTopic = $("copyTopic");
-  const copyResult = $("copyResult");
-
-  const proCompetitorInput = $("proCompetitorInput");
-  const proCompetitorBtn = $("proCompetitorBtn");
-  const proCompetitorResult = $("proCompetitorResult");
-
-  const proAudienceInput = $("proAudienceInput");
-  const proAudienceBtn = $("proAudienceBtn");
-  const proAudienceResult = $("proAudienceResult");
-
-  const proSilentInput = $("proSilentInput");
-  const proSilentBtn = $("proSilentBtn");
-  const proSilentResult = $("proSilentResult");
-
-  const modalBackdrop = $("modalBackdrop");
-  const adCloseIcon = $("adCloseIcon");
-  const adCancelBtn = $("adCancelBtn");
-  const adWatchedBtn = $("adWatchedBtn");
-  const adContinueBtn = $("adContinueBtn");
-  const adConfirmCloseBtn = $("adConfirmCloseBtn");
-  const adStepMain = $("adStepMain");
-  const adStepConfirm = $("adStepConfirm");
-
-  const proCloseBtn = $("proCloseBtn");
-  const proPayBtn = $("proPayBtn");
-
-  const onboardStepLang = $("onboardStepLang");
-  const onboardStepEmail = $("onboardStepEmail");
-  const onboardLangSelect = $("onboardLangSelect");
-  const onboardLangSaveBtn = $("onboardLangSaveBtn");
-  const onboardEmailInput = $("onboardEmailInput");
-  const onboardPasswordInput = $("onboardPasswordInput");
-  const onboardEmailSaveBtn = $("onboardEmailSaveBtn");
-
-  if (langSelect) fillLangSelect(langSelect);
-  if (onboardLangSelect) fillLangSelect(onboardLangSelect);
-
-  renderConversationList();
-  renderMessages();
-  updateAccountEmailUI();
-  updatePlanAndCreditsUI();
-  loadTrends();
-  applyAllTranslations();
-  showPanel("chat", true);
-
-  // ✅ PRO TAB SWITCH (sessiz/kitle/rakip görünmüyor şikayetini kökten bitirir)
-  const proTabs = Array.from(document.querySelectorAll(".pro-tab"));
-  const proTools = ["competitor", "audience", "silent"];
-  function showProTool(which) {
-    proTabs.forEach((b) => b.classList.toggle("active", b.dataset.protab === which));
-    proTools.forEach((k) => {
-      const el = $("proTool-" + k);
-      if (el) el.classList.toggle("hidden", k !== which);
-    });
-  }
-  proTabs.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const which = btn.dataset.protab || "competitor";
-      showProTool(which);
-    });
-  });
-  showProTool("competitor");
-
-  // Soft back
-  if (!softBackBtn) {
-    softBackBtn = document.createElement("button");
-    softBackBtn.id = "softBackBtn";
-    softBackBtn.textContent = "◀";
-    softBackBtn.style.position = "fixed";
-    softBackBtn.style.left = "16px";
-    softBackBtn.style.bottom = "16px";
-    softBackBtn.style.zIndex = "9999";
-    softBackBtn.style.width = "44px";
-    softBackBtn.style.height = "44px";
-    softBackBtn.style.borderRadius = "999px";
-    softBackBtn.style.border = "none";
-    softBackBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-    softBackBtn.style.background = "linear-gradient(135deg, #ffffff, #f3e9ff)";
-    softBackBtn.style.fontSize = "20px";
-    softBackBtn.style.display = "flex";
-    softBackBtn.style.alignItems = "center";
-    softBackBtn.style.justifyContent = "center";
-    softBackBtn.style.cursor = "pointer";
-    softBackBtn.style.userSelect = "none";
-    document.body.appendChild(softBackBtn);
-
-    softBackBtn.addEventListener("click", () => {
-      if (typeof window.__inspireHandleBack === "function" && window.__inspireHandleBack()) return;
-      if (currentPanel !== "chat") showPanel(previousPanel || "chat", true);
-    });
-  }
-
-  function showOnboardingIfNeeded() {
-    const hasLang = !!localStorage.getItem(LANG_KEY);
-    const hasEmail = !!sanitizeEmail(localStorage.getItem(EMAIL_KEY));
-
-    if (hasLang && hasEmail) {
+    if (hasLangAndEmail()) {
       setOnboardingVisible(false);
       setAppVisible(true);
-      return;
-    }
-
-    setOnboardingVisible(true);
-    setAppVisible(false);
-
-    if (!hasLang) {
-      onboardStepLang && onboardStepLang.classList.remove("hidden");
-      onboardStepEmail && onboardStepEmail.classList.add("hidden");
     } else {
-      onboardStepLang && onboardStepLang.classList.add("hidden");
-      onboardStepEmail && onboardStepEmail.classList.remove("hidden");
-      setTimeout(() => { try { onboardEmailInput && onboardEmailInput.focus(); } catch {} }, 50);
-    }
-  }
-  showOnboardingIfNeeded();
-
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener("click", () => sidebar.classList.toggle("hidden"));
-  }
-
-  // swipe to close sidebar
-  let swipeStartX = null;
-  document.addEventListener("touchstart", (e) => {
-    if (!sidebar || sidebar.classList.contains("hidden")) return;
-    if (!e.touches?.length) return;
-    swipeStartX = e.touches[0].clientX;
-  });
-  document.addEventListener("touchend", (e) => {
-    if (swipeStartX === null) return;
-    if (!sidebar || sidebar.classList.contains("hidden")) { swipeStartX = null; return; }
-    if (!e.changedTouches?.length) return;
-    const endX = e.changedTouches[0].clientX;
-    const diffX = endX - swipeStartX;
-    if (Math.abs(diffX) > 60) sidebar.classList.add("hidden");
-    swipeStartX = null;
-  });
-
-  const openHelp = () => helpPanel && helpPanel.classList.remove("hidden");
-  const closeHelp = () => helpPanel && helpPanel.classList.add("hidden");
-  if (helpToggle) helpToggle.addEventListener("click", openHelp);
-  if (helpToggle2) helpToggle2.addEventListener("click", openHelp);
-  if (closeHelpBtn) closeHelpBtn.addEventListener("click", closeHelp);
-
-  if (newChatBtn) {
-    newChatBtn.addEventListener("click", () => {
-      const conv = {
-        id: Date.now().toString(),
-        title: state.lang === "tr" ? "Yeni sohbet" : "New chat",
-        messages: [],
-        createdAt: Date.now(),
-      };
-      state.conversations.unshift(conv);
-      state.currentId = conv.id;
-      scheduleSaveConversations();
-      renderConversationList();
-      renderMessages();
-    });
-  }
-
-  if (modalBackdrop) {
-    modalBackdrop.addEventListener("click", (e) => {
-      if (e.target !== modalBackdrop) return;
-      closeAdModal();
-      closeProModal();
-    });
-  }
-
-  if (watchAdBtn) {
-    watchAdBtn.addEventListener("click", () => {
-      if (state.plan !== "free") return;
-      startRewardAd("credit");
-    });
-  }
-
-  if (adCancelBtn) adCancelBtn.addEventListener("click", closeAdModal);
-  if (adWatchedBtn) adWatchedBtn.addEventListener("click", () => handleRewardedAdFinished());
-
-  if (adCloseIcon) {
-    adCloseIcon.addEventListener("click", () => {
-      if (adStepMain) adStepMain.classList.add("hidden");
-      if (adStepConfirm) adStepConfirm.classList.remove("hidden");
-    });
-  }
-  if (adContinueBtn) {
-    adContinueBtn.addEventListener("click", () => {
-      if (adStepConfirm) adStepConfirm.classList.add("hidden");
-      if (adStepMain) adStepMain.classList.remove("hidden");
-    });
-  }
-  if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", closeAdModal);
-
-  if (proCloseBtn) proCloseBtn.addEventListener("click", closeProModal);
-
-  if (subscribeBtn) {
-    subscribeBtn.addEventListener("click", () => {
-      if (state.plan === "pro") return;
-      openProModal();
-    });
-  }
-
-  if (proPayBtn) {
-    proPayBtn.addEventListener("click", () => {
-      const isTr = state.lang === "tr";
-      if (window.AndroidBilling && window.AndroidBilling.startPurchase) {
-        const sku = isTr ? "pro_monthly_tr" : "pro_monthly_intl";
-        window.AndroidBilling.startPurchase(sku);
-      } else {
-        alert(
-          isTr
-            ? "Bu web sürümünde gerçek ödeme yok. Android uygulamada Google Play satın alma açılacak."
-            : "Billing is not enabled in web preview. Use Android build for Google Play purchase."
-        );
-      }
-    });
-  }
-
-  // Onboarding: lang step
-  if (onboardLangSaveBtn && onboardLangSelect) {
-    onboardLangSaveBtn.addEventListener("click", () => {
-      const code = onboardLangSelect.value || "tr";
-      state.lang = code;
-      localStorage.setItem(LANG_KEY, code);
-      if (langSelect) langSelect.value = code;
-
-      applyAllTranslations();
-      loadTrends();
-
-      if (onboardStepLang) onboardStepLang.classList.add("hidden");
-      if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
-      setTimeout(() => { try { onboardEmailInput && onboardEmailInput.focus(); } catch {} }, 50);
-
       setOnboardingVisible(true);
       setAppVisible(false);
+    }
+
+    const emailNow = getEmailSafe();
+    if (emailNow && !state.email) {
+      state.email = emailNow;
+      saveEmail();
+    }
+
+    const sidebar = $("sidebar");
+    const helpPanel = $("helpPanel");
+    const menuToggle = $("menuToggle");
+    const helpToggle = $("helpToggle");
+    const helpToggle2 = $("helpToggle2");
+    const closeHelpBtn = $("closeHelpBtn");
+
+    const chatForm = $("chatForm");
+    const topicInput = $("topicInput");
+    const platformSelect = $("platformSelect");
+    const langSelect = $("langSelect");
+    const messageInput = $("messageInput");
+    const loadingEl = $("loading");
+    const newChatBtn = $("newChatBtn");
+    const watchAdBtn = $("watchAdBtn");
+    const subscribeBlock = $("subscribeBlock");
+    const subscribeBtn = $("subscribeBtn");
+    const changeEmailBtn = $("changeEmailBtn");
+
+    const voiceBtn = $("voiceBtn");
+    const cameraBtn = $("cameraBtn");
+    const cameraFileInput = $("cameraFileInput");
+
+    const refreshTrendsBtn = $("refreshTrendsBtn");
+    const seriesGenerate = $("seriesGenerate");
+    const seriesTopic = $("seriesTopic");
+    const seriesResult = $("seriesResult");
+
+    const hookGenerate = $("hookGenerate");
+    const hookTopic = $("hookTopic");
+    const hookResult = $("hookResult");
+
+    const copyGenerate = $("copyGenerate");
+    const copyTopic = $("copyTopic");
+    const copyResult = $("copyResult");
+
+    const proCompetitorInput = $("proCompetitorInput");
+    const proCompetitorBtn = $("proCompetitorBtn");
+    const proCompetitorResult = $("proCompetitorResult");
+
+    const proAudienceInput = $("proAudienceInput");
+    const proAudienceBtn = $("proAudienceBtn");
+    const proAudienceResult = $("proAudienceResult");
+
+    const proSilentInput = $("proSilentInput");
+    const proSilentBtn = $("proSilentBtn");
+    const proSilentResult = $("proSilentResult");
+
+    const modalBackdrop = $("modalBackdrop");
+    const adCloseIcon = $("adCloseIcon");
+    const adCancelBtn = $("adCancelBtn");
+    const adWatchedBtn = $("adWatchedBtn");
+    const adContinueBtn = $("adContinueBtn");
+    const adConfirmCloseBtn = $("adConfirmCloseBtn");
+    const adStepMain = $("adStepMain");
+    const adStepConfirm = $("adStepConfirm");
+
+    const proCloseBtn = $("proCloseBtn");
+    const proPayBtn = $("proPayBtn");
+
+    const onboardStepLang = $("onboardStepLang");
+    const onboardStepEmail = $("onboardStepEmail");
+    const onboardLangSelect = $("onboardLangSelect");
+    const onboardLangSaveBtn = $("onboardLangSaveBtn");
+    const onboardEmailInput = $("onboardEmailInput");
+    const onboardPasswordInput = $("onboardPasswordInput");
+    const onboardEmailSaveBtn = $("onboardEmailSaveBtn");
+
+    if (langSelect) fillLangSelect(langSelect);
+    if (onboardLangSelect) fillLangSelect(onboardLangSelect);
+
+    renderConversationList();
+    renderMessages();
+    updateAccountEmailUI();
+    updatePlanAndCreditsUI();
+    loadTrends();
+    applyAllTranslations();
+    showPanel("chat", true);
+
+    // ✅ PRO TAB SWITCH
+    const proTabs = Array.from(document.querySelectorAll(".pro-tab"));
+    const proTools = ["competitor", "audience", "silent"];
+    function showProTool(which) {
+      proTabs.forEach((b) => b.classList.toggle("active", b.dataset.protab === which));
+      proTools.forEach((k) => {
+        const el = $("proTool-" + k);
+        if (el) el.classList.toggle("hidden", k !== which);
+      });
+    }
+    proTabs.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const which = btn.dataset.protab || "competitor";
+        showProTool(which);
+      });
     });
-  }
+    showProTool("competitor");
 
-  // Onboarding: email/password
-  if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
-    onboardEmailSaveBtn.addEventListener("click", async () => {
-      const emailRaw = onboardEmailInput.value.trim();
-      const password = onboardPasswordInput.value.trim();
-      const email = sanitizeEmail(emailRaw).toLowerCase();
+    // Soft back
+    if (!softBackBtn) {
+      softBackBtn = document.createElement("button");
+      softBackBtn.id = "softBackBtn";
+      softBackBtn.textContent = "◀";
+      softBackBtn.style.position = "fixed";
+      softBackBtn.style.left = "16px";
+      softBackBtn.style.bottom = "16px";
+      softBackBtn.style.zIndex = "9999";
+      softBackBtn.style.width = "44px";
+      softBackBtn.style.height = "44px";
+      softBackBtn.style.borderRadius = "999px";
+      softBackBtn.style.border = "none";
+      softBackBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+      softBackBtn.style.background = "linear-gradient(135deg, #ffffff, #f3e9ff)";
+      softBackBtn.style.fontSize = "20px";
+      softBackBtn.style.display = "flex";
+      softBackBtn.style.alignItems = "center";
+      softBackBtn.style.justifyContent = "center";
+      softBackBtn.style.cursor = "pointer";
+      softBackBtn.style.userSelect = "none";
+      document.body.appendChild(softBackBtn);
 
-      if (!email || !password) {
-        alert(state.lang === "tr" ? "Lütfen e-posta ve şifre girin." : "Please enter email and password.");
-        return;
-      }
+      softBackBtn.addEventListener("click", () => {
+        if (typeof window.__inspireHandleBack === "function" && window.__inspireHandleBack()) return;
+        if (currentPanel !== "chat") showPanel(previousPanel || "chat", true);
+      });
+    }
 
-      try {
-        const res = await fetchWithTimeout(apiUrl("/api/register-user"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-user-email": email },
-          body: JSON.stringify({
-            email,
-            password,
-            plan: state.plan,
-            credits: state.credits,
-            lang: state.lang,
-          }),
-        });
+    function showOnboardingIfNeeded() {
+      const hasLang = !!localStorage.getItem(LANG_KEY);
+      const hasEmail = !!sanitizeEmail(localStorage.getItem(EMAIL_KEY));
 
-        const data = await res.json().catch(() => null);
-
-        if (res.status === 401 && data?.message === "INVALID_PASSWORD") {
-          alert(state.lang === "tr" ? "Şifre yanlış." : "Wrong password.");
-          return;
-        }
-        if (!res.ok || !data) throw new Error(data?.error || data?.message || "Sunucu hatası");
-
-        state.email = email;
-        saveEmail();
-
-        const u = data.user || {};
-        if (u.plan) setPlanSafe(u.plan);
-        if (typeof u.credits !== "undefined") {
-          state.credits = u.credits;
-          saveCredits();
-        }
-        if (u.lang && LANG_NAMES[u.lang]) {
-          state.lang = u.lang;
-          localStorage.setItem(LANG_KEY, u.lang);
-          if (langSelect) langSelect.value = u.lang;
-        }
-
-        applyAllTranslations();
-
+      if (hasLang && hasEmail) {
         setOnboardingVisible(false);
         setAppVisible(true);
-        showPanel("chat", true);
-
-        if (data.status === "login")
-          alert(state.lang === "tr" ? "Giriş başarılı. 👌" : "Login successful. 👌");
-        else if (data.status === "registered")
-          alert(state.lang === "tr" ? "Hesap oluşturuldu ve giriş yapıldı. 🎉" : "Account created and logged in. 🎉");
-      } catch (e) {
-        alert((state.lang === "tr" ? "Giriş/kayıt hatası: " : "Login/register error: ") + (e.message || ""));
+        return;
       }
-    });
-  }
 
-  if (changeEmailBtn) {
-    changeEmailBtn.addEventListener("click", () => {
       setOnboardingVisible(true);
       setAppVisible(false);
 
-      if (onboardStepLang) onboardStepLang.classList.add("hidden");
-      if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
-
-      setTimeout(() => { try { onboardEmailInput && onboardEmailInput.focus(); } catch {} }, 50);
-    });
-  }
-
-  if (langSelect) {
-    langSelect.addEventListener("change", () => {
-      const code = langSelect.value;
-      if (!LANG_NAMES[code]) return;
-      state.lang = code;
-      localStorage.setItem(LANG_KEY, code);
-      applyAllTranslations();
-      loadTrends();
-    });
-  }
-
-  document.querySelectorAll(".side-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.dataset.panel || btn.getAttribute("data-panel") || "chat";
-      showPanel(target, true);
-      if (sidebar) sidebar.classList.add("hidden");
-    });
-  });
-
-  // Voice
-  let recognition = null;
-  if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRec();
-    recognition.lang = LANG_SPEECH[state.lang] || "en-US";
-    recognition.interimResults = false;
-    window.__recognitionRef = recognition;
-  }
-
-  if (voiceBtn) {
-    voiceBtn.addEventListener("click", () => {
-      if (!recognition) {
-        alert(state.lang === "tr" ? "Bu tarayıcıda ses tanıma desteklenmiyor. (Chrome önerilir)" : "Speech recognition is not supported.");
-        return;
+      if (!hasLang) {
+        onboardStepLang && onboardStepLang.classList.remove("hidden");
+        onboardStepEmail && onboardStepEmail.classList.add("hidden");
+      } else {
+        onboardStepLang && onboardStepLang.classList.add("hidden");
+        onboardStepEmail && onboardStepEmail.classList.remove("hidden");
+        setTimeout(() => { try { onboardEmailInput && onboardEmailInput.focus(); } catch {} }, 50);
       }
-      try { recognition.lang = LANG_SPEECH[state.lang] || "en-US"; recognition.start(); } catch {}
-      voiceBtn.disabled = true;
-      voiceBtn.textContent = "🎤…";
+    }
+    showOnboardingIfNeeded();
 
-      recognition.onresult = (ev) => {
-        const text = ev.results?.[0]?.[0]?.transcript || "";
-        if (messageInput && text) messageInput.value = (messageInput.value + " " + text).trim();
-      };
-      recognition.onerror = () => alert(state.lang === "tr" ? "Ses tanıma sırasında hata oldu." : "Speech recognition error.");
-      recognition.onend = () => { voiceBtn.disabled = false; voiceBtn.textContent = "🎤"; };
+    if (menuToggle && sidebar) {
+      menuToggle.addEventListener("click", () => sidebar.classList.toggle("hidden"));
+    }
+
+    // swipe to close sidebar
+    let swipeStartX = null;
+    document.addEventListener("touchstart", (e) => {
+      if (!sidebar || sidebar.classList.contains("hidden")) return;
+      if (!e.touches?.length) return;
+      swipeStartX = e.touches[0].clientX;
     });
-  }
-
-  // Camera
-  if (cameraBtn && cameraFileInput) {
-    cameraBtn.addEventListener("click", () => cameraFileInput.click());
-    cameraFileInput.addEventListener("change", () => {
-      const file = cameraFileInput.files?.[0];
-      if (!file) return;
-      const info = `[DOSYA: ${file.name}]`;
-      if (messageInput) messageInput.value = messageInput.value ? messageInput.value + " " + info : info;
+    document.addEventListener("touchend", (e) => {
+      if (swipeStartX === null) return;
+      if (!sidebar || sidebar.classList.contains("hidden")) { swipeStartX = null; return; }
+      if (!e.changedTouches?.length) return;
+      const endX = e.changedTouches[0].clientX;
+      const diffX = endX - swipeStartX;
+      if (Math.abs(diffX) > 60) sidebar.classList.add("hidden");
+      swipeStartX = null;
     });
-  }
 
-  if (refreshTrendsBtn) refreshTrendsBtn.addEventListener("click", loadTrends);
+    const openHelp = () => helpPanel && helpPanel.classList.remove("hidden");
+    const closeHelp = () => helpPanel && helpPanel.classList.add("hidden");
+    if (helpToggle) helpToggle.addEventListener("click", openHelp);
+    if (helpToggle2) helpToggle2.addEventListener("click", openHelp);
+    if (closeHelpBtn) closeHelpBtn.addEventListener("click", closeHelp);
 
-  // Series
-  if (seriesGenerate && seriesTopic && seriesResult) {
-    seriesGenerate.addEventListener("click", async () => {
-      const topic = seriesTopic.value.trim();
-      if (!topic) return;
-      const t = I18N[state.lang] || I18N.tr;
-      seriesResult.textContent = t.loadingText || "Yükleniyor...";
-      seriesResult.textContent = await callSimpleAPI("series", { topic, lang: LANG_NAMES[state.lang] || "Turkish" });
-    });
-  }
+    if (newChatBtn) {
+      newChatBtn.addEventListener("click", () => {
+        const conv = {
+          id: Date.now().toString(),
+          title: state.lang === "tr" ? "Yeni sohbet" : "New chat",
+          messages: [],
+          createdAt: Date.now(),
+        };
+        state.conversations.unshift(conv);
+        state.currentId = conv.id;
 
-  // Hook: free -> ad -> generate
-  if (hookGenerate && hookTopic && hookResult) {
-    hookGenerate.addEventListener("click", async () => {
-      const topic = hookTopic.value.trim();
-      if (!topic) return;
-      const t = I18N[state.lang] || I18N.tr;
+        // ✅ sohbet sayısı limiti
+        state.conversations = normalizeConversationsForStorage(state.conversations);
 
-      const runHook = async () => {
-        hookResult.textContent = t.loadingText || "Yükleniyor...";
-        hookResult.textContent = await callSimpleAPI("hook", { topic, lang: LANG_NAMES[state.lang] || "Turkish" });
-      };
+        scheduleSaveConversations();
+        renderConversationList();
+        renderMessages();
+      });
+    }
 
-      if (state.plan === "pro") return runHook();
-      hookResult.textContent = t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
-      startRewardAd("generate", runHook);
-    });
-  }
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener("click", (e) => {
+        if (e.target !== modalBackdrop) return;
+        closeAdModal();
+        closeProModal();
+      });
+    }
 
-  // Copy: free -> ad -> generate
-  if (copyGenerate && copyTopic && copyResult) {
-    copyGenerate.addEventListener("click", async () => {
-      const t = I18N[state.lang] || I18N.tr;
-      const topic = copyTopic.value.trim();
-      if (!topic) return;
+    if (watchAdBtn) {
+      watchAdBtn.addEventListener("click", () => {
+        if (state.plan !== "free") return;
+        startRewardAd("credit");
+      });
+    }
 
-      const runCopy = async () => {
-        copyResult.textContent = t.loadingText || "Yükleniyor...";
-        copyResult.textContent = await callSimpleAPI("copy", { topic, lang: LANG_NAMES[state.lang] || "Turkish" });
-      };
+    if (adCancelBtn) adCancelBtn.addEventListener("click", closeAdModal);
+    if (adWatchedBtn) adWatchedBtn.addEventListener("click", () => handleRewardedAdFinished());
 
-      if (state.plan === "pro") return runCopy();
-      copyResult.textContent = t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
-      startRewardAd("generate", runCopy);
-    });
-  }
+    if (adCloseIcon) {
+      adCloseIcon.addEventListener("click", () => {
+        if (adStepMain) adStepMain.classList.add("hidden");
+        if (adStepConfirm) adStepConfirm.classList.remove("hidden");
+      });
+    }
+    if (adContinueBtn) {
+      adContinueBtn.addEventListener("click", () => {
+        if (adStepConfirm) adStepConfirm.classList.add("hidden");
+        if (adStepMain) adStepMain.classList.remove("hidden");
+      });
+    }
+    if (adConfirmCloseBtn) adConfirmCloseBtn.addEventListener("click", closeAdModal);
 
-  // PRO tools
-  if (proCompetitorBtn && proCompetitorInput && proCompetitorResult) {
-    proCompetitorBtn.addEventListener("click", async () => {
-      const value = proCompetitorInput.value.trim();
-      if (!value) return;
-      const t = I18N[state.lang] || I18N.tr;
-      proCompetitorResult.textContent = t.loadingText || "Yükleniyor...";
-      proCompetitorResult.textContent = await callRealProEndpoint("pro-competitor", value);
-    });
-  }
+    if (proCloseBtn) proCloseBtn.addEventListener("click", closeProModal);
 
-  if (proAudienceBtn && proAudienceInput && proAudienceResult) {
-    proAudienceBtn.addEventListener("click", async () => {
-      const value = proAudienceInput.value.trim();
-      if (!value) return;
-      const t = I18N[state.lang] || I18N.tr;
-      proAudienceResult.textContent = t.loadingText || "Yükleniyor...";
-      proAudienceResult.textContent = await callRealProEndpoint("pro-audience", value);
-    });
-  }
+    if (subscribeBtn) {
+      subscribeBtn.addEventListener("click", () => {
+        if (state.plan === "pro") return;
+        openProModal();
+      });
+    }
 
-  if (proSilentBtn && proSilentInput && proSilentResult) {
-    proSilentBtn.addEventListener("click", async () => {
-      const value = proSilentInput.value.trim();
-      if (!value) return;
-      const t = I18N[state.lang] || I18N.tr;
-      proSilentResult.textContent = t.loadingText || "Yükleniyor...";
-      proSilentResult.textContent = await callRealProEndpoint("pro-silent", value);
-    });
-  }
+    if (proPayBtn) {
+      proPayBtn.addEventListener("click", () => {
+        const isTr = state.lang === "tr";
+        if (window.AndroidBilling && window.AndroidBilling.startPurchase) {
+          const sku = isTr ? "pro_monthly_tr" : "pro_monthly_intl";
+          window.AndroidBilling.startPurchase(sku);
+        } else {
+          alert(
+            isTr
+              ? "Bu web sürümünde gerçek ödeme yok. Android uygulamada Google Play satın alma açılacak."
+              : "Billing is not enabled in web preview. Use Android build for Google Play purchase."
+          );
+        }
+      });
+    }
 
-  // Chat submit (credits only here)
-  if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
-    chatForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    // Onboarding: lang step
+    if (onboardLangSaveBtn && onboardLangSelect) {
+      onboardLangSaveBtn.addEventListener("click", () => {
+        const code = onboardLangSelect.value || "tr";
+        state.lang = code;
+        localStorage.setItem(LANG_KEY, code);
+        if (langSelect) langSelect.value = code;
 
-      const t = I18N[state.lang] || I18N.tr;
-      const topic = (topicInput.value || "").trim();
-      const extra = (messageInput.value || "").trim();
-      const platform = platformSelect.value || "tiktok";
-
-      const basePrompt = extra ? `${topic}\n\n${extra}` : topic;
-      if (!basePrompt) return;
-
-      const prompt =
-        state.plan === "pro"
-          ? "[PRO_USER] Kullanıcı PRO planda. Daha detaylı, özgün, ileri seviye kısa video fikirleri üret.\n\n" + basePrompt
-          : basePrompt;
-
-      if (state.plan === "free" && state.credits <= 0) {
-        alert(t.freeNoCreditsAlert);
-        return;
-      }
-
-      addMessage("user", prompt);
-      const pendingIdx = addMessage("assistant", t.loadingText || "Yükleniyor...");
-      loadingEl.classList.remove("hidden");
-
-      const reply = await callIdeasAPI(prompt, platform, state.lang);
-      updateMessageAt(pendingIdx, cleanText(reply));
-
-      loadingEl.classList.add("hidden");
-
-      if (state.plan === "free") {
-        state.credits = Math.max(0, state.credits - 1);
-        saveCredits();
-        updatePlanAndCreditsUI();
         applyAllTranslations();
-      }
+        loadTrends();
 
-      topicInput.value = "";
-      messageInput.value = "";
+        if (onboardStepLang) onboardStepLang.classList.add("hidden");
+        if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
+        setTimeout(() => { try { onboardEmailInput && onboardEmailInput.focus(); } catch {} }, 50);
+
+        setOnboardingVisible(true);
+        setAppVisible(false);
+      });
+    }
+
+    // Onboarding: email/password
+    if (onboardEmailSaveBtn && onboardEmailInput && onboardPasswordInput) {
+      onboardEmailSaveBtn.addEventListener("click", async () => {
+        const emailRaw = onboardEmailInput.value.trim();
+        const password = onboardPasswordInput.value.trim();
+        const email = sanitizeEmail(emailRaw).toLowerCase();
+
+        if (!email || !password) {
+          alert(state.lang === "tr" ? "Lütfen e-posta ve şifre girin." : "Please enter email and password.");
+          return;
+        }
+
+        try {
+          const res = await fetchWithTimeout(apiUrl("/api/register-user"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-user-email": email },
+            body: JSON.stringify({
+              email,
+              password,
+              plan: state.plan,
+              credits: state.credits,
+              lang: state.lang,
+            }),
+          });
+
+          const data = await res.json().catch(() => null);
+
+          if (res.status === 401 && data?.message === "INVALID_PASSWORD") {
+            alert(state.lang === "tr" ? "Şifre yanlış." : "Wrong password.");
+            return;
+          }
+          if (!res.ok || !data) throw new Error(data?.error || data?.message || "Sunucu hatası");
+
+          state.email = email;
+          saveEmail();
+
+          const u = data.user || {};
+          if (u.plan) setPlanSafe(u.plan);
+          if (typeof u.credits !== "undefined") {
+            state.credits = u.credits;
+            saveCredits();
+          }
+          if (u.lang && LANG_NAMES[u.lang]) {
+            state.lang = u.lang;
+            localStorage.setItem(LANG_KEY, u.lang);
+            if (langSelect) langSelect.value = u.lang;
+          }
+
+          applyAllTranslations();
+
+          setOnboardingVisible(false);
+          setAppVisible(true);
+          showPanel("chat", true);
+
+          if (data.status === "login")
+            alert(state.lang === "tr" ? "Giriş başarılı. 👌" : "Login successful. 👌");
+          else if (data.status === "registered")
+            alert(state.lang === "tr" ? "Hesap oluşturuldu ve giriş yapıldı. 🎉" : "Account created and logged in. 🎉");
+        } catch (e) {
+          alert((state.lang === "tr" ? "Giriş/kayıt hatası: " : "Login/register error: ") + (e.message || ""));
+        }
+      });
+    }
+
+    if (changeEmailBtn) {
+      changeEmailBtn.addEventListener("click", () => {
+        setOnboardingVisible(true);
+        setAppVisible(false);
+
+        if (onboardStepLang) onboardStepLang.classList.add("hidden");
+        if (onboardStepEmail) onboardStepEmail.classList.remove("hidden");
+
+        setTimeout(() => { try { onboardEmailInput && onboardEmailInput.focus(); } catch {} }, 50);
+      });
+    }
+
+    if (langSelect) {
+      langSelect.addEventListener("change", () => {
+        const code = langSelect.value;
+        if (!LANG_NAMES[code]) return;
+        state.lang = code;
+        localStorage.setItem(LANG_KEY, code);
+        applyAllTranslations();
+        loadTrends();
+      });
+    }
+
+    document.querySelectorAll(".side-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.panel || btn.getAttribute("data-panel") || "chat";
+        showPanel(target, true);
+        if (sidebar) sidebar.classList.add("hidden");
+      });
     });
+
+    // Voice
+    let recognition = null;
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRec();
+      recognition.lang = LANG_SPEECH[state.lang] || "en-US";
+      recognition.interimResults = false;
+      window.__recognitionRef = recognition;
+    }
+
+    if (voiceBtn) {
+      voiceBtn.addEventListener("click", () => {
+        if (!recognition) {
+          alert(state.lang === "tr" ? "Bu tarayıcıda ses tanıma desteklenmiyor. (Chrome önerilir)" : "Speech recognition is not supported.");
+          return;
+        }
+        try { recognition.lang = LANG_SPEECH[state.lang] || "en-US"; recognition.start(); } catch {}
+        voiceBtn.disabled = true;
+        voiceBtn.textContent = "🎤…";
+
+        recognition.onresult = (ev) => {
+          const text = ev.results?.[0]?.[0]?.transcript || "";
+          if (messageInput && text) messageInput.value = (messageInput.value + " " + text).trim();
+        };
+        recognition.onerror = () => alert(state.lang === "tr" ? "Ses tanıma sırasında hata oldu." : "Speech recognition error.");
+        recognition.onend = () => { voiceBtn.disabled = false; voiceBtn.textContent = "🎤"; };
+      });
+    }
+
+    // Camera
+    if (cameraBtn && cameraFileInput) {
+      cameraBtn.addEventListener("click", () => cameraFileInput.click());
+      cameraFileInput.addEventListener("change", () => {
+        const file = cameraFileInput.files?.[0];
+        if (!file) return;
+        const info = `[DOSYA: ${file.name}]`;
+        if (messageInput) messageInput.value = messageInput.value ? messageInput.value + " " + info : info;
+      });
+    }
+
+    if (refreshTrendsBtn) refreshTrendsBtn.addEventListener("click", loadTrends);
+
+    // Series
+    if (seriesGenerate && seriesTopic && seriesResult) {
+      seriesGenerate.addEventListener("click", async () => {
+        const topic = seriesTopic.value.trim();
+        if (!topic) return;
+        const t = I18N[state.lang] || I18N.tr;
+        seriesResult.textContent = t.loadingText || "Yükleniyor...";
+        seriesResult.textContent = await callSimpleAPI("series", { topic, lang: LANG_NAMES[state.lang] || "Turkish" });
+      });
+    }
+
+    // Hook: free -> ad -> generate
+    if (hookGenerate && hookTopic && hookResult) {
+      hookGenerate.addEventListener("click", async () => {
+        const topic = hookTopic.value.trim();
+        if (!topic) return;
+        const t = I18N[state.lang] || I18N.tr;
+
+        const runHook = async () => {
+          hookResult.textContent = t.loadingText || "Yükleniyor...";
+          hookResult.textContent = await callSimpleAPI("hook", { topic, lang: LANG_NAMES[state.lang] || "Turkish" });
+        };
+
+        if (state.plan === "pro") return runHook();
+        hookResult.textContent = t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
+        startRewardAd("generate", runHook);
+      });
+    }
+
+    // Copy: free -> ad -> generate
+    if (copyGenerate && copyTopic && copyResult) {
+      copyGenerate.addEventListener("click", async () => {
+        const t = I18N[state.lang] || I18N.tr;
+        const topic = copyTopic.value.trim();
+        if (!topic) return;
+
+        const runCopy = async () => {
+          copyResult.textContent = t.loadingText || "Yükleniyor...";
+          copyResult.textContent = await callSimpleAPI("copy", { topic, lang: LANG_NAMES[state.lang] || "Turkish" });
+        };
+
+        if (state.plan === "pro") return runCopy();
+        copyResult.textContent = t.adPlayingText || "Reklam izleniyor… Bitince sonuç gelecek.";
+        startRewardAd("generate", runCopy);
+      });
+    }
+
+    // PRO tools
+    if (proCompetitorBtn && proCompetitorInput && proCompetitorResult) {
+      proCompetitorBtn.addEventListener("click", async () => {
+        const value = proCompetitorInput.value.trim();
+        if (!value) return;
+        const t = I18N[state.lang] || I18N.tr;
+        proCompetitorResult.textContent = t.loadingText || "Yükleniyor...";
+        proCompetitorResult.textContent = await callRealProEndpoint("pro-competitor", value);
+      });
+    }
+
+    if (proAudienceBtn && proAudienceInput && proAudienceResult) {
+      proAudienceBtn.addEventListener("click", async () => {
+        const value = proAudienceInput.value.trim();
+        if (!value) return;
+        const t = I18N[state.lang] || I18N.tr;
+        proAudienceResult.textContent = t.loadingText || "Yükleniyor...";
+        proAudienceResult.textContent = await callRealProEndpoint("pro-audience", value);
+      });
+    }
+
+    if (proSilentBtn && proSilentInput && proSilentResult) {
+      proSilentBtn.addEventListener("click", async () => {
+        const value = proSilentInput.value.trim();
+        if (!value) return;
+        const t = I18N[state.lang] || I18N.tr;
+        proSilentResult.textContent = t.loadingText || "Yükleniyor...";
+        proSilentResult.textContent = await callRealProEndpoint("pro-silent", value);
+      });
+    }
+
+    // Chat submit (credits only here)
+    if (chatForm && topicInput && platformSelect && messageInput && loadingEl) {
+      chatForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const t = I18N[state.lang] || I18N.tr;
+        const topic = (topicInput.value || "").trim();
+        const extra = (messageInput.value || "").trim();
+        const platform = platformSelect.value || "tiktok";
+
+        const basePrompt = extra ? `${topic}\n\n${extra}` : topic;
+        if (!basePrompt) return;
+
+        const prompt =
+          state.plan === "pro"
+            ? "[PRO_USER] Kullanıcı PRO planda. Daha detaylı, özgün, ileri seviye kısa video fikirleri üret.\n\n" + basePrompt
+            : basePrompt;
+
+        if (state.plan === "free" && state.credits <= 0) {
+          alert(t.freeNoCreditsAlert);
+          return;
+        }
+
+        // ✅ storage şişmesin: kaydedilen prompt metnini role-limit ile clamp
+        addMessage("user", prompt);
+
+        const pendingIdx = addMessage("assistant", t.loadingText || "Yükleniyor...");
+        loadingEl.classList.remove("hidden");
+
+        const reply = await callIdeasAPI(prompt, platform, state.lang);
+        updateMessageAt(pendingIdx, cleanText(reply));
+
+        loadingEl.classList.add("hidden");
+
+        if (state.plan === "free") {
+          state.credits = Math.max(0, state.credits - 1);
+          saveCredits();
+          updatePlanAndCreditsUI();
+          applyAllTranslations();
+        }
+
+        topicInput.value = "";
+        messageInput.value = "";
+      });
+    }
+  } catch (e) {
+    showCrashOverlay(e?.message || "DOMContentLoaded crash");
   }
 });
 
@@ -1442,4 +1667,4 @@ if ("serviceWorker" in navigator) {
     .register("./service-worker.js")
     .then(() => navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.update())))
     .catch((err) => console.error("SW hatası:", err));
-     }
+       }
