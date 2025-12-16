@@ -1,11 +1,10 @@
 // api/pro-competitor.js
-// PRO Araç – Rakip Video Analizi (OpenAI destekli, ESM)
+// PRO Araç – Rakip Video Analizi (ESM uyumlu) — DAHA DETAYLI + DAHA HIZLI (OpenAI yok)
 
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
-const openaiKey = process.env.OPENAI_API_KEY;
 
 const supabase =
   supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
@@ -15,9 +14,11 @@ function normalizeEmail(v) {
   if (!s || s === "null" || s === "undefined" || s === "none") return "";
   return s;
 }
+
 function normalizePlan(v) {
   return String(v || "").trim().toLowerCase();
 }
+
 function isProUser(userRow) {
   if (!userRow) return false;
   const p1 = normalizePlan(userRow.plan);
@@ -26,6 +27,7 @@ function isProUser(userRow) {
   if (userRow.is_pro === true) return true;
   return false;
 }
+
 function getHeaderEmail(req) {
   return (
     req.headers["x-user-email"] ||
@@ -34,41 +36,6 @@ function getHeaderEmail(req) {
     req.headers["x_email"] ||
     ""
   );
-}
-
-function setCors(res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, x-user-email, x-email"
-  );
-  res.setHeader("Access-Control-Max-Age", "86400");
-}
-
-async function callOpenAI({ system, user, maxTokens = 1100 }) {
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openaiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      max_tokens: maxTokens,
-    }),
-  });
-
-  const data = await r.json();
-  if (!r.ok) {
-    console.error("OPENAI_NOT_OK (pro-competitor)", data);
-    return null;
-  }
-  return data?.choices?.[0]?.message?.content || null;
 }
 
 export default async function handler(req, res) {
@@ -82,19 +49,35 @@ export default async function handler(req, res) {
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
   const ONLY_PRO_EN = "This tool is for PRO members only. Upgrade to use it.";
 
-  setCors(res);
+  // OPTIONS (CORS)
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, x-user-email, x-email"
+    );
+    return res.status(204).end();
+  }
 
-  if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "POST") return res.status(200).json({ message: GENERIC_FAIL });
+  // Sadece POST
+  if (req.method !== "POST") {
+    return res.status(200).json({ message: GENERIC_FAIL });
+  }
 
   if (!supabase) {
     console.error("PRO_COMPETITOR_ENV_MISSING");
     return res.status(200).json({ message: GENERIC_FAIL });
   }
 
+  // Body parse
   let body = req.body || {};
   if (typeof body === "string") {
-    try { body = JSON.parse(body); } catch { body = {}; }
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
   }
 
   const lang = body.lang || "Turkish";
@@ -112,22 +95,26 @@ export default async function handler(req, res) {
   }
 
   if (!email) {
-    return res.status(200).json({ message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN });
+    return res.status(200).json({
+      message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
+      code: "NEED_LOGIN",
+    });
   }
 
-  // Kullanıcıyı bul
+  // Kullanıcıyı bul (daha hızlı: eq)
   let userRow = null;
   try {
     const { data, error } = await supabase
       .from("users")
       .select("id, email, plan, Plan, is_pro")
-      .ilike("email", email)
+      .eq("email", email)
       .limit(1);
 
     if (error) {
       console.error("Supabase error (pro-competitor):", error);
       return res.status(200).json({ message: GENERIC_FAIL });
     }
+
     userRow = Array.isArray(data) && data.length ? data[0] : null;
   } catch (e) {
     console.error("Supabase exception (pro-competitor):", e);
@@ -135,9 +122,13 @@ export default async function handler(req, res) {
   }
 
   if (!userRow) {
-    return res.status(200).json({ message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN });
+    return res.status(200).json({
+      message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
+      code: "USER_NOT_FOUND",
+    });
   }
 
+  // PRO değilse 403
   if (!isProUser(userRow)) {
     return res.status(403).json({
       message: isTR ? ONLY_PRO_TR : ONLY_PRO_EN,
@@ -145,38 +136,51 @@ export default async function handler(req, res) {
     });
   }
 
-  // OpenAI yoksa (env) fallback
-  if (!openaiKey) {
-    console.error("OPENAI_API_KEY_MISSING (pro-competitor)");
-    return res.status(200).json({ message: GENERIC_FAIL });
-  }
+  // ✅ DAHA DETAYLI CEVAP (Hızlı: sabit şablon, ama yönlendirici)
+  const msgTR =
+    "Rakip içerik analizi (detaylı):\n\n" +
+    "A) İzlenme sebebi (en sık 3 tetikleyici)\n" +
+    "• İlk 2 saniye merak/vaat (izleyiciyi kilitler)\n" +
+    "• Tek fikir – tek problem (kafa karıştırmaz)\n" +
+    "• Tempo: 2–4 sn’de bir sahne/zoom/kesme\n\n" +
+    "B) Sende aynısını daha iyi yapmak için net reçete\n" +
+    "1) Hook (0–2 sn)\n" +
+    "• Büyük vaat + hedef kitle: “Eğer [hedef] isen, bunu kaçırma…”\n" +
+    "• Ters köşe: “Herkes yanlış yapıyor, doğrusu şu…”\n" +
+    "• Sayı: “3 adımda…” / “10 saniyede…”\n\n" +
+    "2) Akış (2–15 sn)\n" +
+    "• Problem (2–4 sn): “Şu yüzden olmuyor…”\n" +
+    "• Mini çözüm (4–12 sn): 2–3 madde (her madde 2–3 sn)\n" +
+    "• Kanıt (12–15 sn): mini örnek / önce-sonra / ekran kaydı\n\n" +
+    "3) Caption/Metin (ekran yazısı)\n" +
+    "• 5–7 kelimeyi geçme\n" +
+    "• Her cümleyi 1 satır yap\n" +
+    "• Ana kelimeyi büyüt: [KAZANÇ], [HATA], [ÇÖZÜM]\n\n" +
+    "4) CTA (son 2 sn)\n" +
+    "• “Devamını istiyorsan ‘DEVAM’ yaz.”\n" +
+    "• “Kaydet – sonra lazım olacak.”\n" +
+    "• “Part 2 gelsin mi?”\n\n" +
+    "C) Hızlı şablon (kopyala-yapıştır)\n" +
+    "Hook → Problem → 3 Madde → Mini örnek → CTA\n\n" +
+    "D) Benden daha net sonuç almak için\n" +
+    "• Linkse: videonun konusu + hedef kitleyi 1 cümle yaz\n" +
+    "• Açıklamaysa: ‘konu / kime / amaç’ şeklinde yaz\n";
 
-  const system = isTR
-    ? `Sen üst düzey bir kısa video (TikTok/Reels/Shorts) büyüme stratejisti ve editörsün.
-Kullanıcı sana "rakip video linki veya açıklaması" verir. Sen linke gidemesen bile metinden hareketle PROFESYONEL analiz çıkarırsın.
-ÇIKTI FORMATIN (Türkçe, çok net, madde madde):
-1) Rakibin HOOK'u (ilk 2 saniye) — tahmin + 3 alternatif hook
-2) Yapı Analizi (0-3 / 3-8 / 8-15 / 15-25 / kapanış)
-3) Neden İzleniyor? (psikoloji + pacing + görsel + caption)
-4) Aynısını Yapma, Daha İyisini Yap: 7 somut iyileştirme (uygulanabilir)
-5) Senaryonu Yaz: 25 saniyelik script (konuşma metni + ekranda yazacak caption)
-6) Çekim planı: sahne sahne (kamera, açı, b-roll, geçiş)
-7) Edit rehberi: ritim, altyazı stili, efekt dozajı, müzik öneri tipi
-8) 3 Başlık + 10 hashtag (TR)
-Asla boş laf etme. "Genel" cümle yok.`
-    : `You are an elite short-video growth strategist.
-Return highly actionable analysis in English with:
-hook breakdown + 3 hook variations, structure timeline, why it works,
-7 improvements, a 25s script + on-screen captions, shot list, editing guide,
-3 titles + 10 hashtags. No generic fluff.`;
+  const msgEN =
+    "Competitor analysis (detailed):\n\n" +
+    "A) Why it gets views\n" +
+    "• Strong first 2 seconds (promise/curiosity)\n" +
+    "• One clear idea (no confusion)\n" +
+    "• Fast pacing (cut/zoom every 2–4s)\n\n" +
+    "B) Do it better (recipe)\n" +
+    "1) Hook (0–2s): big promise / twist / number\n" +
+    "2) Flow (2–15s): problem → 2–3 quick points → mini proof\n" +
+    "3) Captions: short lines, highlight keywords\n" +
+    "4) CTA: comment/save/part2\n\n" +
+    "Template: Hook → Problem → 3 Points → Proof → CTA\n";
 
-  const user = isTR
-    ? `Rakip video linki/açıklaması:\n${input}\n\nBunu analiz et ve bana "kopyalamadan daha iyisini" üretecek planı ver.`
-    : `Competitor link/description:\n${input}\n\nAnalyze and give me a plan to outperform it (not copy).`;
-
-  const aiText = await callOpenAI({ system, user, maxTokens: 1200 });
-
-  if (!aiText) return res.status(200).json({ message: GENERIC_FAIL });
-
-  return res.status(200).json({ message: aiText, ok: true });
+  return res.status(200).json({
+    ok: true,
+    message: isTR ? msgTR : msgEN,
+  });
 }
