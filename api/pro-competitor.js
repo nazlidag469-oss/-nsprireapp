@@ -1,24 +1,38 @@
 // api/pro-competitor.js
-// PRO Araç – Rakip Video Analizi (ESM uyumlu) — DAHA DETAYLI + DAHA HIZLI (OpenAI yok)
+// PRO Araç – Rakip Video Analizi (sohbet gibi + tekrar etmeyen + daha net yönlendiren)
 
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+const openaiKey = process.env.OPENAI_API_KEY;
 
 const supabase =
   supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
+
+const LANG_MAP = {
+  tr: "Turkish",
+  en: "English",
+  es: "Spanish",
+  de: "German",
+  ar: "Arabic",
+};
+
+function setCors(res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-user-email, x-email");
+  res.setHeader("Access-Control-Max-Age", "86400");
+}
 
 function normalizeEmail(v) {
   const s = String(v || "").trim().toLowerCase();
   if (!s || s === "null" || s === "undefined" || s === "none") return "";
   return s;
 }
-
 function normalizePlan(v) {
   return String(v || "").trim().toLowerCase();
 }
-
 function isProUser(userRow) {
   if (!userRow) return false;
   const p1 = normalizePlan(userRow.plan);
@@ -27,7 +41,6 @@ function isProUser(userRow) {
   if (userRow.is_pro === true) return true;
   return false;
 }
-
 function getHeaderEmail(req) {
   return (
     req.headers["x-user-email"] ||
@@ -38,50 +51,86 @@ function getHeaderEmail(req) {
   );
 }
 
+function detectLangKey(langRaw) {
+  if (!langRaw) return "tr";
+  const val = String(langRaw).toLowerCase();
+  if (LANG_MAP[val]) return val;
+  for (const [code, name] of Object.entries(LANG_MAP)) {
+    if (String(name).toLowerCase() === val) return code;
+  }
+  return "tr";
+}
+
+async function fetchOpenAIChat({
+  messages,
+  maxTokens = 900,
+  timeoutMs = 16000,
+}) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${openaiKey}`,
+        "Content-Type": "application/json",
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages,
+        temperature: 0.85,          // daha yaratıcı ama hâlâ kontrollü
+        presence_penalty: 0.45,     // tekrar eden şablonu kırar
+        frequency_penalty: 0.25,    // aynı cümleleri azaltır
+        max_tokens: maxTokens,
+      }),
+    });
+
+    const data = await r.json().catch(() => null);
+    if (!r.ok) {
+      console.error("OPENAI_PRO_COMPETITOR_NOT_OK", data);
+      return null;
+    }
+    const text = data?.choices?.[0]?.message?.content;
+    return typeof text === "string" ? text.trim() : null;
+  } catch (e) {
+    console.error("OPENAI_PRO_COMPETITOR_ERROR", e);
+    return null;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+function isVeryShortInput(s) {
+  const t = String(s || "").trim();
+  // “ben ve sen” gibi 1-3 kelime: şablona kaçmasın diye özel yol
+  return t.length < 18 || t.split(/\s+/).filter(Boolean).length <= 3;
+}
+
 export default async function handler(req, res) {
-  const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
+  setCors(res);
 
-  const NEED_LOGIN_TR =
-    "Bu PRO aracı için giriş yapman gerekiyor. (E-posta ile giriş yaptıktan sonra tekrar dene.)";
-  const NEED_LOGIN_EN = "You must login with email to use this PRO tool.";
+  const GENERIC_FAIL_TR = "Şu an yanıt üretilemedi. 10 sn sonra tekrar dener misin?";
+  const NEED_LOGIN_TR = "Bu PRO aracı için e-posta ile giriş yapman gerekiyor.";
+  const ONLY_PRO_TR = "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek açabilirsin.";
 
-  const ONLY_PRO_TR =
-    "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
-  const ONLY_PRO_EN = "This tool is for PRO members only. Upgrade to use it.";
-
-  // OPTIONS (CORS)
-  if (req.method === "OPTIONS") {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type, x-user-email, x-email"
-    );
-    return res.status(204).end();
-  }
-
-  // Sadece POST
-  if (req.method !== "POST") {
-    return res.status(200).json({ message: GENERIC_FAIL });
-  }
+  if (req.method === "OPTIONS") return res.status(204).end();
+  if (req.method !== "POST") return res.status(200).json({ message: GENERIC_FAIL_TR });
 
   if (!supabase) {
     console.error("PRO_COMPETITOR_ENV_MISSING");
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return res.status(200).json({ message: GENERIC_FAIL_TR });
   }
 
-  // Body parse
   let body = req.body || {};
   if (typeof body === "string") {
-    try {
-      body = JSON.parse(body);
-    } catch {
-      body = {};
-    }
+    try { body = JSON.parse(body); } catch { body = {}; }
   }
 
-  const lang = body.lang || "Turkish";
-  const isTR = lang === "tr" || lang === "Turkish";
+  const langKey = detectLangKey(body.lang || "tr");
+  const isTR = langKey === "tr";
+  const langName = LANG_MAP[langKey] || "Turkish";
 
   const email = normalizeEmail(body.email || getHeaderEmail(req));
   const input = String(body.input || "").trim();
@@ -89,98 +138,99 @@ export default async function handler(req, res) {
   if (!input) {
     return res.status(200).json({
       message: isTR
-        ? "Lütfen rakip video linki veya açıklaması yaz."
-        : "Please paste the competitor video link or description.",
+        ? "Rakip video için şunu yaz: (1) video konusu + (2) hedef kitle + (3) videodaki iddia/mesaj. (Link varsa da olur.)"
+        : "Describe the competitor video: topic + audience + main claim (link optional).",
     });
   }
 
   if (!email) {
-    return res.status(200).json({
-      message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
-      code: "NEED_LOGIN",
-    });
+    return res.status(200).json({ message: NEED_LOGIN_TR, code: "NEED_LOGIN" });
   }
 
-  // Kullanıcıyı bul (daha hızlı: eq)
+  // user check
   let userRow = null;
   try {
     const { data, error } = await supabase
       .from("users")
       .select("id, email, plan, Plan, is_pro")
-      .eq("email", email)
+      .ilike("email", email)
       .limit(1);
 
     if (error) {
       console.error("Supabase error (pro-competitor):", error);
-      return res.status(200).json({ message: GENERIC_FAIL });
+      return res.status(200).json({ message: GENERIC_FAIL_TR });
     }
-
     userRow = Array.isArray(data) && data.length ? data[0] : null;
   } catch (e) {
     console.error("Supabase exception (pro-competitor):", e);
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return res.status(200).json({ message: GENERIC_FAIL_TR });
   }
 
   if (!userRow) {
-    return res.status(200).json({
-      message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
-      code: "USER_NOT_FOUND",
-    });
+    return res.status(200).json({ message: NEED_LOGIN_TR, code: "USER_NOT_FOUND" });
   }
 
-  // PRO değilse 403
   if (!isProUser(userRow)) {
-    return res.status(403).json({
-      message: isTR ? ONLY_PRO_TR : ONLY_PRO_EN,
-      code: "PRO_REQUIRED",
+    return res.status(403).json({ message: ONLY_PRO_TR, code: "PRO_REQUIRED" });
+  }
+
+  if (!openaiKey) {
+    // fallback (boş dönmesin)
+    return res.status(200).json({
+      ok: true,
+      message: isTR
+        ? `Tamam. “${input}” için 3 farklı yaklaşım çıkarırım ama daha net olması için şu 2 şeyi yaz:\n- Video ne vaadediyor? (1 cümle)\n- Kime hitap ediyor? (1 cümle)\n\nŞimdilik hızlı öneri: 0–2 sn net iddia + 2–10 sn 3 madde + 10–15 sn mini kanıt + CTA.`
+        : `Got it: “${input}”. Add: (1) promise (1 sentence) (2) audience (1 sentence).`,
     });
   }
 
-  // ✅ DAHA DETAYLI CEVAP (Hızlı: sabit şablon, ama yönlendirici)
-  const msgTR =
-    "Rakip içerik analizi (detaylı):\n\n" +
-    "A) İzlenme sebebi (en sık 3 tetikleyici)\n" +
-    "• İlk 2 saniye merak/vaat (izleyiciyi kilitler)\n" +
-    "• Tek fikir – tek problem (kafa karıştırmaz)\n" +
-    "• Tempo: 2–4 sn’de bir sahne/zoom/kesme\n\n" +
-    "B) Sende aynısını daha iyi yapmak için net reçete\n" +
-    "1) Hook (0–2 sn)\n" +
-    "• Büyük vaat + hedef kitle: “Eğer [hedef] isen, bunu kaçırma…”\n" +
-    "• Ters köşe: “Herkes yanlış yapıyor, doğrusu şu…”\n" +
-    "• Sayı: “3 adımda…” / “10 saniyede…”\n\n" +
-    "2) Akış (2–15 sn)\n" +
-    "• Problem (2–4 sn): “Şu yüzden olmuyor…”\n" +
-    "• Mini çözüm (4–12 sn): 2–3 madde (her madde 2–3 sn)\n" +
-    "• Kanıt (12–15 sn): mini örnek / önce-sonra / ekran kaydı\n\n" +
-    "3) Caption/Metin (ekran yazısı)\n" +
-    "• 5–7 kelimeyi geçme\n" +
-    "• Her cümleyi 1 satır yap\n" +
-    "• Ana kelimeyi büyüt: [KAZANÇ], [HATA], [ÇÖZÜM]\n\n" +
-    "4) CTA (son 2 sn)\n" +
-    "• “Devamını istiyorsan ‘DEVAM’ yaz.”\n" +
-    "• “Kaydet – sonra lazım olacak.”\n" +
-    "• “Part 2 gelsin mi?”\n\n" +
-    "C) Hızlı şablon (kopyala-yapıştır)\n" +
-    "Hook → Problem → 3 Madde → Mini örnek → CTA\n\n" +
-    "D) Benden daha net sonuç almak için\n" +
-    "• Linkse: videonun konusu + hedef kitleyi 1 cümle yaz\n" +
-    "• Açıklamaysa: ‘konu / kime / amaç’ şeklinde yaz\n";
+  const runId = Date.now().toString(); // her istekte “aynı cevap” riskini kırar
 
-  const msgEN =
-    "Competitor analysis (detailed):\n\n" +
-    "A) Why it gets views\n" +
-    "• Strong first 2 seconds (promise/curiosity)\n" +
-    "• One clear idea (no confusion)\n" +
-    "• Fast pacing (cut/zoom every 2–4s)\n\n" +
-    "B) Do it better (recipe)\n" +
-    "1) Hook (0–2s): big promise / twist / number\n" +
-    "2) Flow (2–15s): problem → 2–3 quick points → mini proof\n" +
-    "3) Captions: short lines, highlight keywords\n" +
-    "4) CTA: comment/save/part2\n\n" +
-    "Template: Hook → Problem → 3 Points → Proof → CTA\n";
+  // Kısa inputsa: şablon basmasın, 3 senaryo üretip seçtirsin
+  const shortMode = isVeryShortInput(input);
 
-  return res.status(200).json({
-    ok: true,
-    message: isTR ? msgTR : msgEN,
+  const system = `
+You are a senior short-form strategist.
+Write in ${langName}.
+Very important:
+- Do NOT output a generic template that looks the same every time.
+- Write like a normal chat message (short paragraphs + bullets).
+- Make it specific and actionable, with concrete lines to say on screen.
+- Give decisive recommendations.
+
+If the input is too vague, do NOT refuse.
+Instead, generate 3 plausible scenarios and tailor advice for each scenario, then ask 2 short follow-up questions at the end.
+
+Return structure (no big headings, no emojis spam):
+1) Quick diagnosis (2-4 lines)
+2) What makes it work (5 bullets, specific)
+3) How YOU should beat it (exact improvements, not generic)
+4) A ready-to-shoot script (0-2s / 2-6s / 6-12s / 12-18s / 18-25s) with exact on-screen text
+5) 6 alternative hooks (first 1-2 seconds)
+6) One clear “next action” (what user should do now)
+`.trim();
+
+  const user = `
+RUN_ID: ${runId}
+User input (competitor video or description):
+${input}
+
+Mode:
+${shortMode ? "INPUT IS VERY SHORT. Create 3 scenarios and tailor outputs." : "INPUT HAS ENOUGH DETAIL. Tailor directly."}
+
+Goal: higher retention + clearer hook + better conversion to follow/favorite/comment.
+`.trim();
+
+  const text = await fetchOpenAIChat({
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+    maxTokens: 950,
+    timeoutMs: 17000,
   });
-}
+
+  if (!text) return res.status(200).json({ message: GENERIC_FAIL_TR });
+
+  return res.status(200).json({ ok: true, message: text });
+      }
