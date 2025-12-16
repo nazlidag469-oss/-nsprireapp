@@ -1,5 +1,5 @@
 // api/pro-audience.js
-// PRO Araç – Kitle İçgörü Analizi (OpenAI destekli, ESM)
+// PRO Araç – Kitle İçgörü Analizi (ESM uyumlu) — OpenAI destekli, çökme önleyici
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -36,6 +36,7 @@ function getHeaderEmail(req) {
   );
 }
 
+// CORS helper
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -46,33 +47,58 @@ function setCors(res) {
   res.setHeader("Access-Control-Max-Age", "86400");
 }
 
-async function callOpenAI({ system, user, maxTokens = 1200 }) {
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openaiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      max_tokens: maxTokens,
-    }),
-  });
+// Body parse (string gelebilir)
+function safeBody(req) {
+  let body = req.body || {};
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
+  }
+  return body && typeof body === "object" ? body : {};
+}
 
-  const data = await r.json();
-  if (!r.ok) {
-    console.error("OPENAI_NOT_OK (pro-audience)", data);
+// ✅ Timeout’lu fetch
+async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+// ✅ JSON bazen boş/yarım dönebilir
+async function safeJson(response) {
+  try {
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
+  } catch {
     return null;
   }
-  return data?.choices?.[0]?.message?.content || null;
+}
+
+function langFlags(langRaw) {
+  const v = String(langRaw || "").trim();
+  const low = v.toLowerCase();
+  const isTR = low === "tr" || low === "turkish" || low === "türkçe";
+  const langName = isTR ? "Turkish" : "English";
+  return { isTR, langName };
 }
 
 export default async function handler(req, res) {
-  const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
+  setCors(res);
+
+  const GENERIC_FAIL_TR = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
+  const GENERIC_FAIL_EN = "Could not generate a response right now. Please try again.";
 
   const NEED_LOGIN_TR =
     "Bu PRO aracı için giriş yapman gerekiyor. (E-posta ile giriş yaptıktan sonra tekrar dene.)";
@@ -82,32 +108,32 @@ export default async function handler(req, res) {
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
   const ONLY_PRO_EN = "This tool is for PRO members only. Upgrade to use it.";
 
-  setCors(res);
-
   if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "POST") return res.status(200).json({ message: GENERIC_FAIL });
+
+  if (req.method !== "POST") {
+    // client tarafı bozulmasın diye 200 dönüyoruz
+    return res.status(200).json({ message: GENERIC_FAIL_TR });
+  }
 
   if (!supabase) {
     console.error("PRO_AUDIENCE_ENV_MISSING");
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return res.status(200).json({ message: GENERIC_FAIL_TR });
   }
 
-  let body = req.body || {};
-  if (typeof body === "string") {
-    try { body = JSON.parse(body); } catch { body = {}; }
-  }
-
-  const lang = body.lang || "Turkish";
-  const isTR = lang === "tr" || lang === "Turkish";
+  const body = safeBody(req);
+  const { isTR, langName } = langFlags(body.lang || "Turkish");
 
   const email = normalizeEmail(body.email || getHeaderEmail(req));
-  const input = String(body.input || "").trim();
+  const inputRaw = String(body.input || "").trim();
+
+  // input çok uzarsa şişmesin
+  const input = inputRaw.slice(0, 1200);
 
   if (!input) {
     return res.status(200).json({
       message: isTR
-        ? "Lütfen hedef kitleni tek cümle ile yaz. (Örn: 18–24 yaş, öğrenci, sınav stresi...)"
-        : "Please describe your target audience in one sentence.",
+        ? "Hedef kitleni tek cümleyle yaz. (Örn: 18–24, öğrenci, sınav stresi…) "
+        : "Describe your target audience in one sentence.",
     });
   }
 
@@ -126,18 +152,23 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error("Supabase error (pro-audience):", error);
-      return res.status(200).json({ message: GENERIC_FAIL });
+      return res
+        .status(200)
+        .json({ message: isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN });
     }
     userRow = Array.isArray(data) && data.length ? data[0] : null;
   } catch (e) {
     console.error("Supabase exception (pro-audience):", e);
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return res
+      .status(200)
+      .json({ message: isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN });
   }
 
   if (!userRow) {
     return res.status(200).json({ message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN });
   }
 
+  // PRO değilse 403
   if (!isProUser(userRow)) {
     return res.status(403).json({
       message: isTR ? ONLY_PRO_TR : ONLY_PRO_EN,
@@ -145,32 +176,60 @@ export default async function handler(req, res) {
     });
   }
 
+  // OpenAI yoksa yine de patlamasın: kısa ama düzgün fallback
   if (!openaiKey) {
-    console.error("OPENAI_API_KEY_MISSING (pro-audience)");
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return res.status(200).json({
+      ok: true,
+      message: isTR
+        ? `Hedef kitle: ${input}\n\n1) En büyük dert: …\n2) En güçlü vaat: …\n3) 5 hook: …`
+        : `Target audience: ${input}\n\n1) Main pain: …\n2) Strong promise: …\n3) 5 hooks: …`,
+    });
   }
 
-  const system = isTR
-    ? `Sen kısa video büyütme uzmanısın. Kullanıcı sana hedef kitleyi tek cümle verir.
-ÇIKTI (Türkçe) şu başlıklarda, çok dolu ve uygulanabilir olsun:
-1) Kitleyi 3 Persona'ya böl (isim, yaş, hedef, korku, izleme nedeni)
-2) Pain Point Haritası (5 ana acı + günlük hayattan örnek)
-3) Hook bankası: 15 farklı ilk cümle (kitleye özel)
-4) İçerik sütunları: 5 pillar + her biri için 3 video fikri (toplam 15)
-5) CTA ve yorum taktikleri (kaydet, takip, yorum sorusu; 10 örnek)
-6) 7 günlük mini yayın planı (gün/gün konu + hedef metrik)
-7) “Bu kitleye yanlış gelen şeyler” (5 madde)
-Boş laf yok.`
-    : `You are a short-form growth expert. Given one-line target audience, produce:
-3 personas, pain map, 15 hooks, 5 content pillars with 15 ideas, CTA/comment tactics,
-7-day plan, and 5 common mistakes. No fluff.`;
+  // ✅ OpenAI ile “sohbet gibi” cevap (PRO yazma, emoji yok)
+  try {
+    const prompt = isTR
+      ? `Aşağıdaki hedef kitle tanımına göre içerik stratejisi çıkar.\n\nHEDEF KİTLE:\n${input}\n\nİSTEKLER:\n- Cevap kısa ve sohbet gibi olsun, ama yönlendirici ve dolu olsun.\n- “PRO” kelimesini yazma, başlıkları abartma.\n- 1) Persona (1 paragraf)\n- 2) Dertler & itirazlar (madde)\n- 3) Vaad/konumlandırma (madde)\n- 4) 10 hook cümlesi\n- 5) 7 günlük içerik planı (gün/gün, 1 satır)\n- 6) 3 hızlı A/B test fikri\n`
+      : `Create a content strategy for this target audience.\n\nAUDIENCE:\n${input}\n\nREQUIREMENTS:\n- Keep it short and chat-like, but actionable and dense.\n- Don’t write the word “PRO”.\n- 1) Persona (1 paragraph)\n- 2) Pains & objections (bullets)\n- 3) Positioning/promise (bullets)\n- 4) 10 hook lines\n- 5) 7-day content plan (day by day, 1 line)\n- 6) 3 quick A/B test ideas\n`;
 
-  const user = isTR
-    ? `Hedef kitle tanımı:\n${input}\n\nBuna göre detaylı kitle içgörüsü ve uygulanabilir plan çıkar.`
-    : `Target audience:\n${input}\n\nReturn detailed, actionable audience insights and plan.`;
+    const r = await fetchWithTimeout(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openaiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `You are a practical short-form video coach. Answer in ${langName}. No fluff, no long intros.`,
+            },
+            { role: "user", content: prompt },
+          ],
+          max_tokens: 700,
+        }),
+      },
+      12000
+    );
 
-  const aiText = await callOpenAI({ system, user, maxTokens: 1250 });
-  if (!aiText) return res.status(200).json({ message: GENERIC_FAIL });
+    const data = r ? await safeJson(r) : null;
 
-  return res.status(200).json({ message: aiText, ok: true });
+    if (!r || !data || !r.ok) {
+      console.error("OPENAI_PRO_AUDIENCE_NOT_OK", { status: r?.status, data });
+      return res
+        .status(200)
+        .json({ message: isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN });
     }
+
+    const text = data?.choices?.[0]?.message?.content?.trim();
+    return res.status(200).json({ ok: true, message: text || (isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN) });
+  } catch (e) {
+    console.error("PRO_AUDIENCE_OPENAI_ERROR", e);
+    return res
+      .status(200)
+      .json({ message: isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN });
+  }
+      }
