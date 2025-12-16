@@ -45,16 +45,20 @@ function detectLangKey(langRaw) {
 
 // ✅ JSON bazen boş/yarım dönebilir → güvenli parse
 async function safeJson(response) {
-  const text = await response.text();
-  if (!text) return null;
   try {
-    return JSON.parse(text);
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
   } catch {
     return null;
   }
 }
 
-// ✅ Kısa timeout’lu fetch (YouTube/RapidAPI geciktirmesin)
+// ✅ Timeout’lu fetch
 async function fetchWithTimeout(url, options = {}, timeoutMs = 2500) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -71,9 +75,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   if (req.method === "GET") {
-    return res
-      .status(200)
-      .json({ message: "Bu endpoint POST ile çalışır." });
+    return res.status(200).json({ message: "Bu endpoint POST ile çalışır." });
   }
 
   if (req.method !== "POST") {
@@ -81,8 +83,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Sadece POST destekleniyor." });
   }
 
-  const { prompt, platform, lang, mode, format } = req.body || {};
-  const topic = (prompt || "").toString().trim() || "Belirsiz konu";
+  // ✅ Body bazen string gelir → güvenli parse
+  let body = req.body || {};
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
+  }
+
+  const { prompt, platform, lang, mode, format } = body || {};
+
+  // ✅ prompt aşırı uzarsa server/UI kilitlenmesin
+  const topicRaw = (prompt || "").toString().trim();
+  const topic = (topicRaw.slice(0, 800) || "Belirsiz konu");
 
   const langKey = detectLangKey(lang || "tr");
   const langName = LANG_MAP[langKey] || "Turkish";
@@ -120,8 +135,7 @@ export default async function handler(req, res) {
       const r = await fetchWithTimeout(url, {}, 2500);
       const d = r ? await safeJson(r) : null;
 
-      const titles =
-        d?.items?.map((v) => v.snippet?.title).filter(Boolean) || [];
+      const titles = d?.items?.map((v) => v.snippet?.title).filter(Boolean) || [];
 
       if (titles.length) {
         extraContext +=
@@ -134,13 +148,13 @@ export default async function handler(req, res) {
     }
   }
 
-  // ✅ RapidAPI (maks 2.5s) — boş JSON gelirse patlamasın
+  // ✅ RapidAPI (maks 2.5s) — boş/yarım JSON gelirse patlamasın
   if (rapidKey && (platformSafe === "tiktok" || platformSafe === "instagram")) {
     try {
       let url = "";
       let headers = { "x-rapidapi-key": rapidKey };
       let method = "GET";
-      let body = undefined;
+      let body2 = undefined;
 
       if (platformSafe === "tiktok") {
         url =
@@ -153,10 +167,10 @@ export default async function handler(req, res) {
         headers["x-rapidapi-host"] = "instagram120.p.rapidapi.com";
         headers["Content-Type"] = "application/json";
         method = "POST";
-        body = JSON.stringify({ username: topic, maxId: "" });
+        body2 = JSON.stringify({ username: topic, maxId: "" });
       }
 
-      const r = await fetchWithTimeout(url, { method, headers, body }, 2500);
+      const r = await fetchWithTimeout(url, { method, headers, body: body2 }, 2500);
       const d = r ? await safeJson(r) : null;
 
       if (d) {
@@ -172,44 +186,58 @@ export default async function handler(req, res) {
     }
   }
 
-  // ✅ OpenAI
-  try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openaiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Sen kısa video üreticileri için çalışan profesyonel bir içerik koçusun. " +
-              "Cevabı her zaman " +
-              langName +
-              " dilinde ver. Dikey 9:16 formatına göre yaz. " +
-              "Boş cümle yok, net ve uygulanabilir yaz.",
-          },
-          {
-            role: "user",
-            content:
-              `Konu: ${topic}\n` +
-              `Platform: ${platformSafe}\n` +
-              `İstenen format: ${format || "dikey 9:16 kısa video"}\n` +
-              (mode ? `Kullanıcının modu / hedefi: ${mode}\n` : "") +
-              `Ek bağlam:\n${extraContext}`,
-          },
-        ],
-        max_tokens: 450, // ✅ hız için düşürdük
-      }),
-    });
+  // ✅ extraContext büyümesin (OpenAI tarafında gecikme/limit olur)
+  if (extraContext.length > 1200) extraContext = extraContext.slice(0, 1200);
 
-    const data = await response.json();
+  // ✅ OpenAI (timeout + safeJson)
+  try {
+    const payload = {
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Sen kısa video üreticileri için çalışan profesyonel bir içerik koçusun. " +
+            "Cevabı her zaman " +
+            langName +
+            " dilinde ver. Dikey 9:16 formatına göre yaz. " +
+            "Boş cümle yok, net ve uygulanabilir yaz.",
+        },
+        {
+          role: "user",
+          content:
+            `Konu: ${topic}\n` +
+            `Platform: ${platformSafe}\n` +
+            `İstenen format: ${format || "dikey 9:16 kısa video"}\n` +
+            (mode ? `Kullanıcının modu / hedefi: ${mode}\n` : "") +
+            `Ek bağlam:\n${extraContext}`,
+        },
+      ],
+      max_tokens: 450, // hız için
+    };
+
+    const response = await fetchWithTimeout(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openaiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      },
+      12000 // ✅ OpenAI için 12s
+    );
+
+    const data = response ? await safeJson(response) : null;
+
+    if (!response || !data) {
+      console.error("OPENAI_NO_JSON_OR_TIMEOUT");
+      return res.status(200).json({ message: GENERIC_FAIL });
+    }
 
     if (!response.ok) {
-      console.error("OPENAI_RESPONSE_NOT_OK", data);
+      console.error("OPENAI_RESPONSE_NOT_OK", { status: response.status, data });
       return res.status(200).json({ message: GENERIC_FAIL });
     }
 
@@ -224,4 +252,4 @@ export default async function handler(req, res) {
     console.error("IDEAS_API_ERROR", e);
     return res.status(200).json({ message: GENERIC_FAIL });
   }
-        }
+    }
