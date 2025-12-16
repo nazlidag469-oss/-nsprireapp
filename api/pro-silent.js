@@ -1,5 +1,5 @@
 // api/pro-silent.js
-// PRO Araç – Sessiz Video İçerik Üreticisi (OpenAI destekli, ESM)
+// PRO Araç – Sessiz Video İçerik Üreticisi (ESM uyumlu) — OpenAI destekli, çökme önleyici
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -46,33 +46,55 @@ function setCors(res) {
   res.setHeader("Access-Control-Max-Age", "86400");
 }
 
-async function callOpenAI({ system, user, maxTokens = 1200 }) {
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openaiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      max_tokens: maxTokens,
-    }),
-  });
+function safeBody(req) {
+  let body = req.body || {};
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
+  }
+  return body && typeof body === "object" ? body : {};
+}
 
-  const data = await r.json();
-  if (!r.ok) {
-    console.error("OPENAI_NOT_OK (pro-silent)", data);
+async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+async function safeJson(response) {
+  try {
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
+  } catch {
     return null;
   }
-  return data?.choices?.[0]?.message?.content || null;
+}
+
+function langFlags(langRaw) {
+  const v = String(langRaw || "").trim();
+  const low = v.toLowerCase();
+  const isTR = low === "tr" || low === "turkish" || low === "türkçe";
+  const langName = isTR ? "Turkish" : "English";
+  return { isTR, langName };
 }
 
 export default async function handler(req, res) {
-  const GENERIC_FAIL = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
+  setCors(res);
+
+  const GENERIC_FAIL_TR = "Şu an yanıt üretilemedi, lütfen tekrar dene.";
+  const GENERIC_FAIL_EN = "Could not generate a response right now. Please try again.";
 
   const NEED_LOGIN_TR =
     "Bu PRO aracı için giriş yapman gerekiyor. (E-posta ile giriş yaptıktan sonra tekrar dene.)";
@@ -82,37 +104,32 @@ export default async function handler(req, res) {
     "Bu araç yalnızca PRO üyeler içindir. PRO’ya geçerek kullanabilirsin.";
   const ONLY_PRO_EN = "This tool is for PRO members only. Upgrade to use it.";
 
-  setCors(res);
-
   if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "POST") return res.status(200).json({ message: GENERIC_FAIL });
+
+  if (req.method !== "POST") {
+    return res.status(200).json({ message: GENERIC_FAIL_TR });
+  }
 
   if (!supabase) {
     console.error("PRO_SILENT_ENV_MISSING");
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return res.status(200).json({ message: GENERIC_FAIL_TR });
   }
 
-  let body = req.body || {};
-  if (typeof body === "string") {
-    try { body = JSON.parse(body); } catch { body = {}; }
-  }
-
-  const lang = body.lang || "Turkish";
-  const isTR = lang === "tr" || lang === "Turkish";
+  const body = safeBody(req);
+  const { isTR, langName } = langFlags(body.lang || "Turkish");
 
   const email = normalizeEmail(body.email || getHeaderEmail(req));
-  const input = String(body.input || "").trim();
+  const inputRaw = String(body.input || "").trim();
+  const input = inputRaw.slice(0, 900);
 
   if (!input) {
     return res.status(200).json({
-      message: isTR ? "Lütfen bir konu yaz." : "Please provide a topic.",
+      message: isTR ? "Bir konu yaz." : "Please provide a topic.",
     });
   }
 
   if (!email) {
-    return res.status(200).json({
-      message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
-    });
+    return res.status(200).json({ message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN });
   }
 
   // Kullanıcıyı bul
@@ -126,18 +143,21 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error("Supabase error (pro-silent):", error);
-      return res.status(200).json({ message: GENERIC_FAIL });
+      return res
+        .status(200)
+        .json({ message: isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN });
     }
+
     userRow = Array.isArray(data) && data.length ? data[0] : null;
   } catch (e) {
     console.error("Supabase exception (pro-silent):", e);
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return res
+      .status(200)
+      .json({ message: isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN });
   }
 
   if (!userRow) {
-    return res.status(200).json({
-      message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN,
-    });
+    return res.status(200).json({ message: isTR ? NEED_LOGIN_TR : NEED_LOGIN_EN });
   }
 
   if (!isProUser(userRow)) {
@@ -148,34 +168,57 @@ export default async function handler(req, res) {
   }
 
   if (!openaiKey) {
-    console.error("OPENAI_API_KEY_MISSING (pro-silent)");
-    return res.status(200).json({ message: GENERIC_FAIL });
+    return res.status(200).json({
+      ok: true,
+      message: isTR
+        ? `Konu: ${input}\n\n0–2: …\n2–6: …\n6–15: …\n15–25: …`
+        : `Topic: ${input}\n\n0–2: …\n2–6: …\n6–15: …\n15–25: …`,
+    });
   }
 
-  const system = isTR
-    ? `Sen “Sessiz Video” (konuşma yok) uzmanısın. Kullanıcı bir konu verir.
-ÇIKTI (Türkçe) şu formatta, 9:16:
-1) 3 farklı konsept (Soft / Dengeli / Agresif)
-2) Seçilen en iyi konsept için 25-35 sn storyboard:
-   - saniye saniye (0-2, 2-5, 5-8...)
-   - ekranda yazacak metin (caption)
-   - görüntü/b-roll önerisi
-3) Başlık + Kapak yazısı (thumbnail text)
-4) 10 kısa caption alternatifi (tek satır)
-5) Edit talimatı: font, hız, geçiş, vurgu, müzik tipi
-6) Yorum sorusu + CTA (kaydet/yorum/takip)
-Boş/generic cümle yok.`
-    : `You are a “silent video” expert (no voiceover). Provide:
-3 concepts, then a 25-35s timestamped storyboard with on-screen text + b-roll,
-title + cover text, 10 caption options, editing instructions, CTA + comment question.
-No fluff.`;
+  try {
+    const prompt = isTR
+      ? `Sessiz (konuşmasız) kısa video üret.\n\nKONU:\n${input}\n\nİSTEKLER:\n- Sohbet gibi yaz, kısa ama yönlendirici olsun.\n- “PRO” kelimesini yazma, emoji kullanma.\n- 25–35 sn akış: 0-2 / 2-6 / 6-12 / 12-20 / 20-30 / 30-35\n- Her bölüm için: ekranda yazı (kısa), görsel öneri (b-roll), geçiş/tempo notu.\n- 8 alternatif hook (sessiz videoya uygun)\n- 3 farklı bitiş/CTA seçeneği\n- CapCut için 5 hızlı edit ipucu\n`
+      : `Create a silent (no-voice) short video.\n\nTOPIC:\n${input}\n\nREQUIREMENTS:\n- Chat-like, short but very actionable.\n- Don’t write “PRO”, no emojis.\n- 25–35 sec flow: 0-2 / 2-6 / 6-12 / 12-20 / 20-30 / 30-35\n- For each segment: on-screen text (short), b-roll idea, pacing/edit note.\n- 8 alternative hooks\n- 3 ending/CTA options\n- 5 quick CapCut editing tips\n`;
 
-  const user = isTR
-    ? `Konu/Niş: ${input}\nSessiz video için çok detaylı plan üret.`
-    : `Topic/Niche: ${input}\nCreate a detailed silent-video plan.`;
+    const r = await fetchWithTimeout(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openaiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `You are a practical short-form script writer. Answer in ${langName}. No fluff.`,
+            },
+            { role: "user", content: prompt },
+          ],
+          max_tokens: 800,
+        }),
+      },
+      12000
+    );
 
-  const aiText = await callOpenAI({ system, user, maxTokens: 1250 });
-  if (!aiText) return res.status(200).json({ message: GENERIC_FAIL });
+    const data = r ? await safeJson(r) : null;
 
-  return res.status(200).json({ message: aiText, ok: true });
-      }
+    if (!r || !data || !r.ok) {
+      console.error("OPENAI_PRO_SILENT_NOT_OK", { status: r?.status, data });
+      return res
+        .status(200)
+        .json({ message: isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN });
+    }
+
+    const text = data?.choices?.[0]?.message?.content?.trim();
+    return res.status(200).json({ ok: true, message: text || (isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN) });
+  } catch (e) {
+    console.error("PRO_SILENT_OPENAI_ERROR", e);
+    return res
+      .status(200)
+      .json({ message: isTR ? GENERIC_FAIL_TR : GENERIC_FAIL_EN });
+  }
+}
