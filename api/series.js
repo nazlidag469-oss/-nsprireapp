@@ -46,7 +46,7 @@ Gün 1 – Kısa başlık
 - Satır 3 (kapanış / çağrı)
 
 Sonra alt satıra geç ve "Gün 2 – ..." diye devam et.
-Toplam 30 gün yaz.
+Toplam 15 gün yaz.
 `.trim();
 
   const userPrompt = `
